@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: Bible Recovery Version & Original Language Analyzer API
+  version: 0.3.0
+  description: Provider-based recovery API with mock/lsm_api/web_fallback switching
+servers:
+  - url: https://your-api-domain
+paths:
+  /health:
+    get:
+      operationId: health
+      responses:
+        '200': { description: ok }
+  /provider-status:
+    get:
+      operationId: providerStatus
+      responses:
+        '200': { description: ok }
+  /verse:
+    get:
+      operationId: getVerse
+      parameters:
+        - in: query
+          name: ref
+          required: true
+          schema: { type: string }
+        - in: query
+          name: mode
+          required: false
+          schema: { type: string, enum: [standard, detailed, interlinear, study_card, compact] }
+      responses:
+        '200': { description: ok }
+  /passage:
+    get:
+      operationId: getPassage
+      parameters:
+        - in: query
+          name: ref
+          required: true
+          schema: { type: string }
+        - in: query
+          name: mode
+          required: false
+          schema: { type: string, enum: [standard, detailed, interlinear, study_card, compact] }
+      responses:
+        '200': { description: ok }
+  /interlinear:
+    get:
+      operationId: getInterlinear
+      parameters:
+        - in: query
+          name: ref
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: ok }
+  /word:
+    get:
+      operationId: getWord
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: ok }
+  /strongs/{id}:
+    get:
+      operationId: getStrongs
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: ok }
+  /lemma:
+    get:
+      operationId: getLemma
+      parameters:
+        - in: query
+          name: lemma
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: ok }
+  /search:
+    get:
+      operationId: searchAll
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: ok }
+  /legend:
+    get:
+      operationId: getLegend
+      responses:
+        '200': { description: ok }
+  /codes/{analytical_code}:
+    get:
+      operationId: parseAnalyticalCode
+      parameters:
+        - in: path
+          name: analytical_code
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: ok }
+  /books:
+    get:
+      operationId: getBooks
+      responses:
+        '200': { description: ok }
+  /morphology/search:
+    get:
+      operationId: morphologySearch
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: ok }
+  /resources:
+    get:
+      operationId: getMinistryResources
+      parameters:
+        - in: query
+          name: q
+          required: false
+          schema: { type: string }
+      responses:
+        '200': { description: ok }

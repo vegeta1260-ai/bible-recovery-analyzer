@@ -1,0 +1,4 @@
+{
+  "analytical_keys": ["N", "V", "M/P"],
+  "abbr_keys": ["form_priority", "function_exception", "ot_quote"]
+}

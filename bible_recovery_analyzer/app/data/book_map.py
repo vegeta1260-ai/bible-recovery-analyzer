@@ -1,0 +1,36 @@
+BOOK_ROWS = [
+    ("Gen", "Genesis", "創世記", ["創", "創世記", "gen", "genesis"]),
+    ("Exod", "Exodus", "出埃及記", ["出", "出埃及記", "exod", "exodus"]),
+    ("Ps", "Psalms", "詩篇", ["詩", "詩篇", "ps", "psalm", "psalms"]),
+    ("Matt", "Matthew", "馬太福音", ["太", "馬太", "matt", "matthew"]),
+    ("Mark", "Mark", "馬可福音", ["可", "馬可", "mark"]),
+    ("Luke", "Luke", "路加福音", ["路", "路加", "luke"]),
+    ("John", "John", "約翰福音", ["約", "約翰", "john"]),
+    ("Acts", "Acts", "使徒行傳", ["徒", "使徒行傳", "acts"]),
+    ("Rom", "Romans", "羅馬書", ["羅", "rom", "romans"]),
+    ("1Cor", "1 Corinthians", "哥林多前書", ["林前", "1cor", "1 cor", "1corinthians"]),
+    ("2Cor", "2 Corinthians", "哥林多後書", ["林後", "2cor", "2 cor", "2corinthians"]),
+    ("Gal", "Galatians", "加拉太書", ["加", "gal", "galatians"]),
+    ("Eph", "Ephesians", "以弗所書", ["弗", "eph", "ephesians"]),
+    ("Phil", "Philippians", "腓立比書", ["腓", "phil", "philippians"]),
+    ("Col", "Colossians", "歌羅西書", ["西", "col", "colossians"]),
+    ("1Thess", "1 Thessalonians", "帖撒羅尼迦前書", ["帖前", "1thess", "1 thess"]),
+    ("2Thess", "2 Thessalonians", "帖撒羅尼迦後書", ["帖後", "2thess", "2 thess"]),
+    ("1Tim", "1 Timothy", "提摩太前書", ["提前", "1tim", "1 tim"]),
+    ("2Tim", "2 Timothy", "提摩太後書", ["提後", "2tim", "2 tim"]),
+    ("Titus", "Titus", "提多書", ["多", "titus"]),
+    ("Phlm", "Philemon", "腓利門書", ["門", "phlm", "philemon"]),
+    ("Heb", "Hebrews", "希伯來書", ["來", "heb", "hebrews"]),
+    ("Jas", "James", "雅各書", ["雅", "jas", "james"]),
+    ("1Pet", "1 Peter", "彼得前書", ["彼前", "1pet", "1 pet"]),
+    ("2Pet", "2 Peter", "彼得後書", ["彼後", "2pet", "2 pet"]),
+    ("1John", "1 John", "約翰一書", ["約一", "1john", "1 john"]),
+    ("2John", "2 John", "約翰二書", ["約二", "2john", "2 john"]),
+    ("3John", "3 John", "約翰三書", ["約三", "3john", "3 john"]),
+    ("Jude", "Jude", "猶大書", ["猶", "jude"]),
+    ("Rev", "Revelation", "啟示錄", ["啟", "啟示錄", "rev", "revelation"]),
+]
+
+BOOK_ALIASES = {alias.replace(" ", "").lower(): osis for osis, _en, _zh, aliases in BOOK_ROWS for alias in aliases}
+OSIS_TO_ZH = {osis: zh for osis, _en, zh, _aliases in BOOK_ROWS}
+OSIS_TO_EN = {osis: en for osis, en, _zh, _aliases in BOOK_ROWS}
