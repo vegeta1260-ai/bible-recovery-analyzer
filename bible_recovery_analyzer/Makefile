@@ -9,6 +9,12 @@ seed:
 run:
 	uvicorn app.main:app --reload --port 8000
 
+run-local:
+	bash scripts/start_local.sh
+
+verify-integrity:
+	$(PYTHON) scripts/verify_repo_integrity.py --write-report
+
 test:
 	pytest
 
