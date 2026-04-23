@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,8 +15,24 @@ class Settings(BaseSettings):
     recovery_api_base_url: str = Field(
         default="https://api.lsm.example/recovery-text", alias="RECOVERY_API_BASE_URL"
     )
-    recovery_api_key: str = Field(default="", alias="RECOVERY_API_KEY")
+    recovery_api_token: str = Field(
+        default="",
+        validation_alias=AliasChoices("RECOVERY_API_TOKEN", "RECOVERY_API_KEY"),
+    )
     recovery_api_timeout_seconds: float = Field(default=12.0, alias="RECOVERY_API_TIMEOUT")
+    recovery_api_lang: str = Field(default="", alias="RECOVERY_API_LANG")
+    recovery_api_output: str = Field(default="json", alias="RECOVERY_API_OUTPUT")
+    recovery_api_ref_param: str = Field(default="String", alias="RECOVERY_API_REF_PARAM")
+    recovery_api_output_param: str = Field(default="Out", alias="RECOVERY_API_OUTPUT_PARAM")
+    recovery_api_lang_param: str = Field(default="Lang", alias="RECOVERY_API_LANG_PARAM")
+
+    recovery_api_auth_mode: Literal["header", "query", "none"] = Field(
+        default="header", alias="RECOVERY_API_AUTH_MODE"
+    )
+    recovery_api_auth_header: str = Field(default="Authorization", alias="RECOVERY_API_AUTH_HEADER")
+    recovery_api_auth_header_prefix: str = Field(default="Bearer ", alias="RECOVERY_API_AUTH_HEADER_PREFIX")
+    recovery_api_auth_query_param: str = Field(default="token", alias="RECOVERY_API_AUTH_QUERY_PARAM")
+
     recovery_retry_attempts: int = Field(default=2, alias="RECOVERY_RETRY_ATTEMPTS")
     simulate_lsm_rejection: bool = Field(default=False, alias="SIMULATE_LSM_REJECTION")
     recovery_enable_web_fallback_from_lsm: bool = Field(
@@ -53,6 +69,11 @@ class Settings(BaseSettings):
             raise ValueError("RECOVERY_PROVIDER=web_fallback 時需設 RECOVERY_WEB_FETCH_ENABLED=true")
         if self.recovery_retry_attempts < 1:
             raise ValueError("RECOVERY_RETRY_ATTEMPTS must be >= 1")
+        if self.recovery_provider == "lsm_api":
+            if not self.recovery_api_base_url:
+                raise ValueError("RECOVERY_API_BASE_URL is required when RECOVERY_PROVIDER=lsm_api")
+            if self.recovery_api_auth_mode in {"header", "query"} and not self.recovery_api_token:
+                raise ValueError("RECOVERY_API_TOKEN (or RECOVERY_API_KEY) is required for current auth mode")
         return self
 
 
