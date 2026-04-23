@@ -16,6 +16,14 @@ class Settings(BaseSettings):
         default="https://api.lsm.example/recovery-text", alias="RECOVERY_API_BASE_URL"
     )
     recovery_api_key: str = Field(default="", alias="RECOVERY_API_KEY")
+    recovery_api_auth_mode: Literal["bearer", "header", "query", "none"] = Field(
+        default="bearer", alias="RECOVERY_API_AUTH_MODE"
+    )
+    recovery_api_token: str = Field(default="", alias="RECOVERY_API_TOKEN")
+    recovery_api_auth_header_name: str = Field(
+        default="Authorization", alias="RECOVERY_API_AUTH_HEADER_NAME"
+    )
+    recovery_api_auth_query_param: str = Field(default="token", alias="RECOVERY_API_AUTH_QUERY_PARAM")
     recovery_api_timeout_seconds: float = Field(default=12.0, alias="RECOVERY_API_TIMEOUT")
     recovery_retry_attempts: int = Field(default=2, alias="RECOVERY_RETRY_ATTEMPTS")
     simulate_lsm_rejection: bool = Field(default=False, alias="SIMULATE_LSM_REJECTION")
@@ -53,6 +61,13 @@ class Settings(BaseSettings):
             raise ValueError("RECOVERY_PROVIDER=web_fallback 時需設 RECOVERY_WEB_FETCH_ENABLED=true")
         if self.recovery_retry_attempts < 1:
             raise ValueError("RECOVERY_RETRY_ATTEMPTS must be >= 1")
+
+        if self.recovery_api_auth_mode == "header" and not self.recovery_api_auth_header_name.strip():
+            raise ValueError("RECOVERY_API_AUTH_HEADER_NAME is required when RECOVERY_API_AUTH_MODE=header")
+
+        if self.recovery_api_auth_mode == "query" and not self.recovery_api_auth_query_param.strip():
+            raise ValueError("RECOVERY_API_AUTH_QUERY_PARAM is required when RECOVERY_API_AUTH_MODE=query")
+
         return self
 
 
