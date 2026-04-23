@@ -1,10 +1,11 @@
-# 聖經恢復本及原文字義解析（FastAPI Prototype v0.3）
+# 聖經恢復本及原文字義解析（FastAPI Prototype v0.4）
 
 ## 本輪重點
-1. 安全備份（git + 檔案副本）
-2. Provider-based recovery 架構
-3. LSM 無憑證時的 web fallback 測試流程
-4. 可重現環境與測試流程補強
+1. provider-based recovery 架構維持（`mock` / `lsm_api` / `web_fallback`）
+2. 正式補完 LSM API provider（可配置 auth mode: header/query/none）
+3. 可重複執行的遷移完整性驗證（`scripts/verify_repo_integrity.py`）
+4. 本機落地執行指引（General + Windows + LSM API Windows）
+5. 後續 LSM API / Custom GPT 路線文件化
 
 ## Recovery Provider
 - `mock`
@@ -15,38 +16,38 @@
 - 不離線儲存 Recovery Version 全文
 - web fallback 僅 runtime best-effort
 - web fallback 僅供備援測試，不可視為正式授權整合
+- 不要將 token / API key / secret 寫入 repo
 
-## 主要環境變數
+## 快速啟動（mock）
 ```bash
-RECOVERY_PROVIDER=mock|lsm_api|web_fallback
-RECOVERY_API_BASE_URL=
-RECOVERY_API_KEY=
-RECOVERY_RETRY_ATTEMPTS=2
-SIMULATE_LSM_REJECTION=false
-RECOVERY_ENABLE_WEB_FALLBACK_FROM_LSM=true
-
-RECOVERY_WEB_BASE_URL=
-RECOVERY_WEB_FETCH_ENABLED=false
-RECOVERY_WEB_USER_AGENT="BibleRecoveryAnalyzer/0.3"
-RECOVERY_WEB_TIMEOUT_SECONDS=10
-RECOVERY_WEB_ROUTE_TEMPLATE="verse/{ref}"
-RECOVERY_WEB_SELECTOR=
-RECOVERY_WEB_EXTRACT_MARKER_START=
-RECOVERY_WEB_EXTRACT_MARKER_END=
-RECOVERY_WEB_MAX_CHARS=600
+bash scripts/start_local.sh
 ```
 
-## 快速啟動
+Windows PowerShell：
+```powershell
+.\scripts\start_local.ps1
+```
+
+## LSM API 模式
+請先設定 `.env`：
+```env
+RECOVERY_PROVIDER=lsm_api
+RECOVERY_API_BASE_URL=...
+RECOVERY_API_TOKEN=...
+RECOVERY_API_OUTPUT=json
+RECOVERY_API_AUTH_MODE=header
+```
+
+## 遷移完整性驗證
 ```bash
-bash scripts/bootstrap_env.sh
-source .venv/bin/activate
-make run
+python scripts/verify_repo_integrity.py --write-report
 ```
 
 ## 測試
 ```bash
 make smoke
 make test
+make smoke-lsm
 ```
 
 ## API
@@ -65,30 +66,15 @@ make test
 - `/morphology/search`
 - `/resources`
 
-## 無 LSM 憑證展示指令
-```bash
-# mock
-RECOVERY_PROVIDER=mock uvicorn app.main:app --reload --port 8000
-
-# web fallback
-RECOVERY_PROVIDER=web_fallback \
-RECOVERY_WEB_FETCH_ENABLED=true \
-RECOVERY_WEB_BASE_URL=https://example.org \
-RECOVERY_WEB_SELECTOR='John.1.1' \
-uvicorn app.main:app --reload --port 8000
-
-# 模擬 lsm 拒絕 -> fallback
-RECOVERY_PROVIDER=lsm_api \
-SIMULATE_LSM_REJECTION=true \
-RECOVERY_ENABLE_WEB_FALLBACK_FROM_LSM=true \
-RECOVERY_WEB_FETCH_ENABLED=true \
-RECOVERY_WEB_BASE_URL=https://example.org \
-uvicorn app.main:app --reload --port 8000
-```
-
 ## 文件導覽
-- `docs/backup_and_restore.md`
+- `docs/local_run_guide_general.md`
+- `docs/local_run_guide_windows.md`
+- `docs/local_run_with_lsm_api_windows.md`
+- `docs/migration_verification_report.md`（由 verify script 產生）
+- `docs/lsm_api_integration.md`
+- `docs/lsm_api_preparation.md`
+- `docs/custom_gpt_next_steps.md`
+- `docs/custom_gpt_ready_checklist.md`
 - `docs/provider_switching_guide.md`
-- `docs/web_fallback_design.md`
 - `docs/no_lsm_credential_test_plan.md`
 - `docs/testing_and_validation.md`

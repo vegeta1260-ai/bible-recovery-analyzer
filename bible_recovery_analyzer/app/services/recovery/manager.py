@@ -65,6 +65,12 @@ class RecoveryServiceManager:
         return {
             "configured_provider": self.settings.recovery_provider,
             "simulate_lsm_rejection": self.settings.simulate_lsm_rejection,
+            "lsm_api": {
+                "base_url_configured": bool(self.settings.recovery_api_base_url),
+                "auth_mode": self.settings.recovery_api_auth_mode,
+                "token_configured": bool(self.settings.recovery_api_token),
+                "output": self.settings.recovery_api_output,
+            },
             "web_fallback_enabled": self.settings.recovery_web_fetch_enabled,
             "web_fallback_base_url_configured": bool(self.settings.recovery_web_base_url),
             "warnings": [

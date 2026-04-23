@@ -63,11 +63,7 @@ class LsmApiRecoveryProvider:
         if self.settings.simulate_lsm_rejection:
             raise RecoveryFetchError(self.name, "simulated rejection enabled", retriable=True)
 
-        if not self.settings.recovery_api_key:
-            raise RecoveryFetchError(self.name, "missing RECOVERY_API_KEY", retriable=True)
-
-        headers = {"Authorization": f"Bearer {self.settings.recovery_api_key}"}
-        params = {"ref": osis_ref, "format": "text-only"}
+        headers, params = self._build_request(osis_ref)
         timeout = self.settings.recovery_api_timeout_seconds
 
         for attempt in range(1, self.settings.recovery_retry_attempts + 1):
@@ -78,15 +74,34 @@ class LsmApiRecoveryProvider:
                     raise RecoveryFetchError(self.name, f"auth denied ({resp.status_code})", retriable=True)
                 if resp.status_code == 404:
                     raise RecoveryFetchError(self.name, "verse not found from LSM API", retriable=False)
-                resp.raise_for_status()
-                payload = resp.json()
+                if resp.status_code >= 400:
+                    raise RecoveryFetchError(self.name, f"http {resp.status_code} from upstream", retriable=True)
+
+                payload = self._parse_json(resp)
+                text = self._extract_text(payload)
+                if not text:
+                    message = str(payload.get("message", "empty verses text from upstream"))
+                    raise RecoveryFetchError(self.name, f"empty text response: {message}", retriable=False)
+
+                attribution = str(payload.get("copyright", "")).strip() or self.settings.default_recovery_attribution
+                diagnostics = [f"lsm attempt {attempt} success"]
+                message = str(payload.get("message", "")).strip()
+                detected = str(payload.get("detected", "")).strip()
+                inputstring = str(payload.get("inputstring", "")).strip()
+                if message:
+                    diagnostics.append(f"message={message[:160]}")
+                if detected:
+                    diagnostics.append(f"detected={detected}")
+                if inputstring:
+                    diagnostics.append(f"inputstring={inputstring}")
+
                 return RecoveryProviderResult(
-                    text=payload.get("text", ""),
+                    text=text,
                     source_provider=self.name,
                     source_status="ok",
                     fallback_used=False,
-                    attribution_source=payload.get("attribution", self.settings.default_recovery_attribution),
-                    diagnostics=[f"lsm attempt {attempt} success"],
+                    attribution_source=attribution,
+                    diagnostics=diagnostics,
                 )
             except RecoveryFetchError:
                 raise
@@ -95,11 +110,71 @@ class LsmApiRecoveryProvider:
                 if attempt >= self.settings.recovery_retry_attempts:
                     raise RecoveryFetchError(self.name, f"timeout after {attempt} attempts", retriable=True) from exc
             except httpx.HTTPError as exc:
-                logger.warning("LSM provider HTTP error on attempt %s: %s", attempt, exc)
+                logger.warning("LSM provider HTTP exception on attempt %s: %s", attempt, exc.__class__.__name__)
                 if attempt >= self.settings.recovery_retry_attempts:
-                    raise RecoveryFetchError(self.name, str(exc), retriable=True) from exc
+                    raise RecoveryFetchError(
+                        self.name,
+                        f"upstream HTTP exception: {exc.__class__.__name__}",
+                        retriable=True,
+                    ) from exc
 
         raise RecoveryFetchError(self.name, "unknown lsm provider failure", retriable=True)
+
+    def _build_request(self, osis_ref: str) -> tuple[dict[str, str], dict[str, str]]:
+        params = {
+            self.settings.recovery_api_ref_param: osis_ref,
+            self.settings.recovery_api_output_param: self.settings.recovery_api_output,
+        }
+        if self.settings.recovery_api_lang:
+            params[self.settings.recovery_api_lang_param] = self.settings.recovery_api_lang
+
+        headers: dict[str, str] = {}
+        token = self.settings.recovery_api_token.strip()
+        auth_mode = self.settings.recovery_api_auth_mode
+        if auth_mode == "header" and token:
+            headers[self.settings.recovery_api_auth_header] = f"{self.settings.recovery_api_auth_header_prefix}{token}"
+        elif auth_mode == "query" and token:
+            params[self.settings.recovery_api_auth_query_param] = token
+
+        return headers, params
+
+    def _parse_json(self, resp: httpx.Response) -> dict:
+        try:
+            payload = resp.json()
+        except ValueError as exc:
+            raise RecoveryFetchError(self.name, "upstream did not return valid JSON", retriable=True) from exc
+
+        if not isinstance(payload, dict):
+            raise RecoveryFetchError(self.name, "upstream JSON payload is not object", retriable=True)
+        return payload
+
+    def _extract_text(self, payload: dict) -> str:
+        verses = payload.get("verses")
+        if isinstance(verses, list):
+            lines: list[str] = []
+            for row in verses:
+                if isinstance(row, str):
+                    val = row.strip()
+                elif isinstance(row, dict):
+                    val = ""
+                    for key in ("text", "verse", "content", "value", "line"):
+                        raw = row.get(key)
+                        if isinstance(raw, str) and raw.strip():
+                            val = raw.strip()
+                            break
+                else:
+                    val = ""
+                if val:
+                    lines.append(val)
+            if lines:
+                return "\n".join(lines)
+
+        for key in ("text", "verse", "content"):
+            raw = payload.get(key)
+            if isinstance(raw, str) and raw.strip():
+                return raw.strip()
+
+        return ""
 
 
 class WebFallbackRecoveryProvider:
