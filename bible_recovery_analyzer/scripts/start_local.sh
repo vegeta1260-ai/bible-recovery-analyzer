@@ -16,4 +16,5 @@ pip install -r requirements-dev.txt
 python scripts/seed_data.py
 
 export RECOVERY_PROVIDER=${RECOVERY_PROVIDER:-mock}
+export RECOVERY_API_AUTH_MODE=${RECOVERY_API_AUTH_MODE:-bearer}
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

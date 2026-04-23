@@ -1,25 +1,26 @@
-# Custom GPT / GPT Actions 下一步規劃（本輪只規劃）
+# Custom GPT / GPT Actions 下一步規劃（readiness 版）
 
 ## 後端何時算可接 GPT Actions
 建議達成以下條件後再接：
 1. 本機 smoke test 穩定（`/health`, `/provider-status`, `/verse`, `/passage`, `/interlinear`）
 2. `openapi.yaml` 與實際 API route 一致
-3. provider 策略固定（預設 mock、正式環境再切換）
+3. provider 策略固定（預設 `mock`；部署後依環境切換）
+4. `lsm_api` 授權模式與 token 來源在部署文件中明確定義
 
-## 還需要的條件
-- 可公開存取的 HTTPS URL（例如 cloud run / app service / vm + reverse proxy）
-- OpenAPI 文件可由 GPT Actions 匯入
-- 認證方案（無認證僅限內部測試；正式建議 API key / OAuth）
-- 日誌與限流策略（避免濫用）
+## GPT Actions 接線前檢查清單
+- 具公開 HTTPS endpoint（Cloud Run / App Service / VM+Reverse Proxy）
+- `openapi.yaml` 可公開讀取
+- 設定 API gateway / auth policy（至少 API key 或 OAuth）
+- 記錄 rate limit / 觀測指標（延遲、錯誤率、fallback 比例）
+- `.env` 不包含硬編碼 token，改由平台 secret 注入
 
-## 本機先跑通後的推薦順序
-1. 將服務部署到一個 HTTPS endpoint
-2. 確認 `/openapi.json` 或 `openapi.yaml` 可被外部讀取
-3. 在 Custom GPT 中新增 Action，匯入 OpenAPI
-4. 先綁定 `mock` provider 做聯調
-5. 待 LSM 憑證就緒後，再切換到 `lsm_api` 並重跑整套測試
+## 建議 rollout 順序
+1. 先以 `mock` provider 聯調 GPT Actions schema
+2. 在 staging 使用 `lsm_api` + 測試 token 驗證授權流
+3. 確認 response parsing 與 attribution 欄位符合預期
+4. 再切 production token，並保留 fallback 開關
 
 ## 本輪不做事項
-- 不直接實作 GPT Actions
-- 不接真實憑證
-- 不調整既有 provider-based 主架構
+- 不直接實作 GPT Actions 前端配置
+- 不提交任何真實憑證
+- 不移除既有 provider/target/欄位

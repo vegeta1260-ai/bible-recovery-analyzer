@@ -20,5 +20,8 @@ python scripts/seed_data.py
 if (-not $env:RECOVERY_PROVIDER) {
   $env:RECOVERY_PROVIDER = "mock"
 }
+if (-not $env:RECOVERY_API_AUTH_MODE) {
+  $env:RECOVERY_API_AUTH_MODE = "bearer"
+}
 
 uvicorn app.main:app --host $Host --port $Port --reload

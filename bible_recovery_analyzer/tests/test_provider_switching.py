@@ -1,11 +1,10 @@
 import asyncio
-import os
 
 import pytest
 
 from app.core.config import Settings
 from app.services.recovery.manager import RecoveryServiceManager
-from app.services.recovery.providers import RecoveryFetchError
+from app.services.recovery.providers import LsmApiRecoveryProvider, RecoveryFetchError
 
 
 def build_settings(**overrides):
@@ -24,16 +23,17 @@ def test_mock_provider_selected():
     assert out.source_provider == "mock"
 
 
-def test_lsm_missing_key_fails_without_fallback():
+def test_lsm_missing_token_fails_without_fallback():
     settings = build_settings(
         RECOVERY_PROVIDER="lsm_api",
         RECOVERY_API_KEY="",
+        RECOVERY_API_TOKEN="",
         RECOVERY_ENABLE_WEB_FALLBACK_FROM_LSM="false",
     )
     mgr = RecoveryServiceManager(settings)
     with pytest.raises(RecoveryFetchError) as err:
         asyncio.run(mgr.get_verse_text("John.1.1"))
-    assert "missing RECOVERY_API_KEY" in str(err.value)
+    assert "missing RECOVERY_API_TOKEN / RECOVERY_API_KEY" in str(err.value)
 
 
 def test_simulated_rejection_switches_to_web_fallback_success(monkeypatch):
@@ -90,6 +90,52 @@ def test_provider_switch_three_modes():
                 RECOVERY_WEB_FETCH_ENABLED="true",
                 RECOVERY_WEB_BASE_URL="https://example.org",
             )
+        elif provider == "lsm_api":
+            settings = build_settings(RECOVERY_PROVIDER=provider, RECOVERY_API_TOKEN="dummy-token")
         else:
             settings = build_settings(RECOVERY_PROVIDER=provider)
         assert settings.recovery_provider == provider
+
+
+def test_lsm_auth_mode_header_uses_custom_header():
+    settings = build_settings(
+        RECOVERY_PROVIDER="lsm_api",
+        RECOVERY_API_AUTH_MODE="header",
+        RECOVERY_API_AUTH_HEADER_NAME="X-API-TOKEN",
+        RECOVERY_API_TOKEN="abc123",
+    )
+    provider = LsmApiRecoveryProvider(settings)
+    headers, params, hint = provider._build_auth()
+    assert headers["X-API-TOKEN"] == "abc123"
+    assert params == {}
+    assert "X-API-TOKEN" in hint
+
+
+def test_lsm_auth_mode_query_uses_query_param():
+    settings = build_settings(
+        RECOVERY_PROVIDER="lsm_api",
+        RECOVERY_API_AUTH_MODE="query",
+        RECOVERY_API_AUTH_QUERY_PARAM="access_token",
+        RECOVERY_API_TOKEN="abc123",
+    )
+    provider = LsmApiRecoveryProvider(settings)
+    headers, params, hint = provider._build_auth()
+    assert headers == {}
+    assert params["access_token"] == "abc123"
+    assert "access_token" in hint
+
+
+def test_lsm_payload_parsing_supports_nested_data_key():
+    settings = build_settings(RECOVERY_PROVIDER="lsm_api", RECOVERY_API_TOKEN="dummy-token")
+    provider = LsmApiRecoveryProvider(settings)
+    parsed = provider._parse_payload({"data": {"verseText": "In the beginning", "attribution": "LSM"}})
+    assert parsed["text"] == "In the beginning"
+    assert parsed["attribution"] == "LSM"
+
+
+def test_lsm_payload_missing_text_raises_error():
+    settings = build_settings(RECOVERY_PROVIDER="lsm_api", RECOVERY_API_TOKEN="dummy-token")
+    provider = LsmApiRecoveryProvider(settings)
+    with pytest.raises(RecoveryFetchError) as err:
+        provider._parse_payload({"data": {"foo": "bar"}})
+    assert "missing text field" in str(err.value)
