@@ -2,7 +2,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.deps import get_analyzer_service, get_recovery_client
+from app.deps import get_analyzer_service, get_recovery_client, require_action_auth
 from app.models.schemas import (
     InterlinearResponse,
     LegendResponse,
@@ -28,20 +28,21 @@ def _mk_attribution(copyright_notice: str) -> dict:
     }
 
 
-@router.get("/health")
+@router.get("/health", operation_id="get_health")
 def health():
     return {"status": "ok", "service": "bible_recovery_analyzer"}
 
 
-@router.get("/provider-status")
+@router.get("/provider-status", operation_id="get_provider_status")
 def provider_status(recovery=Depends(get_recovery_client)):
     return recovery.provider_status()
 
 
-@router.get("/verse", response_model=VerseResponse)
+@router.get("/verse", response_model=VerseResponse, operation_id="get_verse")
 async def verse(
     ref: str = Query(...),
     mode: ResponseMode = Query("standard"),
+    _auth=Depends(require_action_auth),
     analyzer=Depends(get_analyzer_service),
     recovery=Depends(get_recovery_client),
 ):
@@ -95,10 +96,11 @@ async def verse(
     }
 
 
-@router.get("/passage", response_model=PassageResponse)
+@router.get("/passage", response_model=PassageResponse, operation_id="get_passage")
 async def passage(
     ref: str = Query(...),
     mode: ResponseMode = Query("detailed"),
+    _auth=Depends(require_action_auth),
     analyzer=Depends(get_analyzer_service),
     recovery=Depends(get_recovery_client),
 ):
@@ -160,8 +162,8 @@ async def passage(
     }
 
 
-@router.get("/interlinear", response_model=InterlinearResponse)
-async def interlinear(ref: str, analyzer=Depends(get_analyzer_service), recovery=Depends(get_recovery_client)):
+@router.get("/interlinear", response_model=InterlinearResponse, operation_id="get_interlinear")
+async def interlinear(ref: str, _auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service), recovery=Depends(get_recovery_client)):
     osis_ref = normalize_ref(ref)
     if "-" in osis_ref:
         raise HTTPException(status_code=400, detail="/interlinear 僅支援單節")
@@ -178,49 +180,89 @@ async def interlinear(ref: str, analyzer=Depends(get_analyzer_service), recovery
     return out
 
 
-@router.get("/word")
-def word(q: str, analyzer=Depends(get_analyzer_service)):
+@router.get("/word", operation_id="get_word")
+def word(q: str, _auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service)):
     return analyzer.lookup_word(q)
 
 
-@router.get("/strongs/{sid}")
-def strongs(sid: str, analyzer=Depends(get_analyzer_service)):
+@router.get("/strongs/{sid}", operation_id="get_strongs")
+def strongs(sid: str, _auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service)):
     out = analyzer.lookup_strongs(sid)
     if not out:
         raise HTTPException(status_code=404, detail="strongs not found")
     return out
 
 
-@router.get("/lemma")
-def lemma(lemma: str, analyzer=Depends(get_analyzer_service)):
+@router.get("/lemma", operation_id="get_lemma")
+def lemma(lemma: str, _auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service)):
     return analyzer.lookup_lemma(lemma)
 
 
-@router.get("/search")
-def search(q: str, analyzer=Depends(get_analyzer_service)):
+@router.get("/search", operation_id="search_tokens")
+def search(q: str, _auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service)):
     return analyzer.search(q)
 
 
 @router.get("/legend", response_model=LegendResponse)
-def legend(analyzer=Depends(get_analyzer_service)):
+def legend(_auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service)):
     return analyzer.legend()
 
 
-@router.get("/codes/{analytical_code}")
-def parse_code(analytical_code: str, analyzer=Depends(get_analyzer_service)):
+@router.get("/codes/{analytical_code}", operation_id="parse_analytical_code")
+def parse_code(analytical_code: str, _auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service)):
     return analyzer.parse_code(analytical_code)
 
 
-@router.get("/books")
-def books(analyzer=Depends(get_analyzer_service)):
+@router.get("/books", operation_id="get_books")
+def books(_auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service)):
     return analyzer.legend().book_mappings
 
 
 @router.get("/morphology/search", response_model=MorphologySearchResponse)
-def morphology_search(q: str, analyzer=Depends(get_analyzer_service)):
+def morphology_search(q: str, _auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service)):
     return analyzer.morphology_search(q)
 
 
 @router.get("/resources", response_model=MinistryResourceResponse)
-def resources(q: str = "affirmation", _analyzer=Depends(get_analyzer_service)):
+def resources(q: str = "affirmation", _auth=Depends(require_action_auth), _analyzer=Depends(get_analyzer_service)):
     return {"query": q, "results": search_resources(q)}
+
+
+@router.get("/study", operation_id="get_study_bundle", summary="Expert study bundle for GPT Actions", description="Preferred single-call endpoint for comprehensive study payload.")
+async def study(ref: str = Query(...), include_diagnostics: bool = Query(True), max_verses: int = Query(50, ge=1, le=50), include_interlinear: bool = Query(True), include_lexicon: bool = Query(True), include_pronunciation: bool = Query(True), include_translation_notes: bool = Query(True), _auth=Depends(require_action_auth), analyzer=Depends(get_analyzer_service), recovery=Depends(get_recovery_client)):
+    osis_ref = normalize_ref(ref)
+    all_refs = split_osis_range(osis_ref)
+    requested_count = len(all_refs)
+    verse_refs = all_refs[:max_verses]
+    truncated = requested_count > len(verse_refs)
+    warnings, missing_fields, verses, interlinear = [], [], [], []
+    lex_map = {}
+    provider, lsm_status, attribution = "unknown", "unknown", ""
+    for vr in verse_refs:
+        cards = analyzer.verse_cards(vr)
+        if not cards:
+            missing_fields.append(f"missing token cards for {vr}")
+            continue
+        try:
+            rr = await recovery.get_verse_text(vr)
+        except RecoveryFetchError as err:
+            warnings.append(f"recovery fetch failed at {vr}: {err.reason}")
+            lsm_status = "error"
+            continue
+        provider, lsm_status, attribution = rr.source_provider, rr.source_status, rr.attribution_source
+        verses.append({"ref": vr, "text": rr.text})
+        for c in cards:
+            if include_interlinear:
+                interlinear.append({"surface_form": c.surface_form, "lemma": c.lemma, "strong_number_base": c.strongs_primary, "strong_number_extended": c.strongs_secondary or "", "analytical_code_raw": c.analytical_code_raw, "part_of_speech": c.part_of_speech, "case": c.morphology_features.get("case", ""), "gender": c.morphology_features.get("gender", ""), "number": c.morphology_features.get("number", ""), "person": c.morphology_features.get("person", ""), "tense": c.morphology_features.get("tense", ""), "voice": c.morphology_features.get("voice", ""), "mood": c.morphology_features.get("mood", ""), "is_crasis": False, "source_language": "unknown", "contextual_function": c.grammar_explanation, "english_gloss": c.literal_gloss_en, "chinese_literal_gloss": c.translation_note_zh if include_translation_notes else "", "pronunciation_zhuyin": c.pronunciation_bopomofo if include_pronunciation else "", "transliteration": c.pronunciation_transliteration if include_pronunciation else "", "special_notes": c.recovery_alignment_note})
+            if include_lexicon and c.strongs_primary and c.strongs_primary not in lex_map:
+                lex = analyzer.lookup_strongs(c.strongs_primary)
+                if lex:
+                    lex_map[c.strongs_primary] = {"strongs": lex.strongs, "lemma": lex.lemma, "gloss": lex.literal_gloss_en, "short_definition": lex.short_definition, "notes": "; ".join(lex.analytical_notes[:2])}
+    if truncated:
+        warnings.append("Request exceeded 50 verses; only the first 50 verses were processed.")
+    action_payload_note = ""
+    if len(str(interlinear)) + len(str(verses)) > 90000 and len(interlinear) > 400:
+        interlinear = interlinear[:400]
+        action_payload_note = "Interlinear rows truncated due to Action payload-size guardrail."
+        warnings.append("Payload was compressed to reduce Action response size.")
+    return {"reference": {"input": ref, "normalized": osis_ref, "requested_verse_count": requested_count, "processed_verse_count": len(verses), "truncated": truncated}, "recovery_text": {"verses": verses, "inputstring": ref, "detected": "verse_range", "message": "ok" if verses else "no verses resolved", "copyright": attribution, "attribution": attribution}, "original_text": {"language": "greek|hebrew|aramaic|unknown", "text": " ".join([x["surface_form"] for x in interlinear[:120]]), "source": "token database", "notes": "Aggregated from token layer."}, "interlinear": interlinear if include_interlinear else [], "lexicon_summary": list(lex_map.values()) if include_lexicon else [], "syntax_observations": {"subject": "", "main_verb": "", "objects": [], "prepositional_phrases": [], "participles": [], "article_structures": [], "special_grammar_notes": []}, "translation_support": {"literal_gloss_summary": " ; ".join(sorted({x["english_gloss"] for x in interlinear[:80] if x.get("english_gloss")})), "recovery_translation_notes": "Token-level translation notes included where available." if include_translation_notes else "disabled", "comparison_notes": []}, "diagnostics": {"provider": provider, "lsm_status": lsm_status, "warnings": warnings if include_diagnostics else [], "missing_fields": sorted(set(missing_fields)) if include_diagnostics else [], "upstream_message": "", "action_payload_note": action_payload_note}}

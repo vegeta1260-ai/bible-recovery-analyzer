@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     recovery_web_extract_marker_end: str = Field(default="", alias="RECOVERY_WEB_EXTRACT_MARKER_END")
     recovery_web_max_chars: int = Field(default=600, alias="RECOVERY_WEB_MAX_CHARS")
 
+    action_api_key: str = Field(default="", alias="ACTION_API_KEY")
+    action_auth_enabled: bool = Field(default=False, alias="ACTION_AUTH_ENABLED")
+    action_auth_mode: Literal["bearer", "none"] = Field(default="none", alias="ACTION_AUTH_MODE")
+
     sqlite_path: str = Field(default="./data/bible_analyzer.db", alias="SQLITE_PATH")
     default_recovery_attribution: str = Field(
         default=(
@@ -53,6 +57,8 @@ class Settings(BaseSettings):
             raise ValueError("RECOVERY_PROVIDER=web_fallback 時需設 RECOVERY_WEB_FETCH_ENABLED=true")
         if self.recovery_retry_attempts < 1:
             raise ValueError("RECOVERY_RETRY_ATTEMPTS must be >= 1")
+        if self.action_auth_enabled and self.action_auth_mode == "bearer" and not self.action_api_key:
+            raise ValueError("ACTION_API_KEY is required when ACTION_AUTH_ENABLED=true and ACTION_AUTH_MODE=bearer")
         return self
 
 

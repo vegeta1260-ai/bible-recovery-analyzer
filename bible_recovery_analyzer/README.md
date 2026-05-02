@@ -45,6 +45,7 @@ make test
 ## API
 - `/health`
 - `/provider-status`
+- `/study`（Custom GPT / GPT Actions 專家聚合端點）
 - `/verse`
 - `/passage`
 - `/interlinear`
@@ -67,3 +68,10 @@ make test
 - `docs/provider_switching_guide.md`
 - `docs/no_lsm_credential_test_plan.md`
 - `docs/testing_and_validation.md`
+
+
+## GPT Actions 下一步
+- 系統預設為完整專家模式（非 quick/standard/full 分流）。
+- 建議優先呼叫 `/study`，其餘端點用於特定深挖。
+- `.env` 新增可選安全欄位：`ACTION_AUTH_ENABLED`, `ACTION_AUTH_MODE`, `ACTION_API_KEY`。
+- 本機測試後可用 Cloudflare Quick Tunnel 暴露 HTTPS 再接 GPT Actions。
