@@ -23,8 +23,12 @@ python scripts/seed_data.py
 確認 `.env` 至少有：
 ```env
 RECOVERY_PROVIDER=mock
+RECOVERY_API_AUTH_MODE=bearer
+RECOVERY_API_TOKEN=
 RECOVERY_API_KEY=
 ```
+
+> 若要切 `lsm_api`，請手動填入 `RECOVERY_API_BASE_URL` 與 token/key。
 
 ## 4) 啟動 API
 ```powershell

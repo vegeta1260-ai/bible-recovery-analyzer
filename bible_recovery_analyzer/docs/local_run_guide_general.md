@@ -17,11 +17,15 @@ pip install -r requirements-dev.txt
 python scripts/seed_data.py
 ```
 
-## 3) 設定 provider=mock
+## 3) 設定 provider（預設先用 mock）
 在 `.env` 確認：
 ```env
 RECOVERY_PROVIDER=mock
+RECOVERY_API_AUTH_MODE=bearer
+RECOVERY_API_TOKEN=
 ```
+
+> 若切到 `lsm_api`，請手動填 `RECOVERY_API_BASE_URL` 與 token/key，不可硬編碼。
 
 ## 4) 啟動服務
 ```bash

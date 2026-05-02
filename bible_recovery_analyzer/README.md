@@ -4,7 +4,8 @@
 1. provider-based recovery 架構維持（`mock` / `lsm_api` / `web_fallback`）
 2. 可重複執行的遷移完整性驗證（`scripts/verify_repo_integrity.py`）
 3. 本機落地執行指引（General + Windows）
-4. 後續 LSM API / Custom GPT 路線文件化（本輪不正式接線）
+4. LSM API integration readiness（可配置 auth mode、token 支援、response parsing）
+5. 後續 Custom GPT 路線文件化（本輪不正式接線）
 
 ## Recovery Provider
 - `mock`
@@ -16,6 +17,7 @@
 - web fallback 僅 runtime best-effort
 - web fallback 僅供備援測試，不可視為正式授權整合
 - 不要將 token / API key / secret 寫入 repo
+- LSM auth mode 支援 bearer/header/query/none（預設 bearer）
 
 ## 快速啟動（建議 mock）
 ```bash

@@ -63,11 +63,8 @@ class LsmApiRecoveryProvider:
         if self.settings.simulate_lsm_rejection:
             raise RecoveryFetchError(self.name, "simulated rejection enabled", retriable=True)
 
-        if not self.settings.recovery_api_key:
-            raise RecoveryFetchError(self.name, "missing RECOVERY_API_KEY", retriable=True)
-
-        headers = {"Authorization": f"Bearer {self.settings.recovery_api_key}"}
-        params = {"ref": osis_ref, "format": "text-only"}
+        headers, params, redacted_auth_hint = self._build_auth()
+        params.update({"ref": osis_ref, "format": "text-only"})
         timeout = self.settings.recovery_api_timeout_seconds
 
         for attempt in range(1, self.settings.recovery_retry_attempts + 1):
@@ -80,16 +77,19 @@ class LsmApiRecoveryProvider:
                     raise RecoveryFetchError(self.name, "verse not found from LSM API", retriable=False)
                 resp.raise_for_status()
                 payload = resp.json()
+                parsed = self._parse_payload(payload)
                 return RecoveryProviderResult(
-                    text=payload.get("text", ""),
+                    text=parsed["text"],
                     source_provider=self.name,
                     source_status="ok",
                     fallback_used=False,
-                    attribution_source=payload.get("attribution", self.settings.default_recovery_attribution),
-                    diagnostics=[f"lsm attempt {attempt} success"],
+                    attribution_source=parsed["attribution"],
+                    diagnostics=[f"lsm attempt {attempt} success", f"auth mode={self.settings.recovery_api_auth_mode}", redacted_auth_hint],
                 )
             except RecoveryFetchError:
                 raise
+            except ValueError as exc:
+                raise RecoveryFetchError(self.name, f"invalid JSON payload: {exc}", retriable=False) from exc
             except httpx.TimeoutException as exc:
                 logger.warning("LSM provider timeout on attempt %s", attempt)
                 if attempt >= self.settings.recovery_retry_attempts:
@@ -100,6 +100,63 @@ class LsmApiRecoveryProvider:
                     raise RecoveryFetchError(self.name, str(exc), retriable=True) from exc
 
         raise RecoveryFetchError(self.name, "unknown lsm provider failure", retriable=True)
+
+    def _build_auth(self) -> tuple[dict[str, str], dict[str, str], str]:
+        mode = self.settings.recovery_api_auth_mode
+        token = self.settings.recovery_api_token or self.settings.recovery_api_key
+
+        headers: dict[str, str] = {}
+        params: dict[str, str] = {}
+
+        if mode == "none":
+            return headers, params, "auth=none"
+
+        if not token:
+            raise RecoveryFetchError(self.name, "missing RECOVERY_API_TOKEN / RECOVERY_API_KEY", retriable=True)
+
+        if mode == "bearer":
+            headers["Authorization"] = f"Bearer {token}"
+            return headers, params, "auth=bearer (token present)"
+
+        if mode == "header":
+            header_name = self.settings.recovery_api_auth_header_name.strip()
+            headers[header_name] = token
+            return headers, params, f"auth=header ({header_name})"
+
+        if mode == "query":
+            query_param = self.settings.recovery_api_auth_query_param.strip()
+            params[query_param] = token
+            return headers, params, f"auth=query ({query_param})"
+
+        raise RecoveryFetchError(self.name, f"unsupported auth mode: {mode}", retriable=False)
+
+    def _parse_payload(self, payload: dict) -> dict[str, str]:
+        text_candidates = [
+            payload.get("text"),
+            payload.get("verseText"),
+            payload.get("recovery_text"),
+        ]
+        data = payload.get("data")
+        if isinstance(data, dict):
+            text_candidates.extend([data.get("text"), data.get("verseText")])
+
+        text = next((value.strip() for value in text_candidates if isinstance(value, str) and value.strip()), "")
+        if not text:
+            raise RecoveryFetchError(self.name, "missing text field in LSM API payload", retriable=False)
+
+        attribution_candidates = [
+            payload.get("attribution"),
+            payload.get("copyright"),
+        ]
+        if isinstance(data, dict):
+            attribution_candidates.append(data.get("attribution"))
+
+        attribution = next(
+            (value.strip() for value in attribution_candidates if isinstance(value, str) and value.strip()),
+            self.settings.default_recovery_attribution,
+        )
+
+        return {"text": text, "attribution": attribution}
 
 
 class WebFallbackRecoveryProvider:
