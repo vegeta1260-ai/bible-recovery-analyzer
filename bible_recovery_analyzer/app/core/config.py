@@ -16,7 +16,8 @@ class Settings(BaseSettings):
         default="https://api.lsm.example/recovery-text", alias="RECOVERY_API_BASE_URL"
     )
     recovery_api_key: str = Field(default="", alias="RECOVERY_API_KEY")
-    recovery_api_auth_mode: Literal["bearer", "header", "query", "none"] = Field(
+    recovery_api_app_id: str = Field(default="", alias="RECOVERY_API_APP_ID")
+    recovery_api_auth_mode: Literal["bearer", "header", "query", "none", "basic"] = Field(
         default="bearer", alias="RECOVERY_API_AUTH_MODE"
     )
     recovery_api_token: str = Field(default="", alias="RECOVERY_API_TOKEN")
@@ -24,6 +25,11 @@ class Settings(BaseSettings):
         default="Authorization", alias="RECOVERY_API_AUTH_HEADER_NAME"
     )
     recovery_api_auth_query_param: str = Field(default="token", alias="RECOVERY_API_AUTH_QUERY_PARAM")
+    recovery_api_ref_param: str = Field(default="String", alias="RECOVERY_API_REF_PARAM")
+    recovery_api_output_param: str = Field(default="Out", alias="RECOVERY_API_OUTPUT_PARAM")
+    recovery_api_output: str = Field(default="json", alias="RECOVERY_API_OUTPUT")
+    recovery_api_input_param: str = Field(default="In", alias="RECOVERY_API_INPUT_PARAM")
+    recovery_api_input_mode: str = Field(default="", alias="RECOVERY_API_INPUT_MODE")
     recovery_api_timeout_seconds: float = Field(default=12.0, alias="RECOVERY_API_TIMEOUT")
     recovery_retry_attempts: int = Field(default=2, alias="RECOVERY_RETRY_ATTEMPTS")
     simulate_lsm_rejection: bool = Field(default=False, alias="SIMULATE_LSM_REJECTION")
@@ -73,6 +79,18 @@ class Settings(BaseSettings):
 
         if self.recovery_api_auth_mode == "query" and not self.recovery_api_auth_query_param.strip():
             raise ValueError("RECOVERY_API_AUTH_QUERY_PARAM is required when RECOVERY_API_AUTH_MODE=query")
+        if (
+            self.recovery_provider == "lsm_api"
+            and self.recovery_api_auth_mode == "basic"
+            and not self.recovery_api_app_id.strip()
+        ):
+            raise ValueError("RECOVERY_API_APP_ID is required when RECOVERY_API_AUTH_MODE=basic")
+        if not self.recovery_api_ref_param.strip():
+            raise ValueError("RECOVERY_API_REF_PARAM is required")
+        if not self.recovery_api_output_param.strip():
+            raise ValueError("RECOVERY_API_OUTPUT_PARAM is required")
+        if self.recovery_api_input_mode.strip() and not self.recovery_api_input_param.strip():
+            raise ValueError("RECOVERY_API_INPUT_PARAM is required when RECOVERY_API_INPUT_MODE is set")
         return self
 
 

@@ -44,6 +44,33 @@ make smoke
 make test
 ```
 
+## LSM Live Auth and Study Smoke
+Use local secrets only in `.env`; never commit `.env` or paste real tokens into docs, logs, diagnostics, commits, or PRs.
+
+Recommended local LSM settings:
+```env
+RECOVERY_PROVIDER=lsm_api
+RECOVERY_API_BASE_URL=https://api.lsm.org/recver/txo.php
+RECOVERY_API_AUTH_MODE=basic
+RECOVERY_API_APP_ID=<LSM_APP_ID>
+RECOVERY_API_TOKEN=<LSM_TOKEN>
+RECOVERY_API_REF_PARAM=String
+RECOVERY_API_OUTPUT_PARAM=Out
+RECOVERY_API_OUTPUT=json
+```
+
+Check which auth shape works without printing secrets:
+```bash
+python scripts/probe_lsm_api_auth.py
+```
+
+Run the live `/study` smoke for John 1:1:
+```bash
+python scripts/smoke_study_live.py
+```
+
+The smoke script skips cleanly when required local credentials are missing.
+
 ## API
 - `/health`
 - `/provider-status`

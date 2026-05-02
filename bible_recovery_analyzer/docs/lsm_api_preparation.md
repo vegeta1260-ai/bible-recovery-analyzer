@@ -6,6 +6,30 @@
 - token 與 key 兩種來源（優先 `RECOVERY_API_TOKEN`，再退回 `RECOVERY_API_KEY`）
 - 多型回應解析（`text`, `verseText`, `recovery_text`, `data.text`, `data.verseText`）
 - timeout / retry / auth denied / not found
+- HTTP Basic auth for the official API (`RECOVERY_API_AUTH_MODE=basic`) with `RECOVERY_API_APP_ID` plus `RECOVERY_API_TOKEN` or `RECOVERY_API_KEY`
+- Official JSON request parameters: `String=<ref>` and `Out=json`
+- Local diagnostics scripts: `python scripts/probe_lsm_api_auth.py` and `python scripts/smoke_study_live.py`
+
+## Live LSM auth notes
+- `basic`: sends `Authorization: Basic base64(appid:token)` and requires `RECOVERY_API_APP_ID`.
+- `header`: sends `{RECOVERY_API_AUTH_HEADER_NAME: token}`.
+- `bearer`: sends `{RECOVERY_API_AUTH_HEADER_NAME: "Bearer " + token}`.
+- `query`: sends the token only when explicitly enabled, using `RECOVERY_API_AUTH_QUERY_PARAM`.
+- Keep `.env` local. Do not commit `.env`, real LSM tokens, Action API keys, probe output containing secrets, or live smoke output containing secrets.
+
+Recommended local `.env` shape:
+```env
+RECOVERY_PROVIDER=lsm_api
+RECOVERY_API_BASE_URL=https://api.lsm.org/recver/txo.php
+RECOVERY_API_AUTH_MODE=basic
+RECOVERY_API_APP_ID=<LSM_APP_ID>
+RECOVERY_API_TOKEN=<LSM_TOKEN>
+RECOVERY_API_REF_PARAM=String
+RECOVERY_API_OUTPUT_PARAM=Out
+RECOVERY_API_OUTPUT=json
+RECOVERY_API_INPUT_PARAM=In
+RECOVERY_API_INPUT_MODE=
+```
 - 可透過 manager 轉接 `web_fallback`
 
 ## 正式接線需要的環境變數
