@@ -133,3 +133,59 @@ def test_mock_recovery_text_presence(client):
     r = client.get("/verse", params={"ref": "John1:1"})
     assert r.status_code == 200
     assert "[MOCK]" in r.json()["interlinear"]["recovery_version_line"]
+
+
+def test_study_basic(client):
+    r = client.get("/study", params={"ref": "John1:1"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["reference"]["normalized"] == "John.1.1"
+    assert "recovery_text" in body and "interlinear" in body and "lexicon_summary" in body and "diagnostics" in body
+
+
+def test_study_truncated_marker(client):
+    r = client.get("/study", params={"ref": "John1:1-51", "max_verses": 50})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["reference"]["truncated"] is True
+    assert body["reference"]["processed_verse_count"] <= 50
+
+
+def test_study_no_secret_leak(client):
+    os.environ["ACTION_API_KEY"] = "SECRET_ACTION_KEY"
+    os.environ["RECOVERY_API_KEY"] = "SECRET_LSM_KEY"
+    r = client.get("/study", params={"ref": "John1:1"})
+    raw = r.text
+    assert "SECRET_ACTION_KEY" not in raw
+    assert "SECRET_LSM_KEY" not in raw
+
+
+def test_action_auth_required_when_enabled_missing_header():
+    os.environ["ACTION_AUTH_ENABLED"] = "true"
+    os.environ["ACTION_AUTH_MODE"] = "bearer"
+    os.environ["ACTION_API_KEY"] = "abc123"
+    import app.deps as deps
+    deps.settings.action_auth_enabled = True
+    deps.settings.action_auth_mode = "bearer"
+    deps.settings.action_api_key = "abc123"
+    from fastapi.testclient import TestClient
+    from app.main import app
+    c = TestClient(app)
+    r = c.get("/verse", params={"ref": "John1:1"})
+    assert r.status_code == 401
+
+
+def test_action_auth_required_when_enabled_with_bearer():
+    os.environ["ACTION_AUTH_ENABLED"] = "true"
+    os.environ["ACTION_AUTH_MODE"] = "bearer"
+    os.environ["ACTION_API_KEY"] = "abc123"
+    import app.deps as deps
+    deps.settings.action_auth_enabled = True
+    deps.settings.action_auth_mode = "bearer"
+    deps.settings.action_api_key = "abc123"
+    from fastapi.testclient import TestClient
+    from app.main import app
+    c = TestClient(app)
+    r = c.get("/verse", params={"ref": "John1:1"}, headers={"Authorization": "Bearer abc123"})
+    assert r.status_code == 200
+    deps.settings.action_auth_enabled = False

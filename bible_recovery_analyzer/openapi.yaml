@@ -1,136 +1,946 @@
 openapi: 3.1.0
 info:
   title: Bible Recovery Version & Original Language Analyzer API
-  version: 0.3.0
-  description: Provider-based recovery API with mock/lsm_api/web_fallback switching
-servers:
-  - url: https://your-api-domain
+  description: 供 ChatGPT Actions 呼叫的聖經恢復本＋原文字義研究 API 原型
+  version: 0.2.0
 paths:
   /health:
     get:
-      operationId: health
+      summary: Health
+      operationId: get_health
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /provider-status:
     get:
-      operationId: providerStatus
+      summary: Provider Status
+      operationId: get_provider_status
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /verse:
     get:
-      operationId: getVerse
+      summary: Verse
+      operationId: get_verse
       parameters:
-        - in: query
-          name: ref
-          required: true
-          schema: { type: string }
-        - in: query
-          name: mode
-          required: false
-          schema: { type: string, enum: [standard, detailed, interlinear, study_card, compact] }
+      - name: ref
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Ref
+      - name: mode
+        in: query
+        required: false
+        schema:
+          enum:
+          - standard
+          - detailed
+          - interlinear
+          - study_card
+          - compact
+          type: string
+          default: standard
+          title: Mode
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerseResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /passage:
     get:
-      operationId: getPassage
+      summary: Passage
+      operationId: get_passage
       parameters:
-        - in: query
-          name: ref
-          required: true
-          schema: { type: string }
-        - in: query
-          name: mode
-          required: false
-          schema: { type: string, enum: [standard, detailed, interlinear, study_card, compact] }
+      - name: ref
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Ref
+      - name: mode
+        in: query
+        required: false
+        schema:
+          enum:
+          - standard
+          - detailed
+          - interlinear
+          - study_card
+          - compact
+          type: string
+          default: detailed
+          title: Mode
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PassageResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /interlinear:
     get:
-      operationId: getInterlinear
+      summary: Interlinear
+      operationId: get_interlinear
       parameters:
-        - in: query
-          name: ref
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Ref
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterlinearResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /word:
     get:
-      operationId: getWord
+      summary: Word
+      operationId: get_word
       parameters:
-        - in: query
-          name: q
-          required: true
-          schema: { type: string }
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Q
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
-  /strongs/{id}:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /strongs/{sid}:
     get:
-      operationId: getStrongs
+      summary: Strongs
+      operationId: get_strongs
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+      - name: sid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Sid
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /lemma:
     get:
-      operationId: getLemma
+      summary: Lemma
+      operationId: get_lemma
       parameters:
-        - in: query
-          name: lemma
-          required: true
-          schema: { type: string }
+      - name: lemma
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Lemma
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /search:
     get:
-      operationId: searchAll
+      summary: Search
+      operationId: search_tokens
       parameters:
-        - in: query
-          name: q
-          required: true
-          schema: { type: string }
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Q
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /legend:
     get:
-      operationId: getLegend
+      summary: Legend
+      operationId: legend_legend_get
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegendResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /codes/{analytical_code}:
     get:
-      operationId: parseAnalyticalCode
+      summary: Parse Code
+      operationId: parse_analytical_code
       parameters:
-        - in: path
-          name: analytical_code
-          required: true
-          schema: { type: string }
+      - name: analytical_code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Analytical Code
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /books:
     get:
-      operationId: getBooks
+      summary: Books
+      operationId: get_books
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /morphology/search:
     get:
-      operationId: morphologySearch
+      summary: Morphology Search
+      operationId: morphology_search_morphology_search_get
       parameters:
-        - in: query
-          name: q
-          required: true
-          schema: { type: string }
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Q
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MorphologySearchResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /resources:
     get:
-      operationId: getMinistryResources
+      summary: Resources
+      operationId: resources_resources_get
       parameters:
-        - in: query
-          name: q
-          required: false
-          schema: { type: string }
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          default: affirmation
+          title: Q
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
-        '200': { description: ok }
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinistryResourceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /study:
+    get:
+      summary: Expert study bundle for GPT Actions
+      description: Preferred single-call endpoint for comprehensive study payload.
+      operationId: get_study_bundle
+      parameters:
+      - name: ref
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Ref
+      - name: include_diagnostics
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Diagnostics
+      - name: max_verses
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 50
+          title: Max Verses
+      - name: include_interlinear
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Interlinear
+      - name: include_lexicon
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Lexicon
+      - name: include_pronunciation
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Pronunciation
+      - name: include_translation_notes
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Translation Notes
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Attribution:
+      properties:
+        source:
+          type: string
+          title: Source
+        copyright_notice:
+          type: string
+          title: Copyright Notice
+        fetched_via_live_api:
+          type: boolean
+          title: Fetched Via Live Api
+          default: true
+      type: object
+      required:
+      - source
+      - copyright_notice
+      title: Attribution
+    BookMapItem:
+      properties:
+        osis:
+          type: string
+          title: Osis
+        english:
+          type: string
+          title: English
+        zh:
+          type: string
+          title: Zh
+        aliases:
+          items:
+            type: string
+          type: array
+          title: Aliases
+      type: object
+      required:
+      - osis
+      - english
+      - zh
+      - aliases
+      title: BookMapItem
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    InterlinearResponse:
+      properties:
+        ref:
+          type: string
+          title: Ref
+        mode:
+          type: string
+          const: interlinear
+          title: Mode
+          default: interlinear
+        lines:
+          $ref: '#/components/schemas/LayeredLines'
+        tokens:
+          items:
+            $ref: '#/components/schemas/TokenStudy'
+          type: array
+          title: Tokens
+        source_provider:
+          type: string
+          title: Source Provider
+        source_status:
+          type: string
+          title: Source Status
+        fallback_used:
+          type: boolean
+          title: Fallback Used
+        attribution_source:
+          type: string
+          title: Attribution Source
+        diagnostics:
+          items:
+            type: string
+          type: array
+          title: Diagnostics
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+      type: object
+      required:
+      - ref
+      - lines
+      - tokens
+      - source_provider
+      - source_status
+      - fallback_used
+      - attribution_source
+      - diagnostics
+      - attribution
+      title: InterlinearResponse
+    LayeredLines:
+      properties:
+        original_text_line:
+          items:
+            type: string
+          type: array
+          title: Original Text Line
+        strongs_line:
+          items:
+            type: string
+          type: array
+          title: Strongs Line
+        analytical_code_line:
+          items:
+            type: string
+          type: array
+          title: Analytical Code Line
+        gloss_line:
+          items:
+            type: string
+          type: array
+          title: Gloss Line
+        recovery_version_line:
+          type: string
+          title: Recovery Version Line
+      type: object
+      required:
+      - original_text_line
+      - strongs_line
+      - analytical_code_line
+      - gloss_line
+      - recovery_version_line
+      title: LayeredLines
+    LegendResponse:
+      properties:
+        analytical_code_legend:
+          additionalProperties:
+            type: string
+          type: object
+          title: Analytical Code Legend
+        abbreviation_legend:
+          additionalProperties:
+            type: string
+          type: object
+          title: Abbreviation Legend
+        book_mappings:
+          items:
+            $ref: '#/components/schemas/BookMapItem'
+          type: array
+          title: Book Mappings
+        usage_notes:
+          items:
+            type: string
+          type: array
+          title: Usage Notes
+      type: object
+      required:
+      - analytical_code_legend
+      - abbreviation_legend
+      - book_mappings
+      - usage_notes
+      title: LegendResponse
+    MinistryResourceItem:
+      properties:
+        title:
+          type: string
+          title: Title
+        kind:
+          type: string
+          enum:
+          - affirmation_negation
+          - hebrew_resource
+          - other
+          title: Kind
+        language:
+          type: string
+          title: Language
+        url:
+          type: string
+          title: Url
+        note:
+          type: string
+          title: Note
+      type: object
+      required:
+      - title
+      - kind
+      - language
+      - url
+      - note
+      title: MinistryResourceItem
+    MinistryResourceResponse:
+      properties:
+        query:
+          type: string
+          title: Query
+        results:
+          items:
+            $ref: '#/components/schemas/MinistryResourceItem'
+          type: array
+          title: Results
+      type: object
+      required:
+      - query
+      - results
+      title: MinistryResourceResponse
+    MorphologySearchResponse:
+      properties:
+        query:
+          type: string
+          title: Query
+        count:
+          type: integer
+          title: Count
+        cards:
+          items:
+            $ref: '#/components/schemas/TokenStudy'
+          type: array
+          title: Cards
+      type: object
+      required:
+      - query
+      - count
+      - cards
+      title: MorphologySearchResponse
+    PassageResponse:
+      properties:
+        ref:
+          type: string
+          title: Ref
+        mode:
+          type: string
+          enum:
+          - standard
+          - detailed
+          - interlinear
+          - study_card
+          - compact
+          title: Mode
+        verse_count:
+          type: integer
+          title: Verse Count
+        verses:
+          items:
+            $ref: '#/components/schemas/VerseResponse'
+          type: array
+          title: Verses
+        passage_summary:
+          type: string
+          title: Passage Summary
+        token_summary:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Token Summary
+      type: object
+      required:
+      - ref
+      - mode
+      - verse_count
+      - verses
+      - passage_summary
+      - token_summary
+      title: PassageResponse
+    TokenStudy:
+      properties:
+        scripture_ref:
+          type: string
+          title: Scripture Ref
+          description: 經文位置
+        token_order:
+          type: integer
+          title: Token Order
+        surface_form:
+          type: string
+          title: Surface Form
+        normalized_form:
+          type: string
+          title: Normalized Form
+        lemma:
+          type: string
+          title: Lemma
+        strongs_primary:
+          type: string
+          title: Strongs Primary
+        strongs_secondary:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Strongs Secondary
+        analytical_code_raw:
+          type: string
+          title: Analytical Code Raw
+        analytical_code_expanded:
+          additionalProperties:
+            type: string
+          type: object
+          title: Analytical Code Expanded
+        part_of_speech:
+          type: string
+          title: Part Of Speech
+        morphology_features:
+          additionalProperties:
+            type: string
+          type: object
+          title: Morphology Features
+        literal_gloss_en:
+          type: string
+          title: Literal Gloss En
+        basic_gloss:
+          type: string
+          title: Basic Gloss
+        translation_note_zh:
+          type: string
+          title: Translation Note Zh
+        grammar_explanation:
+          type: string
+          title: Grammar Explanation
+        verse_usage:
+          type: string
+          title: Verse Usage
+        recovery_alignment_note:
+          type: string
+          title: Recovery Alignment Note
+        pronunciation_transliteration:
+          type: string
+          title: Pronunciation Transliteration
+        pronunciation_bopomofo:
+          type: string
+          title: Pronunciation Bopomofo
+        occurrence_summary:
+          type: string
+          title: Occurrence Summary
+        related_verses:
+          items:
+            type: string
+          type: array
+          title: Related Verses
+        source_layer:
+          type: string
+          title: Source Layer
+        ot_quote_marker:
+          type: boolean
+          title: Ot Quote Marker
+          default: false
+      type: object
+      required:
+      - scripture_ref
+      - token_order
+      - surface_form
+      - normalized_form
+      - lemma
+      - strongs_primary
+      - analytical_code_raw
+      - analytical_code_expanded
+      - part_of_speech
+      - morphology_features
+      - literal_gloss_en
+      - basic_gloss
+      - translation_note_zh
+      - grammar_explanation
+      - verse_usage
+      - recovery_alignment_note
+      - pronunciation_transliteration
+      - pronunciation_bopomofo
+      - occurrence_summary
+      - related_verses
+      - source_layer
+      title: TokenStudy
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    VerseResponse:
+      properties:
+        ref:
+          type: string
+          title: Ref
+        mode:
+          type: string
+          enum:
+          - standard
+          - detailed
+          - interlinear
+          - study_card
+          - compact
+          title: Mode
+        interlinear:
+          $ref: '#/components/schemas/LayeredLines'
+        cards:
+          items:
+            $ref: '#/components/schemas/TokenStudy'
+          type: array
+          title: Cards
+        compact_summary:
+          type: string
+          title: Compact Summary
+        source_provider:
+          type: string
+          title: Source Provider
+        source_status:
+          type: string
+          title: Source Status
+        fallback_used:
+          type: boolean
+          title: Fallback Used
+        attribution_source:
+          type: string
+          title: Attribution Source
+        diagnostics:
+          items:
+            type: string
+          type: array
+          title: Diagnostics
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+      type: object
+      required:
+      - ref
+      - mode
+      - interlinear
+      - cards
+      - compact_summary
+      - source_provider
+      - source_status
+      - fallback_used
+      - attribution_source
+      - diagnostics
+      - attribution
+      title: VerseResponse
