@@ -7,7 +7,8 @@
 
 ## 核心環境變數
 - `RECOVERY_PROVIDER=mock|lsm_api|web_fallback`
-- `RECOVERY_API_AUTH_MODE=bearer|header|query|none`
+- `RECOVERY_API_AUTH_MODE=basic|bearer|header|query|none`
+- `RECOVERY_API_APP_ID` (mode=basic)
 - `RECOVERY_API_TOKEN`（建議）或 `RECOVERY_API_KEY`（相容）
 - `RECOVERY_API_AUTH_HEADER_NAME`（mode=header）
 - `RECOVERY_API_AUTH_QUERY_PARAM`（mode=query）
@@ -29,6 +30,19 @@ RECOVERY_PROVIDER=mock uvicorn app.main:app --reload --port 8000
 RECOVERY_PROVIDER=lsm_api \
 RECOVERY_API_AUTH_MODE=bearer \
 RECOVERY_API_TOKEN=YOUR_TOKEN \
+uvicorn app.main:app --reload --port 8000
+```
+
+### LSM API with Basic auth
+```bash
+RECOVERY_PROVIDER=lsm_api \
+RECOVERY_API_BASE_URL=https://api.lsm.org/recver/txo.php \
+RECOVERY_API_AUTH_MODE=basic \
+RECOVERY_API_APP_ID=YOUR_APP_ID \
+RECOVERY_API_TOKEN=YOUR_TOKEN \
+RECOVERY_API_REF_PARAM=String \
+RECOVERY_API_OUTPUT_PARAM=Out \
+RECOVERY_API_OUTPUT=json \
 uvicorn app.main:app --reload --port 8000
 ```
 

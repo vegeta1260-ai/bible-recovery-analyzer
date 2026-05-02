@@ -237,20 +237,36 @@ async def study(ref: str = Query(...), include_diagnostics: bool = Query(True), 
     truncated = requested_count > len(verse_refs)
     warnings, missing_fields, verses, interlinear = [], [], [], []
     lex_map = {}
-    provider, lsm_status, attribution = "unknown", "unknown", ""
+    configured_provider = getattr(getattr(recovery, "settings", None), "recovery_provider", "unknown")
+    provider, lsm_status, attribution = configured_provider, "unknown", ""
+    upstream_message, inputstring, detected = "", ref, ""
+    provider_diagnostics: list[str] = []
     for vr in verse_refs:
         cards = analyzer.verse_cards(vr)
         if not cards:
             missing_fields.append(f"missing token cards for {vr}")
             continue
         try:
-            rr = await recovery.get_verse_text(vr)
+            lookup_ref = ref if requested_count == 1 else None
+            rr = await recovery.get_verse_text(vr, lookup_ref)
         except RecoveryFetchError as err:
             warnings.append(f"recovery fetch failed at {vr}: {err.reason}")
+            provider = configured_provider or err.provider
             lsm_status = "error"
             continue
         provider, lsm_status, attribution = rr.source_provider, rr.source_status, rr.attribution_source
-        verses.append({"ref": vr, "text": rr.text})
+        upstream_message = rr.message
+        inputstring = rr.inputstring or inputstring
+        detected = rr.detected or detected
+        provider_diagnostics.extend(rr.diagnostics)
+        if rr.verses:
+            verses.extend(
+                {"ref": verse.get("ref") or vr, "text": verse["text"]}
+                for verse in rr.verses
+                if verse.get("text")
+            )
+        else:
+            verses.append({"ref": vr, "text": rr.text})
         for c in cards:
             if include_interlinear:
                 interlinear.append({"surface_form": c.surface_form, "lemma": c.lemma, "strong_number_base": c.strongs_primary, "strong_number_extended": c.strongs_secondary or "", "analytical_code_raw": c.analytical_code_raw, "part_of_speech": c.part_of_speech, "case": c.morphology_features.get("case", ""), "gender": c.morphology_features.get("gender", ""), "number": c.morphology_features.get("number", ""), "person": c.morphology_features.get("person", ""), "tense": c.morphology_features.get("tense", ""), "voice": c.morphology_features.get("voice", ""), "mood": c.morphology_features.get("mood", ""), "is_crasis": False, "source_language": "unknown", "contextual_function": c.grammar_explanation, "english_gloss": c.literal_gloss_en, "chinese_literal_gloss": c.translation_note_zh if include_translation_notes else "", "pronunciation_zhuyin": c.pronunciation_bopomofo if include_pronunciation else "", "transliteration": c.pronunciation_transliteration if include_pronunciation else "", "special_notes": c.recovery_alignment_note})
@@ -265,4 +281,4 @@ async def study(ref: str = Query(...), include_diagnostics: bool = Query(True), 
         interlinear = interlinear[:400]
         action_payload_note = "Interlinear rows truncated due to Action payload-size guardrail."
         warnings.append("Payload was compressed to reduce Action response size.")
-    return {"reference": {"input": ref, "normalized": osis_ref, "requested_verse_count": requested_count, "processed_verse_count": len(verses), "truncated": truncated}, "recovery_text": {"verses": verses, "inputstring": ref, "detected": "verse_range", "message": "ok" if verses else "no verses resolved", "copyright": attribution, "attribution": attribution}, "original_text": {"language": "greek|hebrew|aramaic|unknown", "text": " ".join([x["surface_form"] for x in interlinear[:120]]), "source": "token database", "notes": "Aggregated from token layer."}, "interlinear": interlinear if include_interlinear else [], "lexicon_summary": list(lex_map.values()) if include_lexicon else [], "syntax_observations": {"subject": "", "main_verb": "", "objects": [], "prepositional_phrases": [], "participles": [], "article_structures": [], "special_grammar_notes": []}, "translation_support": {"literal_gloss_summary": " ; ".join(sorted({x["english_gloss"] for x in interlinear[:80] if x.get("english_gloss")})), "recovery_translation_notes": "Token-level translation notes included where available." if include_translation_notes else "disabled", "comparison_notes": []}, "diagnostics": {"provider": provider, "lsm_status": lsm_status, "warnings": warnings if include_diagnostics else [], "missing_fields": sorted(set(missing_fields)) if include_diagnostics else [], "upstream_message": "", "action_payload_note": action_payload_note}}
+    return {"reference": {"input": ref, "normalized": osis_ref, "requested_verse_count": requested_count, "processed_verse_count": len(verses), "truncated": truncated}, "recovery_text": {"verses": verses, "inputstring": inputstring, "detected": detected or "verse_range", "message": upstream_message or ("ok" if verses else "no verses resolved"), "copyright": attribution, "attribution": attribution}, "original_text": {"language": "greek|hebrew|aramaic|unknown", "text": " ".join([x["surface_form"] for x in interlinear[:120]]), "source": "token database", "notes": "Aggregated from token layer."}, "interlinear": interlinear if include_interlinear else [], "lexicon_summary": list(lex_map.values()) if include_lexicon else [], "syntax_observations": {"subject": "", "main_verb": "", "objects": [], "prepositional_phrases": [], "participles": [], "article_structures": [], "special_grammar_notes": []}, "translation_support": {"literal_gloss_summary": " ; ".join(sorted({x["english_gloss"] for x in interlinear[:80] if x.get("english_gloss")})), "recovery_translation_notes": "Token-level translation notes included where available." if include_translation_notes else "disabled", "comparison_notes": []}, "diagnostics": {"provider": provider, "lsm_status": lsm_status, "warnings": warnings if include_diagnostics else [], "missing_fields": sorted(set(missing_fields)) if include_diagnostics else [], "upstream_message": upstream_message if include_diagnostics else "", "provider_diagnostics": provider_diagnostics if include_diagnostics else [], "action_payload_note": action_payload_note}}

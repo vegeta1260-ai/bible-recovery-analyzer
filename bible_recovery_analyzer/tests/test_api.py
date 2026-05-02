@@ -9,6 +9,8 @@ os.environ["RECOVERY_PROVIDER"] = "mock"
 os.environ["SQLITE_PATH"] = "./data/test_bible_analyzer.db"
 
 from app.main import app  # noqa: E402
+from app.deps import get_recovery_client  # noqa: E402
+from app.services.recovery.providers import RecoveryProviderResult  # noqa: E402
 from app.services.strongs import normalize_strongs  # noqa: E402
 from scripts.seed_data import main as seed_main  # noqa: E402
 
@@ -141,6 +143,40 @@ def test_study_basic(client):
     body = r.json()
     assert body["reference"]["normalized"] == "John.1.1"
     assert "recovery_text" in body and "interlinear" in body and "lexicon_summary" in body and "diagnostics" in body
+
+
+def test_study_uses_provider_verses_and_metadata(client):
+    class FakeRecovery:
+        async def get_verse_text(self, osis_ref: str, request_ref: str | None = None):
+            assert osis_ref == "John.1.1"
+            assert request_ref == "John 1:1"
+            return RecoveryProviderResult(
+                text="In the beginning was the Word.",
+                source_provider="lsm_api",
+                source_status="ok",
+                fallback_used=False,
+                attribution_source="LSM copyright",
+                diagnostics=["lsm attempt 1 success"],
+                verses=[{"ref": "John 1:1", "text": "In the beginning was the Word."}],
+                inputstring="John 1:1",
+                detected="John 1:1.",
+                message="",
+                copyright="LSM copyright",
+            )
+
+    app.dependency_overrides[get_recovery_client] = lambda: FakeRecovery()
+    try:
+        r = client.get("/study", params={"ref": "John 1:1"})
+    finally:
+        app.dependency_overrides.pop(get_recovery_client, None)
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["reference"]["processed_verse_count"] == 1
+    assert body["recovery_text"]["verses"] == [{"ref": "John 1:1", "text": "In the beginning was the Word."}]
+    assert body["recovery_text"]["copyright"] == "LSM copyright"
+    assert body["diagnostics"]["provider"] == "lsm_api"
+    assert body["diagnostics"]["lsm_status"] == "ok"
 
 
 def test_study_truncated_marker(client):

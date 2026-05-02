@@ -21,17 +21,17 @@ class RecoveryServiceManager:
         self.lsm_provider = LsmApiRecoveryProvider(settings)
         self.web_provider = WebFallbackRecoveryProvider(settings)
 
-    async def get_verse_text(self, osis_ref: str) -> RecoveryProviderResult:
+    async def get_verse_text(self, osis_ref: str, request_ref: str | None = None) -> RecoveryProviderResult:
         provider = self.settings.recovery_provider
 
         if provider == "mock":
-            return await self.mock_provider.fetch(osis_ref)
+            return await self.mock_provider.fetch(osis_ref, request_ref)
 
         diagnostics: list[str] = []
 
         if provider == "lsm_api":
             try:
-                result = await self.lsm_provider.fetch(osis_ref)
+                result = await self.lsm_provider.fetch(osis_ref, request_ref)
                 result.diagnostics.extend(diagnostics)
                 return result
             except RecoveryFetchError as err:
@@ -39,7 +39,7 @@ class RecoveryServiceManager:
                 logger.warning("LSM provider failed: %s", err.reason)
                 if self.settings.recovery_enable_web_fallback_from_lsm:
                     try:
-                        fallback = await self.web_provider.fetch(osis_ref)
+                        fallback = await self.web_provider.fetch(osis_ref, request_ref)
                         fallback.fallback_used = True
                         fallback.diagnostics = diagnostics + fallback.diagnostics
                         return fallback
@@ -57,7 +57,7 @@ class RecoveryServiceManager:
                 ) from err
 
         if provider == "web_fallback":
-            return await self.web_provider.fetch(osis_ref)
+            return await self.web_provider.fetch(osis_ref, request_ref)
 
         raise RecoveryFetchError("recovery_manager", f"unsupported RECOVERY_PROVIDER={provider}", retriable=False)
 
@@ -66,6 +66,9 @@ class RecoveryServiceManager:
             "configured_provider": self.settings.recovery_provider,
             "simulate_lsm_rejection": self.settings.simulate_lsm_rejection,
             "lsm_api_auth_mode": self.settings.recovery_api_auth_mode,
+            "lsm_api_app_id_configured": bool(self.settings.recovery_api_app_id),
+            "lsm_api_ref_param": self.settings.recovery_api_ref_param,
+            "lsm_api_output_param": self.settings.recovery_api_output_param,
             "web_fallback_enabled": self.settings.recovery_web_fetch_enabled,
             "web_fallback_base_url_configured": bool(self.settings.recovery_web_base_url),
             "warnings": [
