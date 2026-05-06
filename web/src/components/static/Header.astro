@@ -1,6 +1,7 @@
 ---
 import FontSizeControl from '../islands/FontSizeControl.tsx';
 import ThemeToggle from '../islands/ThemeToggle.tsx';
+import AudioController from '../islands/AudioController.tsx';
 const base = import.meta.env.BASE_URL;
 const navItems = [
   { href: `${base}`, label: '首頁' },
@@ -22,6 +23,7 @@ const navItems = [
     <div class="header-controls">
       <FontSizeControl client:load />
       <ThemeToggle client:load />
+      <AudioController client:load />
     </div>
   </div>
 </header>
