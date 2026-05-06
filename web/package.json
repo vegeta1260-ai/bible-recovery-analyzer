@@ -15,13 +15,20 @@
   },
   "dependencies": {
     "@astrojs/react": "^5.0.4",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.9.1",
     "astro": "^6.2.2",
+    "howler": "^2.2.4",
+    "lottie-react": "^2.4.1",
+    "motion": "^12.38.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "tsparticles": "^3.9.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/howler": "^2.2.12",
     "jsdom": "^29.1.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
