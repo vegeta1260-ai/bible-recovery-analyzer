@@ -1,17 +1,9 @@
 ---
-
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="首頁">
+  <section style="padding: 3rem 0; text-align: center;">
+    <h1>聖經恢復本原文字義解析</h1>
+    <p style="margin-top: 1rem; color: var(--color-text-secondary); font-size: var(--font-lg);">搜尋功能將在 Plan 2 實作</p>
+  </section>
+</BaseLayout>
