@@ -36,16 +36,20 @@ const BOOK_TYPE_MAP: Record<string, BookType> = {
   Rev: 'apocalypse',
 };
 
-// Placeholder audio file paths (1-second silent MP3s until real assets are provided)
+// Audio file paths — use import.meta.env.BASE_URL at runtime
+const BASE = typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
+  ? import.meta.env.BASE_URL.replace(/\/$/, '')
+  : '';
+
 const TRACK_MAP: Record<BookType, string> = {
-  pentateuch: '/audio/ambient-pentateuch.mp3',
-  history:    '/audio/ambient-history.mp3',
-  wisdom:     '/audio/ambient-wisdom.mp3',
-  prophecy:   '/audio/ambient-prophecy.mp3',
-  gospel:     '/audio/ambient-gospel.mp3',
-  epistle:    '/audio/ambient-epistle.mp3',
-  apocalypse: '/audio/ambient-apocalypse.mp3',
-  default:    '/audio/ambient-default.mp3',
+  pentateuch: `${BASE}/audio/ambient-pentateuch.mp3`,
+  history:    `${BASE}/audio/ambient-history.mp3`,
+  wisdom:     `${BASE}/audio/ambient-wisdom.mp3`,
+  prophecy:   `${BASE}/audio/ambient-prophecy.mp3`,
+  gospel:     `${BASE}/audio/ambient-gospel.mp3`,
+  epistle:    `${BASE}/audio/ambient-epistle.mp3`,
+  apocalypse: `${BASE}/audio/ambient-apocalypse.mp3`,
+  default:    `${BASE}/audio/ambient-default.mp3`,
 };
 
 const FADE_DURATION = 2000; // ms
