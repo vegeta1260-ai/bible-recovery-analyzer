@@ -1,0 +1,42 @@
+---
+import codesData from '../../data/analyticalCodes.json';
+const { analyticalCodeLegend, abbreviationLegend, grammarNotes } = codesData as {
+  analyticalCodeLegend: Record<string, string>;
+  abbreviationLegend: Record<string, string>;
+  grammarNotes: Record<string, string>;
+};
+---
+<section>
+  <h2>分析碼圖例</h2>
+  <table class="legend-table">
+    <thead><tr><th>代碼</th><th>說明</th></tr></thead>
+    <tbody>
+      {Object.entries(analyticalCodeLegend).map(([code, desc]) => (
+        <tr><td class="mono">{code}</td><td>{desc}</td></tr>
+      ))}
+    </tbody>
+  </table>
+  <h2 style="margin-top: 2rem;">縮寫說明</h2>
+  <table class="legend-table">
+    <thead><tr><th>項目</th><th>說明</th></tr></thead>
+    <tbody>
+      {Object.entries(abbreviationLegend).map(([key, desc]) => (
+        <tr><td class="mono">{key}</td><td>{desc}</td></tr>
+      ))}
+    </tbody>
+  </table>
+  <h2 style="margin-top: 2rem;">文法使用注記</h2>
+  <ul class="grammar-notes">
+    {Object.entries(grammarNotes).map(([key, note]) => (
+      <li><strong>{key}:</strong> {note}</li>
+    ))}
+  </ul>
+</section>
+<style>
+  .legend-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: var(--font-sm); }
+  .legend-table th, .legend-table td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--color-border); text-align: left; }
+  .legend-table th { background: var(--color-surface); font-family: var(--font-sans); font-weight: 700; }
+  .legend-table tr:hover td { background: var(--color-surface-hover); }
+  .grammar-notes { margin-top: 1rem; padding-left: 1.5rem; font-size: var(--font-sm); line-height: 1.8; }
+  .grammar-notes li { margin-bottom: 0.5rem; }
+</style>
