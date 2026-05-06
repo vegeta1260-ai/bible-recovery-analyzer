@@ -76,3 +76,11 @@ code, .mono { font-family: var(--font-mono); }
 .result-section h4 { font-size: var(--font-sm); color: var(--color-text-secondary); margin-bottom: 0.5rem; }
 .ref-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .ref-tag { background: var(--color-surface-hover); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: var(--font-sm); }
+
+/* -- AudioController -- */
+.audio-controller { display: flex; align-items: center; }
+.audio-btn { background: none; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.35rem 0.5rem; cursor: pointer; color: var(--color-text-secondary); display: flex; align-items: center; transition: color 0.2s, border-color 0.2s, background 0.2s; }
+.audio-btn:hover { background: var(--color-surface-hover); color: var(--color-primary); border-color: var(--color-primary); }
+.audio-btn--on { color: var(--color-primary); border-color: var(--color-primary); }
+.audio-btn--off { color: var(--color-text-muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
