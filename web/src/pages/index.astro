@@ -1,9 +1,41 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SearchBox from '../components/islands/SearchBox.tsx';
+import BookGrid from '../components/static/BookGrid.astro';
 ---
-<BaseLayout title="首頁">
-  <section style="padding: 3rem 0; text-align: center;">
+
+<BaseLayout title="首頁" description="聖經恢復本原文字義解析 — 搜尋經文、逐字對照、原文研究">
+  <section class="hero">
     <h1>聖經恢復本原文字義解析</h1>
-    <p style="margin-top: 1rem; color: var(--color-text-secondary); font-size: var(--font-lg);">搜尋功能將在 Plan 2 實作</p>
+    <p class="hero-sub">搜尋經文查看恢復本 + 原文逐字對照 + 研究卡</p>
+  </section>
+
+  <SearchBox client:load />
+
+  <section class="book-section">
+    <h2>書卷快速入口</h2>
+    <BookGrid />
   </section>
 </BaseLayout>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 3rem 0 1rem;
+  }
+  .hero h1 {
+    font-size: var(--font-2xl);
+  }
+  .hero-sub {
+    color: var(--color-text-secondary);
+    font-size: var(--font-lg);
+    margin-top: 0.5rem;
+  }
+  .book-section {
+    margin-top: 3rem;
+  }
+  .book-section h2 {
+    font-size: var(--font-xl);
+    margin-bottom: 1rem;
+  }
+</style>
