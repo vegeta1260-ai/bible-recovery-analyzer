@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import type { Token } from '@/lib/analyzer';
 import type { RecoveryResult } from '@/lib/lsmApi';
 import InterlinearView from './InterlinearView';
 import TokenCard from './TokenCard';
+import MiracleEffectRouter from '@/effects/MiracleEffectRouter';
+import type { MiracleContext } from '@/effects/MiracleEffectRouter';
 
 interface Props {
   osisRef: string;
@@ -14,8 +17,22 @@ export default function VerseResult({ osisRef, tokens, recovery, loading }: Prop
   const parts = osisRef.split('.');
   const displayRef = parts.length >= 3 ? `${parts[0]} ${parts[1]}:${parts[2]}` : osisRef;
 
+  const [effectDone, setEffectDone] = useState(false);
+  const miracleCtx: MiracleContext = {
+    book: parts[0] ?? '',
+    ref: osisRef,
+    normalizedForms: tokens.map(t => t.normalized_form),
+  };
+
   return (
     <div className="verse-result">
+      {/* Miracle effect overlay — renders and removes itself on completion */}
+      {!effectDone && tokens.length > 0 && (
+        <MiracleEffectRouter
+          context={miracleCtx}
+          onComplete={() => setEffectDone(true)}
+        />
+      )}
       <h2 className="verse-ref">{displayRef}</h2>
 
       {recovery?.error && (

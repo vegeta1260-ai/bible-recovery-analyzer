@@ -2,13 +2,16 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SearchBox from '../components/islands/SearchBox.tsx';
 import BookGrid from '../components/static/BookGrid.astro';
+import ScrollUnfold from '../effects/ScrollUnfold.tsx';
 ---
 
 <BaseLayout title="首頁" description="聖經恢復本原文字義解析 — 搜尋經文、逐字對照、原文研究">
-  <section class="hero">
-    <h1>聖經恢復本原文字義解析</h1>
-    <p class="hero-sub">搜尋經文查看恢復本 + 原文逐字對照 + 研究卡</p>
-  </section>
+  <ScrollUnfold client:idle delay={200}>
+    <section class="hero">
+      <h1>聖經恢復本原文字義解析</h1>
+      <p class="hero-sub">搜尋經文查看恢復本 + 原文逐字對照 + 研究卡</p>
+    </section>
+  </ScrollUnfold>
 
   <SearchBox client:load />
 

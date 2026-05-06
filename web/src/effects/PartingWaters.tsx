@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { animate, stagger } from 'motion';
+import { animate } from 'motion';
 
 interface Props {
   onComplete?: () => void;

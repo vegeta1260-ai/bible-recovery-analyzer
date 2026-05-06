@@ -1,8 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { normalizeRef, splitOsisRange } from '@/lib/reference';
 import { getVerseTokens, lookupWord, lookupLemma } from '@/lib/analyzer';
 import { search as fullTextSearch } from '@/lib/search';
 import { fetchRecoveryText } from '@/lib/lsmApi';
+import { isAudioEnabled } from '@/audio/audioStore';
+import { playPageTurn } from '@/audio/webAudioEffects';
+import { switchMusic } from '@/audio/musicManager';
 import type { Token } from '@/lib/analyzer';
 import type { RecoveryResult } from '@/lib/lsmApi';
 import VerseResult from './VerseResult';
@@ -24,6 +27,19 @@ export default function SearchBox() {
   const [tokenResults, setTokenResults] = useState<Token[]>([]);
   const [searchResults, setSearchResults] = useState<{ refs: string[]; matchedLemmas: string[]; matchedStrongs: string[] } | null>(null);
   const [error, setError] = useState('');
+  const audioStarted = useRef(false);
+
+  // Start audio on first user interaction with this component
+  const ensureAudioStarted = useCallback(() => {
+    if (audioStarted.current) return;
+    audioStarted.current = true;
+    // AudioContext requires user gesture — trigger ambient pad if enabled
+    if (isAudioEnabled()) {
+      import('@/audio/webAudioEffects').then(({ playAmbientPad }) => {
+        playAmbientPad(true);
+      });
+    }
+  }, []);
 
   const clearResults = () => {
     setVerseResults([]);
@@ -36,6 +52,7 @@ export default function SearchBox() {
     const q = query.trim();
     if (!q) return;
 
+    ensureAudioStarted();
     clearResults();
     setLoading(true);
 
@@ -43,12 +60,19 @@ export default function SearchBox() {
       if (mode === 'verse') {
         const osisRef = normalizeRef(q);
         const refs = splitOsisRange(osisRef);
+        const book = refs[0]?.split('.')[0] ?? '';
+
         const results: VerseData[] = refs.map(ref => ({
           osisRef: ref,
           tokens: getVerseTokens(ref),
           recovery: null,
         }));
         setVerseResults(results);
+
+        // Switch ambient music to match this book
+        if (isAudioEnabled() && book) {
+          switchMusic(book);
+        }
 
         // Fetch recovery text in parallel
         const recoveryPromises = refs.map(ref => {
@@ -63,6 +87,9 @@ export default function SearchBox() {
           tokens: getVerseTokens(ref),
           recovery: recoveries[i],
         })));
+
+        // Page-turn sound on results appearing
+        if (isAudioEnabled()) playPageTurn();
       } else if (mode === 'word') {
         setTokenResults(lookupWord(q));
       } else if (mode === 'lemma') {
@@ -111,6 +138,7 @@ export default function SearchBox() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
+          onFocus={ensureAudioStarted}
           placeholder={mode === 'verse' ? '輸入經文，如：約1:1 或 Gen1:1-3'
             : mode === 'word' ? '輸入原文或音譯，如：λόγος 或 logos'
             : mode === 'lemma' ? '輸入 lemma，如：λόγος'
