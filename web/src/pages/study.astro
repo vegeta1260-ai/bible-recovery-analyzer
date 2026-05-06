@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SearchBox from '../components/islands/SearchBox.tsx';
+---
+
+<BaseLayout title="研經" description="聖經恢復本原文字義研經工具 — 搜尋經文、逐字對照、原文分析">
+  <div class="study-page">
+    <h1 style="margin: 2rem 0 0;">研經工具</h1>
+    <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem;">
+      輸入經文引用查看恢復本經文 + 原文逐字對照 + 研究卡。切換模式可搜尋字詞、lemma、詞形。
+    </p>
+    <SearchBox client:load />
+  </div>
+</BaseLayout>
+
+<style>
+  .study-page {
+    max-width: 900px;
+  }
+</style>
