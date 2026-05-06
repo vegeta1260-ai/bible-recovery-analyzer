@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { normalizeRef, splitOsisRange } from '@/lib/reference';
 import { getVerseTokens, lookupWord, lookupLemma } from '@/lib/analyzer';
 import { search as fullTextSearch } from '@/lib/search';
@@ -7,6 +7,9 @@ import type { Token } from '@/lib/analyzer';
 import type { RecoveryResult } from '@/lib/lsmApi';
 import VerseResult from './VerseResult';
 import PassageResult from './PassageResult';
+
+const LemmaFrequencyChart = lazy(() => import('./LemmaFrequencyChart'));
+const AnalyticalCodePie = lazy(() => import('./AnalyticalCodePie'));
 
 type SearchMode = 'verse' | 'word' | 'lemma' | 'search' | 'morphology';
 
@@ -189,6 +192,22 @@ export default function SearchBox() {
             </div>
           )}
           {searchResults.refs.length === 0 && <p className="no-data">查無結果。</p>}
+        </div>
+      )}
+
+      {/* D3 charts — shown when there are any results, desktop only */}
+      {(verseResults.length > 0 || tokenResults.length > 0 || searchResults !== null) && (
+        <div className="d3-charts-section" style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div className="card" style={{ padding: '1rem' }}>
+            <Suspense fallback={<div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B6914' }}>載入圖表中...</div>}>
+              <LemmaFrequencyChart />
+            </Suspense>
+          </div>
+          <div className="card" style={{ padding: '1rem', display: 'flex', justifyContent: 'center' }}>
+            <Suspense fallback={<div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B6914' }}>載入圖表中...</div>}>
+              <AnalyticalCodePie />
+            </Suspense>
+          </div>
         </div>
       )}
     </div>
