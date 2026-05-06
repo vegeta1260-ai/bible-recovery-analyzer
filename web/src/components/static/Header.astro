@@ -1,0 +1,36 @@
+---
+import FontSizeControl from '../islands/FontSizeControl.tsx';
+import ThemeToggle from '../islands/ThemeToggle.tsx';
+const base = import.meta.env.BASE_URL;
+const navItems = [
+  { href: `${base}`, label: '首頁' },
+  { href: `${base}books`, label: '書卷' },
+  { href: `${base}legend`, label: '圖例' },
+  { href: `${base}lexicon`, label: '字典' },
+  { href: `${base}resources`, label: '資源' },
+];
+---
+<header class="site-header">
+  <div class="header-inner container">
+    <a href={base} class="logo">聖經原文解析</a>
+    <nav class="main-nav" aria-label="主導覽">
+      {navItems.map(item => (
+        <a href={item.href} class="nav-link">{item.label}</a>
+      ))}
+    </nav>
+    <div class="header-controls">
+      <FontSizeControl client:load />
+      <ThemeToggle client:load />
+    </div>
+  </div>
+</header>
+<style>
+  .site-header { border-bottom: 1px solid var(--color-border); background: var(--color-bg); position: sticky; top: 0; z-index: 100; }
+  .header-inner { display: flex; align-items: center; gap: 1.5rem; padding-top: 0.8rem; padding-bottom: 0.8rem; }
+  .logo { font-family: var(--font-sans); font-weight: 700; font-size: var(--font-lg); color: var(--color-primary); white-space: nowrap; }
+  .main-nav { display: flex; gap: 1rem; flex: 1; }
+  .nav-link { font-family: var(--font-sans); font-size: var(--font-sm); color: var(--color-text-secondary); padding: 0.3rem 0.6rem; border-radius: 6px; }
+  .nav-link:hover { color: var(--color-primary); background: var(--color-surface); }
+  .header-controls { display: flex; gap: 0.5rem; }
+  @media (max-width: 767px) { .main-nav { display: none; } }
+</style>

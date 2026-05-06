@@ -1,0 +1,37 @@
+---
+import bookMapData from '../../data/bookMap.json';
+type BookEntry = { osis: string; english: string; zh: string; aliases: string[] };
+const books = bookMapData as BookEntry[];
+const ot = books.filter(b => ['Gen', 'Exod', 'Ps'].includes(b.osis));
+const nt = books.filter(b => !['Gen', 'Exod', 'Ps'].includes(b.osis));
+---
+<section class="book-grid-section">
+  <h2>舊約（已收錄）</h2>
+  <div class="book-grid">
+    {ot.map(book => (
+      <div class="book-card card">
+        <span class="book-zh">{book.zh}</span>
+        <span class="book-en">{book.english}</span>
+        <span class="book-osis mono">{book.osis}</span>
+      </div>
+    ))}
+  </div>
+  <h2>新約</h2>
+  <div class="book-grid">
+    {nt.map(book => (
+      <div class="book-card card">
+        <span class="book-zh">{book.zh}</span>
+        <span class="book-en">{book.english}</span>
+        <span class="book-osis mono">{book.osis}</span>
+      </div>
+    ))}
+  </div>
+</section>
+<style>
+  .book-grid-section h2 { margin: 2rem 0 1rem; font-size: var(--font-xl); }
+  .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.8rem; }
+  .book-card { text-align: center; padding: 1rem; }
+  .book-zh { display: block; font-size: var(--font-lg); font-weight: 700; }
+  .book-en { display: block; font-size: var(--font-sm); color: var(--color-text-secondary); }
+  .book-osis { display: block; font-size: var(--font-xs); color: var(--color-text-muted); margin-top: 0.3rem; }
+</style>

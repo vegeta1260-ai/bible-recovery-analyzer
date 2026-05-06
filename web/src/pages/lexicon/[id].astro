@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import lexiconData from '../../data/lexicon.json';
+type LexiconEntry = { strongs: string; normalized_strongs: string; lemma: string; language: string; transliteration: string; pronunciation_bopomofo: string; short_definition: string; literal_gloss_en: string; common_inflections: string[]; analytical_notes: string[]; };
+const entries = lexiconData as LexiconEntry[];
+export function getStaticPaths() {
+  return (lexiconData as LexiconEntry[]).map(e => ({ params: { id: e.strongs } }));
+}
+const { id } = Astro.params;
+const entry = entries.find(e => e.strongs === id)!;
+const langTag = entry.language === 'Hebrew' ? 'he' : 'grc';
+const langDir = entry.language === 'Hebrew' ? 'rtl' : 'ltr';
+---
+<BaseLayout title={`${entry.lemma} (${entry.strongs})`} description={`Strong's ${entry.strongs} ${entry.lemma}: ${entry.short_definition}`}>
+  <article style="margin: 2rem 0;">
+    <h1>
+      <span lang={langTag} dir={langDir}>{entry.lemma}</span>
+      <span class="mono" style="font-size: var(--font-lg); color: var(--color-text-muted); margin-left: 0.5rem;">{entry.strongs}</span>
+    </h1>
+    <div class="detail-grid">
+      <div class="card">
+        <h3>基本資訊</h3>
+        <dl>
+          <dt>語言</dt><dd>{entry.language}</dd>
+          <dt>音譯</dt><dd>{entry.transliteration}</dd>
+          <dt>注音</dt><dd>{entry.pronunciation_bopomofo}</dd>
+          <dt>簡義</dt><dd>{entry.short_definition}</dd>
+          <dt>英文 Gloss</dt><dd>{entry.literal_gloss_en}</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>常見變形</h3>
+        <ul>{entry.common_inflections.map(inf => <li class="mono">{inf}</li>)}</ul>
+      </div>
+      <div class="card">
+        <h3>分析注記</h3>
+        <ul>{entry.analytical_notes.map(note => <li>{note}</li>)}</ul>
+      </div>
+    </div>
+  </article>
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org", "@type": "DefinedTerm",
+    "name": entry.transliteration, "description": entry.short_definition,
+    "inDefinedTermSet": { "@type": "DefinedTermSet", "name": "Strong's Concordance" },
+    "identifier": entry.strongs, "inLanguage": langTag,
+  })} />
+</BaseLayout>
+<style>
+  h1 { margin-bottom: 1.5rem; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+  .detail-grid h3 { font-size: var(--font-base); margin-bottom: 0.8rem; color: var(--color-primary); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 1rem; font-size: var(--font-sm); }
+  dt { font-weight: 700; color: var(--color-text-secondary); }
+  ul { padding-left: 1.2rem; font-size: var(--font-sm); }
+  li { margin-bottom: 0.3rem; }
+</style>

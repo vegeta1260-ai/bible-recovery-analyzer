@@ -1,0 +1,30 @@
+---
+const resources = [
+  { title: 'Living Stream Ministry Publications Catalog', kind: 'affirmation_negation', language: 'zh/en', url: 'https://www.lsm.org/', note: '用於查核《肯定與否定》系列授權與可取得版本（需人工確認可用性）。' },
+  { title: 'Taiwan Gospel Book Room', kind: 'affirmation_negation', language: 'zh', url: 'https://www.twgbr.org.tw/', note: '可查詢書籍目錄與購買資訊；是否有全文公開需逐篇確認。' },
+  { title: 'Sefaria Hebrew Bible (study reference)', kind: 'hebrew_resource', language: 'en/he', url: 'https://www.sefaria.org/texts/Tanakh', note: '可作希伯來文研究輔助資源（非恢復本）。' },
+  { title: 'STEP Bible', kind: 'hebrew_resource', language: 'en/he/el', url: 'https://www.stepbible.org/', note: '可作 OT/NT 原文詞形查考輔助資源。' },
+];
+const kindLabels: Record<string, string> = { affirmation_negation: '肯定與否定', hebrew_resource: '原文研究', other: '其他' };
+---
+<div class="resource-list">
+  {resources.map(r => (
+    <div class="card resource-card">
+      <div class="resource-header">
+        <span class="resource-kind">{kindLabels[r.kind] ?? r.kind}</span>
+        <span class="resource-lang mono">{r.language}</span>
+      </div>
+      <h3><a href={r.url} target="_blank" rel="noopener noreferrer">{r.title}</a></h3>
+      <p class="resource-note">{r.note}</p>
+    </div>
+  ))}
+</div>
+<style>
+  .resource-list { display: grid; gap: 1rem; }
+  .resource-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+  .resource-kind { font-size: var(--font-xs); color: var(--color-accent); font-weight: 700; font-family: var(--font-sans); }
+  .resource-lang { font-size: var(--font-xs); color: var(--color-text-muted); }
+  .resource-card h3 { font-size: var(--font-base); margin-bottom: 0.4rem; }
+  .resource-card h3 a { color: var(--color-primary); }
+  .resource-note { font-size: var(--font-sm); color: var(--color-text-secondary); }
+</style>

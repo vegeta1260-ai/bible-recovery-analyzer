@@ -1,0 +1,37 @@
+---
+import Header from '../components/static/Header.astro';
+import Footer from '../components/static/Footer.astro';
+import '../styles/global.css';
+interface Props { title: string; description?: string; }
+const { title, description = '聖經恢復本原文字義解析工具' } = Astro.props;
+const fullTitle = `${title} | 聖經原文解析`;
+---
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+  <body>
+    <Header />
+    <main class="container"><slot /></main>
+    <Footer />
+    <script is:inline>
+      (function() {
+        var theme = localStorage.getItem('theme');
+        if (theme) document.documentElement.setAttribute('data-theme', theme);
+        else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.setAttribute('data-theme', 'dark');
+        var scale = localStorage.getItem('fontScale');
+        if (scale) document.documentElement.setAttribute('data-font-scale', scale);
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BookGrid from '../components/static/BookGrid.astro';
+---
+<BaseLayout title="書卷總覽" description="聖經 66 卷書 OSIS / 英文 / 中文 / 別名對照表">
+  <h1 style="margin: 2rem 0 0;">書卷總覽</h1>
+  <p style="color: var(--color-text-secondary); margin-bottom: 1rem;">目前收錄 30 卷書。完整 66 卷將於後續階段補齊。</p>
+  <BookGrid />
+</BaseLayout>
