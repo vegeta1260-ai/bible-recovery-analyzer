@@ -14,7 +14,8 @@
     "analytical_notes": [
       "form-priority",
       "function-exception-possible"
-    ]
+    ],
+    "normalized_strongs": "H430"
   },
   {
     "strongs": "H1961",
@@ -31,7 +32,8 @@
     "analytical_notes": [
       "form-priority",
       "function-exception-possible"
-    ]
+    ],
+    "normalized_strongs": "H1961"
   },
   {
     "strongs": "H7225",
@@ -48,7 +50,8 @@
     "analytical_notes": [
       "form-priority",
       "function-exception-possible"
-    ]
+    ],
+    "normalized_strongs": "H7225"
   },
   {
     "strongs": "G3056",
@@ -65,7 +68,8 @@
     "analytical_notes": [
       "form-priority",
       "function-exception-possible"
-    ]
+    ],
+    "normalized_strongs": "G3056"
   },
   {
     "strongs": "G2316",
@@ -82,7 +86,8 @@
     "analytical_notes": [
       "form-priority",
       "function-exception-possible"
-    ]
+    ],
+    "normalized_strongs": "G2316"
   },
   {
     "strongs": "G2064",
@@ -99,7 +104,8 @@
     "analytical_notes": [
       "form-priority",
       "function-exception-possible"
-    ]
+    ],
+    "normalized_strongs": "G2064"
   },
   {
     "strongs": "G3756",
@@ -116,7 +122,8 @@
     "analytical_notes": [
       "form-priority",
       "function-exception-possible"
-    ]
+    ],
+    "normalized_strongs": "G3756"
   },
   {
     "strongs": "G3361",
@@ -133,6 +140,7 @@
     "analytical_notes": [
       "form-priority",
       "function-exception-possible"
-    ]
+    ],
+    "normalized_strongs": "G3361"
   }
 ]
