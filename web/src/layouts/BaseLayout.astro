@@ -2,9 +2,21 @@
 import Header from '../components/static/Header.astro';
 import Footer from '../components/static/Footer.astro';
 import '../styles/global.css';
-interface Props { title: string; description?: string; }
-const { title, description = '聖經恢復本原文字義解析工具' } = Astro.props;
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  canonicalUrl?: string;
+}
+const {
+  title,
+  description = '聖經恢復本原文字義解析工具 — 希伯來文、希臘文 Strong\'s 編號、詞形分析、全文搜尋',
+  ogImage = '/og-default.png',
+  canonicalUrl,
+} = Astro.props;
 const fullTitle = `${title} | 聖經原文解析`;
+const siteUrl = 'https://weiqi.kids';
+const canonical = canonicalUrl ?? `${siteUrl}${Astro.url.pathname}`;
 ---
 <!doctype html>
 <html lang="zh-Hant">
@@ -13,9 +25,25 @@ const fullTitle = `${title} | 聖經原文解析`;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Open Graph -->
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={`${siteUrl}${ogImage}`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="聖經原文解析" />
+    <meta property="og:locale" content="zh_TW" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${siteUrl}${ogImage}`} />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
