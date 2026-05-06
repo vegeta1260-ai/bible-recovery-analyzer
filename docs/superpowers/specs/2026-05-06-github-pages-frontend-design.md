@@ -12,7 +12,7 @@
 
 - 靜態資料（token、lexicon、書卷表、分析碼圖例）嵌入為 JSON
 - 純計算邏輯（經文引用解析、Strong's 正規化、分析碼展開、注音轉換）以 TypeScript 在瀏覽器端實作
-- 恢復本經文透過 Cloudflare Workers 代理呼叫 LSM API（`https://api.lsm.org/recver/txo.php`）
+- 恢復本經文由前端直接呼叫 LSM API（`https://api.lsm.org/recver/txo.php`，已確認支援 CORS `Access-Control-Allow-Origin: *`）
 - 12 種視覺特效 + 環境音樂系統
 - OKLCH 暖色系 + 動態字體大小 + 響應式佈局
 - SEO/AEO 優化（結構化資料、預渲染靜態 HTML）
@@ -35,7 +35,7 @@
 | 程序化音效 | Web Audio API 原生 | — | 翻頁聲、鐘聲等即時生成（不用 Tone.js，減少 130KB） |
 | 樣式 | CSS Modules + OKLCH | — | 暖色系 design tokens |
 | 字體 | Noto Serif/Sans TC + Ezra SIL/GentiumPlus | Google Fonts + self-host | 中文/原文閱讀 |
-| CORS 代理 | Cloudflare Workers | — | LSM API 跨域代理（必要組件） |
+| LSM API | 直接呼叫 | — | LSM API 支援 CORS，無需代理 |
 | 部署 | GitHub Actions | — | 自動 build & deploy 到 GitHub Pages |
 
 ---
@@ -46,9 +46,6 @@
 bible-recovery-analyzer/              (現有 repo 根目錄)
 ├── bible_recovery_analyzer/           (現有 FastAPI 後端，不動)
 ├── docs/superpowers/specs/            (設計文件)
-├── worker/                            (新增：Cloudflare Workers CORS 代理)
-│   ├── wrangler.toml
-│   └── src/index.ts
 └── web/                               (新增：Astro 前端專案)
     ├── astro.config.mjs
     ├── package.json
@@ -196,27 +193,19 @@ bible-recovery-analyzer/              (現有 repo 根目錄)
 | `lib/pronunciation.ts` | `services/pronunciation.py` | `transliterationToZhuyinLike()` |
 | `lib/analyzer.ts` | `services/analyzer.py` | 本地 token/lexicon 查詢（操作 JSON 而非 SQLite） |
 | `lib/search.ts` | `services/analyzer.py` search() | 全文跨欄位搜尋 |
-| `lib/lsmApi.ts` | `services/recovery/providers.py` | 透過 Cloudflare Worker 呼叫 LSM API |
+| `lib/lsmApi.ts` | `services/recovery/providers.py` | 直接呼叫 LSM API（已確認支援 CORS） |
 
-### 7.3 LSM API 呼叫（經由 Cloudflare Workers 代理）
+### 7.3 LSM API 呼叫（前端直接呼叫）
 
-LSM API 為第三方服務，極高概率不設 `Access-Control-Allow-Origin` header，因此瀏覽器直接呼叫會被 CORS 阻擋。**Cloudflare Workers 代理為必要架構組件，不是備案。**
-
-```typescript
-// worker/src/index.ts — Cloudflare Workers CORS 代理
-// 僅代理到 https://api.lsm.org/recver/txo.php
-// 加入 Access-Control-Allow-Origin header
-// 限制 origin 為 GitHub Pages 域名
-// 不記錄、不快取、不修改請求/回應內容
-```
+LSM API 已確認支援 CORS（回傳 `Access-Control-Allow-Origin: *`），前端可直接呼叫，無需代理。
 
 ```typescript
-// lib/lsmApi.ts — 前端呼叫
-const WORKER_URL = "https://bible-api-proxy.<account>.workers.dev";
+// lib/lsmApi.ts
+const LSM_API_URL = "https://api.lsm.org/recver/txo.php";
 
 export async function fetchRecoveryText(ref: string): Promise<RecoveryResult> {
   const params = new URLSearchParams({ String: ref, Out: "json" });
-  const resp = await fetch(`${WORKER_URL}?${params}`);
+  const resp = await fetch(`${LSM_API_URL}?${params}`);
   const data = await resp.json();
   // 解析 data.verses / data.text / data.copyright
   // 禁止使用 dangerouslySetInnerHTML 渲染回傳內容
@@ -224,10 +213,8 @@ export async function fetchRecoveryText(ref: string): Promise<RecoveryResult> {
 }
 ```
 
-**Cloudflare Workers 免費方案：** 每日 100,000 次請求，足夠此專案使用。
-
-**離線/錯誤降級：**
-- Worker 無回應或 LSM API 失敗 → 顯示友善錯誤訊息卡片（「恢復本經文暫時無法載入，請稍後再試」）
+**錯誤降級：**
+- LSM API 失敗 → 顯示友善錯誤訊息卡片（「恢復本經文暫時無法載入，請稍後再試」）
 - 本地 token 資料不受影響，interlinear 和 token card 仍可正常顯示
 - 重試策略：自動重試 1 次（間隔 2 秒），失敗後停止
 
@@ -591,13 +578,7 @@ const EFFECT_RULES = [
 
 流程：`npm ci` → `npm run build`（含 satori OG image 生成）→ deploy `web/dist/` 到 GitHub Pages。
 
-### 16.2 Cloudflare Workers（CORS 代理）
-
-觸發條件：push 到 main 且 `worker/**` 有變更。
-
-流程：`npx wrangler deploy`（需在 GitHub Actions 中設定 `CLOUDFLARE_API_TOKEN` secret）。
-
-### 16.3 Astro 配置
+### 16.2 Astro 配置
 
 ```javascript
 // astro.config.mjs
