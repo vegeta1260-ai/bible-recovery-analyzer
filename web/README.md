@@ -285,22 +285,182 @@ python -c "from scripts.seed_data import ...; ..."  # 見 Plan 1 Task 2
 ### Git 工作流
 
 - 主分支：`main`
-- 前端變更觸發 GitHub Actions 自動 build + deploy
 - commit message 格式：`feat(web): ...` / `fix(web): ...` / `test(web): ...`
+- 每次 push 到 `main` 自動觸發 build + deploy（見下方部署章節）
 
 ---
 
 ## 部署
 
-GitHub Actions 自動部署到 GitHub Pages。
+### 自動部署流程
 
-觸發條件：push 到 `main` 且 `web/**` 有變更。
+**push 到 `main` → GitHub Actions 自動 build → 推到 `gh-pages` 分支 → GitHub Pages 自動更新**
 
-流程：`npm ci` → `npm run build` → deploy `dist/` 到 Pages。
+| 步驟 | 執行者 | 說明 |
+|------|--------|------|
+| 1. push 到 main | 開發者 | 任何檔案變更都會觸發 |
+| 2. `npm install` | GitHub Actions | 在 CI 環境安裝依賴 |
+| 3. `npm run build` | GitHub Actions | Astro build 產出 `web/dist/` |
+| 4. 推到 gh-pages | `peaceiris/actions-gh-pages` | 自動將 `dist/` 內容推到 `gh-pages` 分支 |
+| 5. 發布 | GitHub Pages | 偵測 `gh-pages` 分支變更，自動發布靜態檔案 |
 
-詳見 `.github/workflows/deploy-pages.yml`。
+- Workflow 檔案：`.github/workflows/deploy-pages.yml`
+- GitHub Pages 設定：Source = **Deploy from a branch**, Branch = **gh-pages / root**
+- 線上網址：https://vegeta1260-ai.github.io/bible-recovery-analyzer/
 
-線上網址：https://vegeta1260-ai.github.io/bible-recovery-analyzer/
+### 手動部署（備用）
+
+如果 GitHub Actions 無法使用，可從本地手動部署：
+
+```bash
+cd web
+npm run build
+cd /tmp && rm -rf gh-deploy && mkdir gh-deploy && cd gh-deploy
+git init -b gh-pages
+cp -r /path/to/web/dist/* .
+touch .nojekyll
+git add -A && git commit -m "Deploy"
+git remote add origin git@github.com:vegeta1260-ai/bible-recovery-analyzer.git
+git push origin gh-pages --force
+```
+
+---
+
+## 標準作業程序 (SOP)
+
+### SOP 1：日常開發流程
+
+```
+1. 修改程式碼
+2. 本地測試：npm test
+3. 本地預覽：npm run dev → http://localhost:4321/bible-recovery-analyzer/
+4. 確認沒問題後 commit + push main
+5. GitHub Actions 自動 build + deploy（約 1 分鐘）
+6. 確認線上：https://vegeta1260-ai.github.io/bible-recovery-analyzer/
+```
+
+### SOP 2：新增靜態頁面
+
+```
+1. 建立 web/src/pages/新頁面.astro
+2. 引入 BaseLayout：
+   ---
+   import BaseLayout from '../layouts/BaseLayout.astro';
+   ---
+   <BaseLayout title="頁面標題" description="SEO 描述">
+     <h1>內容</h1>
+   </BaseLayout>
+3. 如需導覽連結，在 web/src/components/static/Header.astro 的 navItems 加入
+4. npm run build 確認頁面產出
+5. commit + push
+```
+
+### SOP 3：新增 React Island 元件
+
+```
+1. 建立 web/src/components/islands/元件名.tsx
+2. 在 .astro 頁面中引入，選擇正確的 hydrate 策略：
+   - client:load — 首屏必要互動
+   - client:idle — 非首屏
+   - client:visible — 滾動到才載入
+   - client:media="(min-width: 768px)" — 桌面專屬
+3. 如果元件用到 @/ alias import，確認 astro.config.mjs 的 vite.resolve.alias 有設定
+4. npm run build 確認 build 成功
+5. commit + push
+```
+
+### SOP 4：新增視覺特效
+
+```
+1. 建立 web/src/effects/特效名.tsx（React 元件）
+2. 元件開頭必須檢查 prefers-reduced-motion：
+   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+   if (prefersReducedMotion) return null;
+3. 在 web/src/effects/MiracleEffectRouter.tsx 的 EFFECT_RULES 加入觸發規則
+4. 使用 client:visible 延遲載入（Tier 2 特效）
+5. 如有新的測試規則，更新 web/tests/lib/miracleEffects.test.ts
+6. npm test && npm run build
+7. commit + push
+```
+
+### SOP 5：新增/更換環境音樂
+
+```
+1. 從 Pixabay Music (https://pixabay.com/music/) 下載免費商用 MP3
+2. 用 ffmpeg 壓縮為 64kbps mono（控制檔案大小）：
+   ffmpeg -y -i 原檔.mp3 -b:a 64k -ac 1 web/public/audio/ambient-類型.mp3
+3. 音檔命名規則：ambient-{類型}.mp3
+   可用類型：pentateuch, history, wisdom, prophecy, gospel, epistle, apocalypse, default
+4. 如需新增類型，更新 web/src/audio/musicManager.ts 的 TRACK_MAP 和 BOOK_TYPE_MAP
+5. npm run build 確認音檔包含在 dist/audio/
+6. commit + push（注意：大音檔會讓 push 變慢，建議壓縮後再推）
+```
+
+### SOP 6：更新靜態 JSON 資料
+
+```
+1. 在後端 bible_recovery_analyzer/ 修改 seed_data.py 或 book_map.py 等來源
+2. 執行 Python 匯出腳本產生新的 JSON（見 Plan 1 Task 2 的腳本）
+3. 將產出的 JSON 覆蓋到 web/src/data/ 對應檔案
+4. 如有新增 lexicon 條目，確認 web/src/pages/lexicon/[id].astro 的 getStaticPaths() 會正確產生新頁面
+5. npm test（確認 lib 模組的測試仍通過）
+6. npm run build（確認新頁面產出）
+7. commit + push
+```
+
+### SOP 7：新增 D3 圖表
+
+```
+1. 建立 web/src/components/islands/圖表名.tsx
+2. 使用 useRef + useEffect 讓 D3 操作 SVG：
+   const svgRef = useRef<SVGSVGElement>(null);
+   useEffect(() => { d3.select(svgRef.current)...; }, [data]);
+3. 配色使用暖色系 hex（D3/SVG 不支援 oklch）：
+   #8B6914, #D4A017, #C4956A, #A0522D, #CD853F
+4. 在頁面中使用 client:visible 或 client:idle 載入
+5. 手機不載入：client:media="(min-width: 768px)"，手機改用純文字統計
+6. npm run build
+7. commit + push
+```
+
+### SOP 8：修改 Design Tokens（色彩/字體）
+
+```
+1. 編輯 web/src/styles/tokens.css
+2. 亮色和深色模式都要同步修改（[data-theme="dark"] 區塊）
+3. 確認文字/背景組合的 WCAG AA 對比度 >= 4.5:1
+4. 特效色不需要滿足 AA，但主要文字色（text, text-secondary）必須滿足
+5. npm run build && 用瀏覽器檢查亮色/深色模式
+6. commit + push
+```
+
+---
+
+## Troubleshooting
+
+### GitHub Actions build 失敗
+
+| 錯誤 | 原因 | 解法 |
+|------|------|------|
+| `Invalid Version` | package-lock.json 中 sharp 的可選依賴在非本地平台有空版本 | Workflow 已設定 `rm -f package-lock.json && npm install` 繞過 |
+| `Module not found @/...` | Vite alias 未設定 | 確認 `astro.config.mjs` 有 `vite.resolve.alias` 指向 `src/` |
+| Build timeout | 音檔太大（> 50MB） | 用 ffmpeg 壓縮音檔為 64kbps mono |
+
+### 本地開發問題
+
+| 問題 | 解法 |
+|------|------|
+| `npm test` 失敗 | 確認 `vitest.config.ts` 的 `@` alias 指向 `/src` |
+| 原文字體不顯示 | 確認 `public/fonts/` 有 Ezra SIL / GentiumPlus woff2 檔案 |
+| 音效沒聲音 | 瀏覽器要求使用者互動後才允許播放，需先點擊頁面任何元素 |
+| 深色模式閃爍 | BaseLayout.astro 的 `<script is:inline>` 負責防閃爍，確認沒被移除 |
+
+### LSM API 問題
+
+| 問題 | 解法 |
+|------|------|
+| 恢復本經文載入失敗 | `lsmApi.ts` 已內建重試 1 次（間隔 2 秒），失敗後顯示友善訊息 |
+| CORS 錯誤 | LSM API 支援 `Access-Control-Allow-Origin: *`，如果出現 CORS 錯誤表示 LSM 端有變更 |
 
 ---
 
@@ -308,14 +468,14 @@ GitHub Actions 自動部署到 GitHub Pages。
 
 MVP 階段使用種子資料（10 token + 8 lexicon + 30 卷書）。後續擴充：
 
-| 階段 | 資料目標 | 來源 |
-|------|---------|------|
-| Phase 2 | 完整 66 卷書對照表 | 補齊 book_map.py |
-| Phase 3 | 全量 NT token (~140,000) | 開源 MorphGNT / SBLGNT |
-| Phase 4 | 全量 OT token (~400,000) | 開源 OSHB / WLC |
-| Phase 5 | 完整 Strong's lexicon (~8,700) | 開源 Strong's 資料 |
+| 階段 | 資料目標 | 來源 | 影響 |
+|------|---------|------|------|
+| Phase 2 | 完整 66 卷書對照表 | 補齊 book_map.py | 所有書卷輸入可解析 |
+| Phase 3 | 全量 NT token (~140,000) | 開源 MorphGNT / SBLGNT | 搜尋/統計/D3 有實用價值 |
+| Phase 4 | 全量 OT token (~400,000) | 開源 OSHB / WLC | 完整 OT 覆蓋 |
+| Phase 5 | 完整 Strong's lexicon (~8,700) | 開源 Strong's 資料 | 所有 Strong's 有獨立頁面 |
 
-每個 Phase 獨立進行，不阻塞現有功能。
+每個 Phase 獨立進行，不阻塞現有功能。依照 SOP 6 更新靜態 JSON 即可。
 
 ---
 
