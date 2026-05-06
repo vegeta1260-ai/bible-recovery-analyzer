@@ -1,0 +1,138 @@
+[
+  {
+    "strongs": "H430",
+    "lemma": "אֱלֹהִים",
+    "language": "Hebrew",
+    "transliteration": "elohim",
+    "pronunciation_bopomofo": "ㄝㄌㄛㄏㄧㄇ",
+    "short_definition": "God, gods",
+    "literal_gloss_en": "God",
+    "common_inflections": [
+      "elohim",
+      "elohims"
+    ],
+    "analytical_notes": [
+      "form-priority",
+      "function-exception-possible"
+    ]
+  },
+  {
+    "strongs": "H1961",
+    "lemma": "היה",
+    "language": "Hebrew",
+    "transliteration": "ehyeh",
+    "pronunciation_bopomofo": "ㄝㄏㄧㄝㄏ",
+    "short_definition": "to be",
+    "literal_gloss_en": "be",
+    "common_inflections": [
+      "ehyeh",
+      "ehyehs"
+    ],
+    "analytical_notes": [
+      "form-priority",
+      "function-exception-possible"
+    ]
+  },
+  {
+    "strongs": "H7225",
+    "lemma": "רֵאשִׁית",
+    "language": "Hebrew",
+    "transliteration": "bereshit",
+    "pronunciation_bopomofo": "ㄅㄝㄖㄝㄕㄧㄊ",
+    "short_definition": "beginning",
+    "literal_gloss_en": "beginning",
+    "common_inflections": [
+      "bereshit",
+      "bereshits"
+    ],
+    "analytical_notes": [
+      "form-priority",
+      "function-exception-possible"
+    ]
+  },
+  {
+    "strongs": "G3056",
+    "lemma": "λόγος",
+    "language": "Greek",
+    "transliteration": "logos",
+    "pronunciation_bopomofo": "ㄌㄛㄍㄛㄙ",
+    "short_definition": "word, expression, reason",
+    "literal_gloss_en": "word",
+    "common_inflections": [
+      "logos",
+      "logoss"
+    ],
+    "analytical_notes": [
+      "form-priority",
+      "function-exception-possible"
+    ]
+  },
+  {
+    "strongs": "G2316",
+    "lemma": "θεός",
+    "language": "Greek",
+    "transliteration": "theos",
+    "pronunciation_bopomofo": "ㄙㄝㄛㄙ",
+    "short_definition": "God",
+    "literal_gloss_en": "God",
+    "common_inflections": [
+      "theos",
+      "theoss"
+    ],
+    "analytical_notes": [
+      "form-priority",
+      "function-exception-possible"
+    ]
+  },
+  {
+    "strongs": "G2064",
+    "lemma": "ἔρχομαι",
+    "language": "Greek",
+    "transliteration": "erchomai",
+    "pronunciation_bopomofo": "ㄝㄖㄎㄛㄇㄞ",
+    "short_definition": "to come",
+    "literal_gloss_en": "come",
+    "common_inflections": [
+      "erchomai",
+      "erchomais"
+    ],
+    "analytical_notes": [
+      "form-priority",
+      "function-exception-possible"
+    ]
+  },
+  {
+    "strongs": "G3756",
+    "lemma": "οὐ",
+    "language": "Greek",
+    "transliteration": "ou",
+    "pronunciation_bopomofo": "ㄨ",
+    "short_definition": "not",
+    "literal_gloss_en": "not",
+    "common_inflections": [
+      "ou",
+      "ous"
+    ],
+    "analytical_notes": [
+      "form-priority",
+      "function-exception-possible"
+    ]
+  },
+  {
+    "strongs": "G3361",
+    "lemma": "μή",
+    "language": "Greek",
+    "transliteration": "mē",
+    "pronunciation_bopomofo": "ㄇㄟ",
+    "short_definition": "not (subjunctive/volitive)",
+    "literal_gloss_en": "not",
+    "common_inflections": [
+      "mē",
+      "mēs"
+    ],
+    "analytical_notes": [
+      "form-priority",
+      "function-exception-possible"
+    ]
+  }
+]
