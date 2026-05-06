@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import lexiconData from '../../data/lexicon.json';
+import D3OccurrenceChart from '../../components/islands/D3OccurrenceChart';
 type LexiconEntry = { strongs: string; normalized_strongs: string; lemma: string; language: string; transliteration: string; pronunciation_bopomofo: string; short_definition: string; literal_gloss_en: string; common_inflections: string[]; analytical_notes: string[]; };
 const entries = lexiconData as LexiconEntry[];
 export function getStaticPaths() {
@@ -38,6 +39,7 @@ const langDir = entry.language === 'Hebrew' ? 'rtl' : 'ltr';
       </div>
     </div>
   </article>
+  <D3OccurrenceChart client:visible strongs={entry.strongs} />
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org", "@type": "DefinedTerm",
     "name": entry.transliteration, "description": entry.short_definition,
