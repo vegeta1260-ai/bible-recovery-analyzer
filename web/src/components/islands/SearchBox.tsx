@@ -36,12 +36,6 @@ export default function SearchBox() {
   const ensureAudioStarted = useCallback(() => {
     if (audioStarted.current) return;
     audioStarted.current = true;
-    // AudioContext requires user gesture — trigger ambient pad if enabled
-    if (isAudioEnabled()) {
-      import('@/audio/webAudioEffects').then(({ playAmbientPad }) => {
-        playAmbientPad(true);
-      });
-    }
   }, []);
 
   const clearResults = () => {
