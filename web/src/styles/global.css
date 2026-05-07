@@ -84,3 +84,47 @@ code, .mono { font-family: var(--font-mono); }
 .audio-btn--on { color: var(--color-primary); border-color: var(--color-primary); }
 .audio-btn--off { color: var(--color-text-muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
+
+/* -- 手機版 (< 768px) -- */
+@media (max-width: 767px) {
+  /* 整體 */
+  .container { padding: 0 0.75rem; }
+  .card { padding: 0.8rem; border-radius: 8px; }
+
+  /* 搜尋框：輸入和按鈕堆疊 */
+  .search-input-row { flex-direction: column; }
+  .search-btn { width: 100%; }
+  .search-modes { gap: 0.3rem; }
+  .mode-btn { font-size: var(--font-xs); padding: 0.3rem 0.5rem; }
+
+  /* Token 研究卡：標題堆疊、欄位單欄 */
+  .token-header { flex-direction: column; gap: 0.3rem; }
+  .token-surface { font-size: var(--font-lg); }
+  .token-fields { grid-template-columns: 1fr; gap: 0.2rem; }
+  .token-fields dt { white-space: normal; color: var(--color-text-muted); font-size: var(--font-xs); margin-top: 0.5rem; }
+  .token-fields dd { margin-left: 0; padding-left: 0; }
+  .code-expanded { flex-direction: column; }
+  .code-tag { font-size: calc(var(--font-xs) * 0.9); }
+
+  /* Interlinear：擴展到螢幕邊緣以增加滑動空間 */
+  .interlinear-scroll { margin: 0 -0.75rem; padding: 0 0.75rem; }
+  .interlinear-table td { padding: 0.3rem 0.5rem; }
+  .row-original td { font-size: var(--font-lg); }
+  .recovery-text { font-size: var(--font-sm); padding: 0.6rem; }
+
+  /* 經文結果 */
+  .verse-ref { font-size: var(--font-xl); }
+  .recovery-verse-text { font-size: var(--font-base); line-height: 1.6; }
+
+  /* 搜尋結果標籤 */
+  .ref-list { gap: 0.3rem; }
+  .ref-tag { font-size: var(--font-xs); padding: 0.15rem 0.4rem; }
+
+  /* 書卷格子：2 欄 */
+  .book-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .book-card { padding: 0.6rem; }
+  .book-zh { font-size: var(--font-base); }
+
+  /* 圖例表格可滾動 */
+  .legend-table { display: block; overflow-x: auto; }
+}
