@@ -67,3 +67,10 @@ make test
 - `docs/provider_switching_guide.md`
 - `docs/no_lsm_credential_test_plan.md`
 - `docs/testing_and_validation.md`
+
+
+## 本輪重點（網站化與 MACULA）
+- 新增 `/study` 聚合端點，可回傳 LSM recovery_text + MACULA original_text/interlinear/lexicon_summary。
+- 新增 MACULA 匯入腳本：download/import greek/import hebrew/import all。
+- GPTS prompt 整合暫緩，本輪先聚焦網站與雲端 API。
+- 雲端測試重點：`pytest`、`/study?ref=John1:1`、`/study?ref=Gen1:1`。

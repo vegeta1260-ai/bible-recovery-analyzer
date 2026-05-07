@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     recovery_web_extract_marker_end: str = Field(default="", alias="RECOVERY_WEB_EXTRACT_MARKER_END")
     recovery_web_max_chars: int = Field(default=600, alias="RECOVERY_WEB_MAX_CHARS")
 
+    cors_allowed_origins: str = Field(default="https://vegeta1260-ai.github.io,https://vegeta1260-ai.github.io/bible-recovery-analyzer/", alias="CORS_ALLOWED_ORIGINS")
     sqlite_path: str = Field(default="./data/bible_analyzer.db", alias="SQLITE_PATH")
     default_recovery_attribution: str = Field(
         default=(

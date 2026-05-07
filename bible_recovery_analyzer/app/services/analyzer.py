@@ -5,7 +5,7 @@ from collections import Counter
 from sqlalchemy import or_, select
 
 from app.data.book_map import BOOK_ROWS
-from app.models.db import LexiconEntry, Token
+from app.models.db import LexiconEntry, OriginalToken, OriginalVerse, Token
 from app.models.schemas import (
     AnalyticalCodeInfo,
     BookMapItem,
@@ -158,6 +158,14 @@ class AnalyzerService:
         self._inject_occurrence_summary(cards)
         return MorphologySearchResponse(query=q, count=len(cards), cards=cards)
 
+
+    def original_tokens(self, verse_refs: list[str]) -> list[OriginalToken]:
+        with self.session_factory() as db:
+            return db.execute(select(OriginalToken).where(OriginalToken.verse_ref.in_(verse_refs)).order_by(OriginalToken.verse_ref, OriginalToken.token_index)).scalars().all()
+
+    def original_verses(self, verse_refs: list[str]) -> list[OriginalVerse]:
+        with self.session_factory() as db:
+            return db.execute(select(OriginalVerse).where(OriginalVerse.verse_ref.in_(verse_refs)).order_by(OriginalVerse.verse_ref)).scalars().all()
     @staticmethod
     def _row_to_card(row: Token) -> TokenStudy:
         return TokenStudy(

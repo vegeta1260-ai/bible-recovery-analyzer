@@ -224,3 +224,36 @@ def morphology_search(q: str, analyzer=Depends(get_analyzer_service)):
 @router.get("/resources", response_model=MinistryResourceResponse)
 def resources(q: str = "affirmation", _analyzer=Depends(get_analyzer_service)):
     return {"query": q, "results": search_resources(q)}
+
+
+@router.get("/study")
+async def study(ref: str = Query(...), include_diagnostics: bool = True, max_verses: int = Query(50, ge=1, le=50), include_interlinear: bool = True, include_lexicon: bool = True, include_pronunciation: bool = True, include_translation_notes: bool = True, analyzer=Depends(get_analyzer_service), recovery=Depends(get_recovery_client)):
+    osis_ref = normalize_ref(ref)
+    refs = split_osis_range(osis_ref)
+    requested = len(refs)
+    refs = refs[:max_verses]
+    truncated = requested > len(refs)
+    verses=[]; warnings=[]
+    for vr in refs:
+        try:
+            rr=await recovery.get_verse_text(vr)
+            verses.append({"ref":vr,"text":rr.text})
+            attribution=rr.attribution_source; provider=rr.source_provider; lsm=rr.source_status
+        except RecoveryFetchError as err:
+            warnings.append(err.reason)
+    orig_tokens = analyzer.original_tokens(refs)
+    orig_verses = {v.verse_ref:v for v in analyzer.original_verses(refs)}
+    lang = orig_tokens[0].language if orig_tokens else 'unknown'
+    src = orig_tokens[0].source if orig_tokens else ''
+    interlinear=[]; lex_map={}
+    for tkn in orig_tokens:
+        if include_interlinear:
+            interlinear.append({"surface_form":tkn.surface_form,"lemma":tkn.lemma,"strong_number_base":tkn.strong_number_base,"strong_number_extended":tkn.strong_number_extended,"analytical_code_raw":tkn.morph_code,"part_of_speech":tkn.part_of_speech,"case":tkn.case,"gender":tkn.gender,"number":tkn.number,"person":tkn.person,"tense":tkn.tense,"voice":tkn.voice,"mood":tkn.mood,"stem":tkn.stem,"state":tkn.state,"english_gloss":tkn.gloss_en,"chinese_literal_gloss":tkn.gloss_zh,"pronunciation_zhuyin":"" if not include_pronunciation else None,"transliteration":"" if not include_pronunciation else None,"special_notes":""})
+        if include_lexicon and tkn.strong_number_base and tkn.strong_number_base not in lex_map:
+            lex_map[tkn.strong_number_base] = {"strongs":tkn.strong_number_base,"lemma":tkn.lemma or '',"gloss":tkn.gloss_en or '',"short_definition":"","notes":""}
+    original_text = ' '.join([orig_verses[r].original_text for r in refs if r in orig_verses]).strip()
+    if not orig_tokens:
+        warnings.append('original language data not imported')
+    if truncated:
+        warnings.append('Request exceeded 50 verses; only the first 50 verses were processed.')
+    return {"reference":{"input":ref,"normalized":osis_ref,"requested_verse_count":requested,"processed_verse_count":len(refs),"truncated":truncated},"recovery_text":{"verses":verses,"inputstring":ref,"detected":"ref","message":"ok","copyright":attribution if verses else '',"attribution":attribution if verses else ''},"original_text":{"language":lang,"text":original_text,"source":src,"notes":"syntax tree not imported in phase 1"},"interlinear":interlinear,"lexicon_summary":list(lex_map.values()),"syntax_observations":{"subject":"","main_verb":"","objects":[],"prepositional_phrases":[],"participles":[],"article_structures":[],"special_grammar_notes":[]},"translation_support":{"literal_gloss_summary":"","recovery_translation_notes":"","comparison_notes":[]},"diagnostics":{"provider":provider if verses else 'unknown',"lsm_status":lsm if verses else 'unknown',"original_language_status":'ok' if orig_tokens else 'missing',"warnings":warnings if include_diagnostics else [],"missing_fields":[],"upstream_message":"","action_payload_note":""},"attribution":{"recovery_source":"LSM API","original_language_source":src or 'not_imported'}}

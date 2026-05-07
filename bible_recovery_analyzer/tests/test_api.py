@@ -133,3 +133,52 @@ def test_mock_recovery_text_presence(client):
     r = client.get("/verse", params={"ref": "John1:1"})
     assert r.status_code == 200
     assert "[MOCK]" in r.json()["interlinear"]["recovery_version_line"]
+
+
+def test_study_returns_greek_interlinear_when_data_exists(client):
+    from scripts.import_macula_greek import main as import_greek
+    import_greek(source_dir='tests/fixtures/macula_greek', force=True, sqlite_path='./data/test_bible_analyzer.db')
+    r = client.get('/study', params={'ref':'John1:1'})
+    assert r.status_code == 200
+    j=r.json()
+    assert j['original_text']['language'] == 'greek'
+    assert len(j['interlinear']) >= 1
+
+
+def test_study_returns_hebrew_interlinear_when_data_exists(client):
+    from scripts.import_macula_hebrew import main as import_hebrew
+    import_hebrew(source_dir='tests/fixtures/macula_hebrew', force=True, sqlite_path='./data/test_bible_analyzer.db')
+    r = client.get('/study', params={'ref':'Gen1:1'})
+    assert r.status_code == 200
+    j=r.json()
+    assert j['original_text']['language'] == 'hebrew'
+
+
+def test_study_graceful_when_macula_not_imported(client):
+    r = client.get('/study', params={'ref':'John1:9'})
+    assert r.status_code == 200
+    assert 'original language data not imported' in ' '.join(r.json()['diagnostics']['warnings'])
+
+
+def test_reference_mapping_john(client):
+    r = client.get('/study', params={'ref':'John1:1-3'})
+    assert r.status_code == 200
+    assert r.json()['reference']['normalized'].startswith('John.1.1')
+
+
+def test_reference_mapping_genesis(client):
+    r = client.get('/study', params={'ref':'Genesis1:1'})
+    assert r.status_code == 200
+    assert r.json()['reference']['normalized'].startswith('Gen.1.1')
+
+
+def test_study_max_verse_limit(client):
+    r = client.get('/study', params={'ref':'John1:1-60'})
+    assert r.status_code == 200
+    assert r.json()['reference']['truncated'] is True
+
+
+def test_cors_config_allows_github_pages_origin():
+    from app.main import app
+    cors = [m for m in app.user_middleware if m.cls.__name__ == 'CORSMiddleware'][0]
+    assert 'https://vegeta1260-ai.github.io' in cors.kwargs['allow_origins']
