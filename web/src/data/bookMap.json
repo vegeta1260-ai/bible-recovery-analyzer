@@ -1,32 +1,704 @@
 [
-  { "osis": "Gen", "english": "Genesis", "zh": "創世記", "aliases": ["創", "創世記", "gen", "genesis"] },
-  { "osis": "Exod", "english": "Exodus", "zh": "出埃及記", "aliases": ["出", "出埃及記", "exod", "exodus"] },
-  { "osis": "Ps", "english": "Psalms", "zh": "詩篇", "aliases": ["詩", "詩篇", "ps", "psalm", "psalms"] },
-  { "osis": "Matt", "english": "Matthew", "zh": "馬太福音", "aliases": ["太", "馬太", "matt", "matthew"] },
-  { "osis": "Mark", "english": "Mark", "zh": "馬可福音", "aliases": ["可", "馬可", "mark"] },
-  { "osis": "Luke", "english": "Luke", "zh": "路加福音", "aliases": ["路", "路加", "luke"] },
-  { "osis": "John", "english": "John", "zh": "約翰福音", "aliases": ["約", "約翰", "john"] },
-  { "osis": "Acts", "english": "Acts", "zh": "使徒行傳", "aliases": ["徒", "使徒行傳", "acts"] },
-  { "osis": "Rom", "english": "Romans", "zh": "羅馬書", "aliases": ["羅", "rom", "romans"] },
-  { "osis": "1Cor", "english": "1 Corinthians", "zh": "哥林多前書", "aliases": ["林前", "1cor", "1 cor", "1corinthians"] },
-  { "osis": "2Cor", "english": "2 Corinthians", "zh": "哥林多後書", "aliases": ["林後", "2cor", "2 cor", "2corinthians"] },
-  { "osis": "Gal", "english": "Galatians", "zh": "加拉太書", "aliases": ["加", "gal", "galatians"] },
-  { "osis": "Eph", "english": "Ephesians", "zh": "以弗所書", "aliases": ["弗", "eph", "ephesians"] },
-  { "osis": "Phil", "english": "Philippians", "zh": "腓立比書", "aliases": ["腓", "phil", "philippians"] },
-  { "osis": "Col", "english": "Colossians", "zh": "歌羅西書", "aliases": ["西", "col", "colossians"] },
-  { "osis": "1Thess", "english": "1 Thessalonians", "zh": "帖撒羅尼迦前書", "aliases": ["帖前", "1thess", "1 thess"] },
-  { "osis": "2Thess", "english": "2 Thessalonians", "zh": "帖撒羅尼迦後書", "aliases": ["帖後", "2thess", "2 thess"] },
-  { "osis": "1Tim", "english": "1 Timothy", "zh": "提摩太前書", "aliases": ["提前", "1tim", "1 tim"] },
-  { "osis": "2Tim", "english": "2 Timothy", "zh": "提摩太後書", "aliases": ["提後", "2tim", "2 tim"] },
-  { "osis": "Titus", "english": "Titus", "zh": "提多書", "aliases": ["多", "titus"] },
-  { "osis": "Phlm", "english": "Philemon", "zh": "腓利門書", "aliases": ["門", "phlm", "philemon"] },
-  { "osis": "Heb", "english": "Hebrews", "zh": "希伯來書", "aliases": ["來", "heb", "hebrews"] },
-  { "osis": "Jas", "english": "James", "zh": "雅各書", "aliases": ["雅", "jas", "james"] },
-  { "osis": "1Pet", "english": "1 Peter", "zh": "彼得前書", "aliases": ["彼前", "1pet", "1 pet"] },
-  { "osis": "2Pet", "english": "2 Peter", "zh": "彼得後書", "aliases": ["彼後", "2pet", "2 pet"] },
-  { "osis": "1John", "english": "1 John", "zh": "約翰一書", "aliases": ["約一", "1john", "1 john"] },
-  { "osis": "2John", "english": "2 John", "zh": "約翰二書", "aliases": ["約二", "2john", "2 john"] },
-  { "osis": "3John", "english": "3 John", "zh": "約翰三書", "aliases": ["約三", "3john", "3 john"] },
-  { "osis": "Jude", "english": "Jude", "zh": "猶大書", "aliases": ["猶", "jude"] },
-  { "osis": "Rev", "english": "Revelation", "zh": "啟示錄", "aliases": ["啟", "啟示錄", "rev", "revelation"] }
+  {
+    "osis": "Gen",
+    "english": "Genesis",
+    "zh": "創世記",
+    "aliases": [
+      "創",
+      "創世記",
+      "gen",
+      "genesis"
+    ]
+  },
+  {
+    "osis": "Exod",
+    "english": "Exodus",
+    "zh": "出埃及記",
+    "aliases": [
+      "出",
+      "出埃及記",
+      "exod",
+      "exodus"
+    ]
+  },
+  {
+    "osis": "Lev",
+    "english": "Leviticus",
+    "zh": "利未記",
+    "aliases": [
+      "利",
+      "利未記",
+      "lev",
+      "leviticus"
+    ]
+  },
+  {
+    "osis": "Num",
+    "english": "Numbers",
+    "zh": "民數記",
+    "aliases": [
+      "民",
+      "民數記",
+      "num",
+      "numbers"
+    ]
+  },
+  {
+    "osis": "Deut",
+    "english": "Deuteronomy",
+    "zh": "申命記",
+    "aliases": [
+      "申",
+      "申命記",
+      "deut",
+      "deuteronomy"
+    ]
+  },
+  {
+    "osis": "Josh",
+    "english": "Joshua",
+    "zh": "約書亞記",
+    "aliases": [
+      "書",
+      "約書亞記",
+      "josh",
+      "joshua"
+    ]
+  },
+  {
+    "osis": "Judg",
+    "english": "Judges",
+    "zh": "士師記",
+    "aliases": [
+      "士",
+      "士師記",
+      "judg",
+      "judges"
+    ]
+  },
+  {
+    "osis": "Ruth",
+    "english": "Ruth",
+    "zh": "路得記",
+    "aliases": [
+      "得",
+      "路得記",
+      "ruth"
+    ]
+  },
+  {
+    "osis": "1Sam",
+    "english": "1 Samuel",
+    "zh": "撒母耳記上",
+    "aliases": [
+      "撒上",
+      "撒母耳記上",
+      "1sam",
+      "1 sam",
+      "1samuel"
+    ]
+  },
+  {
+    "osis": "2Sam",
+    "english": "2 Samuel",
+    "zh": "撒母耳記下",
+    "aliases": [
+      "撒下",
+      "撒母耳記下",
+      "2sam",
+      "2 sam",
+      "2samuel"
+    ]
+  },
+  {
+    "osis": "1Kgs",
+    "english": "1 Kings",
+    "zh": "列王紀上",
+    "aliases": [
+      "王上",
+      "列王紀上",
+      "1kgs",
+      "1 kgs",
+      "1kings"
+    ]
+  },
+  {
+    "osis": "2Kgs",
+    "english": "2 Kings",
+    "zh": "列王紀下",
+    "aliases": [
+      "王下",
+      "列王紀下",
+      "2kgs",
+      "2 kgs",
+      "2kings"
+    ]
+  },
+  {
+    "osis": "1Chr",
+    "english": "1 Chronicles",
+    "zh": "歷代志上",
+    "aliases": [
+      "代上",
+      "歷代志上",
+      "1chr",
+      "1 chr",
+      "1chronicles"
+    ]
+  },
+  {
+    "osis": "2Chr",
+    "english": "2 Chronicles",
+    "zh": "歷代志下",
+    "aliases": [
+      "代下",
+      "歷代志下",
+      "2chr",
+      "2 chr",
+      "2chronicles"
+    ]
+  },
+  {
+    "osis": "Ezra",
+    "english": "Ezra",
+    "zh": "以斯拉記",
+    "aliases": [
+      "拉",
+      "以斯拉記",
+      "ezra"
+    ]
+  },
+  {
+    "osis": "Neh",
+    "english": "Nehemiah",
+    "zh": "尼希米記",
+    "aliases": [
+      "尼",
+      "尼希米記",
+      "neh",
+      "nehemiah"
+    ]
+  },
+  {
+    "osis": "Esth",
+    "english": "Esther",
+    "zh": "以斯帖記",
+    "aliases": [
+      "帖",
+      "以斯帖記",
+      "esth",
+      "esther"
+    ]
+  },
+  {
+    "osis": "Job",
+    "english": "Job",
+    "zh": "約伯記",
+    "aliases": [
+      "伯",
+      "約伯記",
+      "job"
+    ]
+  },
+  {
+    "osis": "Ps",
+    "english": "Psalms",
+    "zh": "詩篇",
+    "aliases": [
+      "詩",
+      "詩篇",
+      "ps",
+      "psalm",
+      "psalms"
+    ]
+  },
+  {
+    "osis": "Prov",
+    "english": "Proverbs",
+    "zh": "箴言",
+    "aliases": [
+      "箴",
+      "箴言",
+      "prov",
+      "proverbs"
+    ]
+  },
+  {
+    "osis": "Eccl",
+    "english": "Ecclesiastes",
+    "zh": "傳道書",
+    "aliases": [
+      "傳",
+      "傳道書",
+      "eccl",
+      "ecclesiastes"
+    ]
+  },
+  {
+    "osis": "Song",
+    "english": "Song of Solomon",
+    "zh": "雅歌",
+    "aliases": [
+      "歌",
+      "雅歌",
+      "song",
+      "songofsolomon"
+    ]
+  },
+  {
+    "osis": "Isa",
+    "english": "Isaiah",
+    "zh": "以賽亞書",
+    "aliases": [
+      "賽",
+      "以賽亞書",
+      "isa",
+      "isaiah"
+    ]
+  },
+  {
+    "osis": "Jer",
+    "english": "Jeremiah",
+    "zh": "耶利米書",
+    "aliases": [
+      "耶",
+      "耶利米書",
+      "jer",
+      "jeremiah"
+    ]
+  },
+  {
+    "osis": "Lam",
+    "english": "Lamentations",
+    "zh": "耶利米哀歌",
+    "aliases": [
+      "哀",
+      "耶利米哀歌",
+      "lam",
+      "lamentations"
+    ]
+  },
+  {
+    "osis": "Ezek",
+    "english": "Ezekiel",
+    "zh": "以西結書",
+    "aliases": [
+      "結",
+      "以西結書",
+      "ezek",
+      "ezekiel"
+    ]
+  },
+  {
+    "osis": "Dan",
+    "english": "Daniel",
+    "zh": "但以理書",
+    "aliases": [
+      "但",
+      "但以理書",
+      "dan",
+      "daniel"
+    ]
+  },
+  {
+    "osis": "Hos",
+    "english": "Hosea",
+    "zh": "何西阿書",
+    "aliases": [
+      "何",
+      "何西阿書",
+      "hos",
+      "hosea"
+    ]
+  },
+  {
+    "osis": "Joel",
+    "english": "Joel",
+    "zh": "約珥書",
+    "aliases": [
+      "珥",
+      "約珥書",
+      "joel"
+    ]
+  },
+  {
+    "osis": "Amos",
+    "english": "Amos",
+    "zh": "阿摩司書",
+    "aliases": [
+      "摩",
+      "阿摩司書",
+      "amos"
+    ]
+  },
+  {
+    "osis": "Obad",
+    "english": "Obadiah",
+    "zh": "俄巴底亞書",
+    "aliases": [
+      "俄",
+      "俄巴底亞書",
+      "obad",
+      "obadiah"
+    ]
+  },
+  {
+    "osis": "Jonah",
+    "english": "Jonah",
+    "zh": "約拿書",
+    "aliases": [
+      "拿",
+      "約拿書",
+      "jonah"
+    ]
+  },
+  {
+    "osis": "Mic",
+    "english": "Micah",
+    "zh": "彌迦書",
+    "aliases": [
+      "彌",
+      "彌迦書",
+      "mic",
+      "micah"
+    ]
+  },
+  {
+    "osis": "Nah",
+    "english": "Nahum",
+    "zh": "那鴻書",
+    "aliases": [
+      "鴻",
+      "那鴻書",
+      "nah",
+      "nahum"
+    ]
+  },
+  {
+    "osis": "Hab",
+    "english": "Habakkuk",
+    "zh": "哈巴谷書",
+    "aliases": [
+      "哈",
+      "哈巴谷書",
+      "hab",
+      "habakkuk"
+    ]
+  },
+  {
+    "osis": "Zeph",
+    "english": "Zephaniah",
+    "zh": "西番雅書",
+    "aliases": [
+      "番",
+      "西番雅書",
+      "zeph",
+      "zephaniah"
+    ]
+  },
+  {
+    "osis": "Hag",
+    "english": "Haggai",
+    "zh": "哈該書",
+    "aliases": [
+      "該",
+      "哈該書",
+      "hag",
+      "haggai"
+    ]
+  },
+  {
+    "osis": "Zech",
+    "english": "Zechariah",
+    "zh": "撒迦利亞書",
+    "aliases": [
+      "亞",
+      "撒迦利亞書",
+      "zech",
+      "zechariah"
+    ]
+  },
+  {
+    "osis": "Mal",
+    "english": "Malachi",
+    "zh": "瑪拉基書",
+    "aliases": [
+      "瑪",
+      "瑪拉基書",
+      "mal",
+      "malachi"
+    ]
+  },
+  {
+    "osis": "Matt",
+    "english": "Matthew",
+    "zh": "馬太福音",
+    "aliases": [
+      "太",
+      "馬太",
+      "matt",
+      "matthew"
+    ]
+  },
+  {
+    "osis": "Mark",
+    "english": "Mark",
+    "zh": "馬可福音",
+    "aliases": [
+      "可",
+      "馬可",
+      "mark"
+    ]
+  },
+  {
+    "osis": "Luke",
+    "english": "Luke",
+    "zh": "路加福音",
+    "aliases": [
+      "路",
+      "路加",
+      "luke"
+    ]
+  },
+  {
+    "osis": "John",
+    "english": "John",
+    "zh": "約翰福音",
+    "aliases": [
+      "約",
+      "約翰",
+      "john"
+    ]
+  },
+  {
+    "osis": "Acts",
+    "english": "Acts",
+    "zh": "使徒行傳",
+    "aliases": [
+      "徒",
+      "使徒行傳",
+      "acts"
+    ]
+  },
+  {
+    "osis": "Rom",
+    "english": "Romans",
+    "zh": "羅馬書",
+    "aliases": [
+      "羅",
+      "rom",
+      "romans"
+    ]
+  },
+  {
+    "osis": "1Cor",
+    "english": "1 Corinthians",
+    "zh": "哥林多前書",
+    "aliases": [
+      "林前",
+      "1cor",
+      "1 cor",
+      "1corinthians"
+    ]
+  },
+  {
+    "osis": "2Cor",
+    "english": "2 Corinthians",
+    "zh": "哥林多後書",
+    "aliases": [
+      "林後",
+      "2cor",
+      "2 cor",
+      "2corinthians"
+    ]
+  },
+  {
+    "osis": "Gal",
+    "english": "Galatians",
+    "zh": "加拉太書",
+    "aliases": [
+      "加",
+      "gal",
+      "galatians"
+    ]
+  },
+  {
+    "osis": "Eph",
+    "english": "Ephesians",
+    "zh": "以弗所書",
+    "aliases": [
+      "弗",
+      "eph",
+      "ephesians"
+    ]
+  },
+  {
+    "osis": "Phil",
+    "english": "Philippians",
+    "zh": "腓立比書",
+    "aliases": [
+      "腓",
+      "phil",
+      "philippians"
+    ]
+  },
+  {
+    "osis": "Col",
+    "english": "Colossians",
+    "zh": "歌羅西書",
+    "aliases": [
+      "西",
+      "col",
+      "colossians"
+    ]
+  },
+  {
+    "osis": "1Thess",
+    "english": "1 Thessalonians",
+    "zh": "帖撒羅尼迦前書",
+    "aliases": [
+      "帖前",
+      "1thess",
+      "1 thess"
+    ]
+  },
+  {
+    "osis": "2Thess",
+    "english": "2 Thessalonians",
+    "zh": "帖撒羅尼迦後書",
+    "aliases": [
+      "帖後",
+      "2thess",
+      "2 thess"
+    ]
+  },
+  {
+    "osis": "1Tim",
+    "english": "1 Timothy",
+    "zh": "提摩太前書",
+    "aliases": [
+      "提前",
+      "1tim",
+      "1 tim"
+    ]
+  },
+  {
+    "osis": "2Tim",
+    "english": "2 Timothy",
+    "zh": "提摩太後書",
+    "aliases": [
+      "提後",
+      "2tim",
+      "2 tim"
+    ]
+  },
+  {
+    "osis": "Titus",
+    "english": "Titus",
+    "zh": "提多書",
+    "aliases": [
+      "多",
+      "titus"
+    ]
+  },
+  {
+    "osis": "Phlm",
+    "english": "Philemon",
+    "zh": "腓利門書",
+    "aliases": [
+      "門",
+      "phlm",
+      "philemon"
+    ]
+  },
+  {
+    "osis": "Heb",
+    "english": "Hebrews",
+    "zh": "希伯來書",
+    "aliases": [
+      "來",
+      "heb",
+      "hebrews"
+    ]
+  },
+  {
+    "osis": "Jas",
+    "english": "James",
+    "zh": "雅各書",
+    "aliases": [
+      "雅",
+      "jas",
+      "james"
+    ]
+  },
+  {
+    "osis": "1Pet",
+    "english": "1 Peter",
+    "zh": "彼得前書",
+    "aliases": [
+      "彼前",
+      "1pet",
+      "1 pet"
+    ]
+  },
+  {
+    "osis": "2Pet",
+    "english": "2 Peter",
+    "zh": "彼得後書",
+    "aliases": [
+      "彼後",
+      "2pet",
+      "2 pet"
+    ]
+  },
+  {
+    "osis": "1John",
+    "english": "1 John",
+    "zh": "約翰一書",
+    "aliases": [
+      "約一",
+      "1john",
+      "1 john"
+    ]
+  },
+  {
+    "osis": "2John",
+    "english": "2 John",
+    "zh": "約翰二書",
+    "aliases": [
+      "約二",
+      "2john",
+      "2 john"
+    ]
+  },
+  {
+    "osis": "3John",
+    "english": "3 John",
+    "zh": "約翰三書",
+    "aliases": [
+      "約三",
+      "3john",
+      "3 john"
+    ]
+  },
+  {
+    "osis": "Jude",
+    "english": "Jude",
+    "zh": "猶大書",
+    "aliases": [
+      "猶",
+      "jude"
+    ]
+  },
+  {
+    "osis": "Rev",
+    "english": "Revelation",
+    "zh": "啟示錄",
+    "aliases": [
+      "啟",
+      "啟示錄",
+      "rev",
+      "revelation"
+    ]
+  }
 ]

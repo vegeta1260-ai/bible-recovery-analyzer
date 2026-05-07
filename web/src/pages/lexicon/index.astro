@@ -3,14 +3,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import lexiconData from '../../data/lexicon.json';
 type LexiconEntry = { strongs: string; lemma: string; language: string; transliteration: string; short_definition: string; literal_gloss_en: string; pronunciation_bopomofo: string; };
 const entries = (lexiconData as LexiconEntry[]).sort((a, b) => a.strongs.localeCompare(b.strongs));
-const base = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 <BaseLayout title="原文字典" description="Strong's 編號字典索引">
   <h1 style="margin: 2rem 0 1rem;">原文字典</h1>
   <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem;">目前收錄 {entries.length} 筆條目（MVP 資料）。</p>
   <div class="lexicon-grid">
     {entries.map(entry => (
-      <a href={`${base}lexicon/${entry.strongs}`} class="card lexicon-card">
+      <a href={`${base}/lexicon/${entry.strongs}`} class="card lexicon-card">
         <span class="strongs mono">{entry.strongs}</span>
         <span class="lemma" lang={entry.language === 'Hebrew' ? 'he' : 'grc'} dir={entry.language === 'Hebrew' ? 'rtl' : 'ltr'}>{entry.lemma}</span>
         <span class="gloss">{entry.literal_gloss_en} — {entry.short_definition}</span>
