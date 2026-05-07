@@ -1,4 +1,3 @@
-import tokensData from '@/data/tokens.json';
 import lexiconData from '@/data/lexicon.json';
 import { normalizeStrongs } from '@/lib/strongs';
 
@@ -37,10 +36,134 @@ export interface LexiconEntry {
   analytical_notes: string[];
 }
 
-const tokens = tokensData as Token[];
 const lexicon = lexiconData as LexiconEntry[];
 
-export function getVerseTokens(osisRef: string): Token[] {
+// --- Compressed token key mapping ---
+interface CompressedToken {
+  r: string;    // verse_ref
+  o: number;    // token_order
+  s: string;    // surface_form
+  n: string;    // normalized_form
+  l: string;    // lemma
+  ac: string;   // analytical_code_raw
+  pos: string;  // part_of_speech
+  mf: Record<string, string>; // morphology_features
+  st?: string;  // strongs_primary
+  st2?: string; // strongs_secondary
+  ge?: string;  // literal_gloss_en
+  zh?: string;  // translation_note_zh
+  ra?: string;  // recovery_alignment_note
+  tr?: string;  // pronunciation_transliteration
+  bp?: string;  // pronunciation_bopomofo
+  sl?: string;  // source_layer
+  vu?: string;  // verse_usage
+  gx?: string;  // grammar_explanation
+  oq?: boolean; // is_ot_quote
+}
+
+function expandToken(c: CompressedToken): Token {
+  return {
+    verse_ref: c.r,
+    token_order: c.o,
+    surface_form: c.s,
+    normalized_form: c.n,
+    lemma: c.l,
+    strongs_primary: c.st || '',
+    strongs_secondary: c.st2 || null,
+    analytical_code_raw: c.ac,
+    part_of_speech: c.pos,
+    morphology_features: c.mf,
+    literal_gloss_en: c.ge || '',
+    translation_note_zh: c.zh || '',
+    recovery_alignment_note: c.ra || '',
+    pronunciation_transliteration: c.tr || '',
+    pronunciation_bopomofo: c.bp || '',
+    source_layer: c.sl || 'SBLGNT|MorphGNT',
+    verse_usage: c.vu || '',
+    grammar_explanation: c.gx || '',
+    is_ot_quote: c.oq || false,
+  };
+}
+
+// --- IndexedDB cache ---
+const DB_NAME = 'bible-tokens';
+const DB_VERSION = 1;
+const STORE_NAME = 'books';
+
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(STORE_NAME);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getCached(book: string): Promise<Token[] | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(book);
+      req.onsuccess = () => resolve(req.result ?? null);
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function setCache(book: string, tokens: Token[]): Promise<void> {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(tokens, book);
+  } catch {
+    // silently ignore cache errors
+  }
+}
+
+// --- Per-book loading ---
+const BASE = typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
+  ? import.meta.env.BASE_URL.replace(/\/$/, '')
+  : '';
+
+const bookTokenCache = new Map<string, Token[]>();
+
+export async function loadBookTokens(book: string): Promise<Token[]> {
+  // Memory cache first
+  if (bookTokenCache.has(book)) {
+    return bookTokenCache.get(book)!;
+  }
+
+  // IndexedDB cache second
+  const cached = await getCached(book);
+  if (cached) {
+    bookTokenCache.set(book, cached);
+    return cached;
+  }
+
+  // Fetch from server
+  try {
+    const resp = await fetch(`${BASE}/data/tokens/${book}.json`);
+    if (!resp.ok) return [];
+    const compressed: CompressedToken[] = await resp.json();
+    const tokens = compressed.map(expandToken);
+    bookTokenCache.set(book, tokens);
+    await setCache(book, tokens);
+    return tokens;
+  } catch {
+    return [];
+  }
+}
+
+// --- Public API (now async for book loading) ---
+
+export async function getVerseTokens(osisRef: string): Promise<Token[]> {
+  const book = osisRef.split('.')[0];
+  const tokens = await loadBookTokens(book);
   return tokens
     .filter((t) => t.verse_ref === osisRef)
     .sort((a, b) => a.token_order - b.token_order);
@@ -55,20 +178,32 @@ export function lookupStrongs(rawId: string): LexiconEntry | null {
   }
 }
 
-export function lookupWord(query: string): Token[] {
+export async function lookupWord(query: string, book?: string): Promise<Token[]> {
   const q = query.trim();
-  return tokens
-    .filter((t) =>
+  const books = book ? [book] : Array.from(bookTokenCache.keys());
+  const results: Token[] = [];
+  for (const b of books) {
+    const tokens = await loadBookTokens(b);
+    results.push(...tokens.filter((t) =>
       t.surface_form === q || t.normalized_form === q ||
       t.lemma === q || t.pronunciation_transliteration === q
-    )
+    ));
+    if (results.length >= 80) break;
+  }
+  return results
     .sort((a, b) => a.verse_ref.localeCompare(b.verse_ref) || a.token_order - b.token_order)
     .slice(0, 80);
 }
 
-export function lookupLemma(lemma: string): Token[] {
-  return tokens
-    .filter((t) => t.lemma === lemma)
+export async function lookupLemma(lemma: string, book?: string): Promise<Token[]> {
+  const books = book ? [book] : Array.from(bookTokenCache.keys());
+  const results: Token[] = [];
+  for (const b of books) {
+    const tokens = await loadBookTokens(b);
+    results.push(...tokens.filter((t) => t.lemma === lemma));
+    if (results.length >= 80) break;
+  }
+  return results
     .sort((a, b) => a.verse_ref.localeCompare(b.verse_ref) || a.token_order - b.token_order)
     .slice(0, 80);
 }

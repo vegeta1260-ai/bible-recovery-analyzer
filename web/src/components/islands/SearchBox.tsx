@@ -59,38 +59,36 @@ export default function SearchBox() {
         const refs = splitOsisRange(osisRef);
         const book = refs[0]?.split('.')[0] ?? '';
 
-        const results: VerseData[] = refs.map(ref => ({
+        // Load book tokens + fetch recovery text in parallel
+        const [bookTokens, ...recoveries] = await Promise.all([
+          getVerseTokens(refs[0]).then(() => {
+            // After first verse loads, show tokens immediately
+            return Promise.all(refs.map(ref => getVerseTokens(ref)));
+          }),
+          ...refs.map(ref => {
+            const parts = ref.split('.');
+            const displayRef = parts.length >= 3 ? `${parts[0]} ${parts[1]}:${parts.slice(2).join('-')}` : ref;
+            return fetchRecoveryText(displayRef);
+          }),
+        ]);
+
+        setVerseResults(refs.map((ref, i) => ({
           osisRef: ref,
-          tokens: getVerseTokens(ref),
-          recovery: null,
-        }));
-        setVerseResults(results);
+          tokens: bookTokens[i] || [],
+          recovery: recoveries[i] || null,
+        })));
 
         // Switch ambient music to match this book
         if (isAudioEnabled() && book) {
           switchMusic(book);
         }
 
-        // Fetch recovery text in parallel
-        const recoveryPromises = refs.map(ref => {
-          const parts = ref.split('.');
-          const displayRef = parts.length >= 3 ? `${parts[0]} ${parts[1]}:${parts.slice(2).join('-')}` : ref;
-          return fetchRecoveryText(displayRef);
-        });
-
-        const recoveries = await Promise.all(recoveryPromises);
-        setVerseResults(refs.map((ref, i) => ({
-          osisRef: ref,
-          tokens: getVerseTokens(ref),
-          recovery: recoveries[i],
-        })));
-
         // Page-turn sound on results appearing
         if (isAudioEnabled()) playPageTurn();
       } else if (mode === 'word') {
-        setTokenResults(lookupWord(q));
+        setTokenResults(await lookupWord(q));
       } else if (mode === 'lemma') {
-        setTokenResults(lookupLemma(q));
+        setTokenResults(await lookupLemma(q));
       } else if (mode === 'search' || mode === 'morphology') {
         const result = fullTextSearch(q);
         setSearchResults(result);
