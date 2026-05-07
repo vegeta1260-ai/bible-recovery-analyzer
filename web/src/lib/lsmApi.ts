@@ -1,4 +1,7 @@
 const LSM_API_URL = 'https://api.lsm.org/recver/txo.php';
+const LSM_APP_ID = 'ai.vegeta1260.biblerecoveryanalyzer';
+const LSM_TOKEN = 'web_9972c275-24f4-4720-bd42-8b5c0d9c6fd7';
+const LSM_AUTH = 'Basic ' + btoa(`${LSM_APP_ID}:${LSM_TOKEN}`);
 
 export interface RecoveryVerse {
   ref: string;
@@ -26,7 +29,9 @@ function errorResult(msg: string): RecoveryResult {
 
 async function doFetch(ref: string): Promise<RecoveryResult> {
   const params = new URLSearchParams({ String: ref, Out: 'json' });
-  const resp = await fetch(`${LSM_API_URL}?${params}`);
+  const resp = await fetch(`${LSM_API_URL}?${params}`, {
+    headers: { Authorization: LSM_AUTH },
+  });
   if (!resp.ok) {
     return errorResult(`LSM API returned ${resp.status}`);
   }
