@@ -4,9 +4,8 @@ import lexiconData from '../../data/lexicon.json';
 import D3OccurrenceChart from '../../components/islands/D3OccurrenceChart';
 type LexiconEntry = { strongs: string; normalized_strongs: string; lemma: string; language: string; transliteration: string; pronunciation_bopomofo: string; short_definition: string; literal_gloss_en: string; common_inflections: string[]; analytical_notes: string[]; };
 const entries = lexiconData as LexiconEntry[];
-// Pre-render only the first 50 entries for SEO; rest loaded dynamically via /data/lexicon.json
 export function getStaticPaths() {
-  return (lexiconData as LexiconEntry[]).slice(0, 50).map(e => ({ params: { id: e.strongs } }));
+  return (lexiconData as LexiconEntry[]).map(e => ({ params: { id: e.strongs } }));
 }
 const { id } = Astro.params;
 const entry = entries.find(e => e.strongs === id)!;
