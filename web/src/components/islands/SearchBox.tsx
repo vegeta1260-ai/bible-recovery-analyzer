@@ -90,7 +90,7 @@ export default function SearchBox() {
       } else if (mode === 'lemma') {
         setTokenResults(await lookupLemma(q));
       } else if (mode === 'search' || mode === 'morphology') {
-        const result = fullTextSearch(q);
+        const result = await fullTextSearch(q);
         setSearchResults(result);
       }
     } catch (err) {

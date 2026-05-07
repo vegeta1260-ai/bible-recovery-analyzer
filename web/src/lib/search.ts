@@ -1,7 +1,8 @@
-import tokensData from '@/data/tokens.json';
-import type { Token } from '@/lib/analyzer';
+import { loadBookTokens, type Token } from '@/lib/analyzer';
+import bookMapData from '@/data/bookMap.json';
 
-const tokens = tokensData as Token[];
+type BookEntry = { osis: string };
+const allBooks = (bookMapData as BookEntry[]).map(b => b.osis);
 
 export interface SearchResult {
   query: string;
@@ -10,19 +11,36 @@ export interface SearchResult {
   matchedStrongs: string[];
 }
 
-export function search(query: string): SearchResult {
+export async function search(query: string, book?: string): Promise<SearchResult> {
   const q = query.trim();
   const qUpper = q.toUpperCase();
+  const booksToSearch = book ? [book] : allBooks;
+  const matched: Token[] = [];
 
-  const matched = tokens.filter((t) =>
-    t.verse_ref.includes(q) || t.surface_form.includes(q) ||
-    t.lemma.includes(q) || t.strongs_primary.includes(qUpper) ||
-    t.analytical_code_raw.includes(qUpper)
-  );
+  for (const b of booksToSearch) {
+    let tokens: Token[];
+    try {
+      tokens = await loadBookTokens(b);
+    } catch {
+      continue;
+    }
+    if (tokens.length === 0) continue;
+
+    for (const t of tokens) {
+      if (
+        t.verse_ref.includes(q) || t.surface_form.includes(q) ||
+        t.lemma.includes(q) || t.strongs_primary.includes(qUpper) ||
+        t.analytical_code_raw.includes(qUpper)
+      ) {
+        matched.push(t);
+      }
+    }
+    if (matched.length >= 500) break;
+  }
 
   const refs = [...new Set(matched.map((t) => t.verse_ref))].sort().slice(0, 100);
   const matchedLemmas = [...new Set(matched.map((t) => t.lemma))].sort().slice(0, 100);
-  const matchedStrongs = [...new Set(matched.map((t) => t.strongs_primary))].sort().slice(0, 100);
+  const matchedStrongs = [...new Set(matched.map((t) => t.strongs_primary))].filter(Boolean).sort().slice(0, 100);
 
   return { query: q, refs, matchedLemmas, matchedStrongs };
 }
