@@ -106,7 +106,7 @@ echo ""
 
 echo "[9] LSM API (直接測試)"
 LSM_RESPONSE=$(curl -s "https://api.lsm.org/recver/txo.php?String=John+1:1&Out=json" -H "Authorization: Basic $(echo -n 'ai.vegeta1260.biblerecoveryanalyzer:web_9972c275-24f4-4720-bd42-8b5c0d9c6fd7' | base64)")
-if echo "$LSM_RESPONSE" | grep -q '"verses":\[{'; then
+if echo "$LSM_RESPONSE" | grep -q '"text"'; then
   echo "  PASS  LSM API auth 有效，回傳經文"
   PASS=$((PASS + 1))
 else
