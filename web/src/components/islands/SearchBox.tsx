@@ -104,6 +104,26 @@ export default function SearchBox() {
     if (e.key === 'Enter') handleSearch();
   };
 
+  // 從 URL 的 ?ref= 帶入經文（書卷快速入口連結），於掛載時填入查詢框
+  const autoRef = useRef<string | null>(null);
+  const didAutoSearch = useRef(false);
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref');
+    if (ref) {
+      autoRef.current = ref;
+      setQuery(ref);
+    }
+  }, []);
+
+  // query 更新成帶入的 ref 後，自動執行一次經文搜尋（mode 預設即為 verse）
+  useEffect(() => {
+    if (didAutoSearch.current) return;
+    if (autoRef.current && query === autoRef.current) {
+      didAutoSearch.current = true;
+      handleSearch();
+    }
+  }, [query, handleSearch]);
+
   const modes: { value: SearchMode; label: string }[] = [
     { value: 'verse', label: '經文' },
     { value: 'word', label: '字詞' },

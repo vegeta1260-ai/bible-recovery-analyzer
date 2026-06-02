@@ -10,26 +10,29 @@ const NT_OSIS = new Set([
 ]);
 const ot = books.filter(b => !NT_OSIS.has(b.osis));
 const nt = books.filter(b => NT_OSIS.has(b.osis));
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+// 點書卷 → 研經頁帶入該卷 1:1 自動搜尋（每卷皆有第 1 章第 1 節）
+const bookHref = (book: BookEntry) => `${base}/study?ref=${encodeURIComponent(book.zh + '1:1')}`;
 ---
 <section class="book-grid-section">
   <h2>舊約（{ot.length} 卷）</h2>
   <div class="book-grid">
     {ot.map(book => (
-      <div class="book-card card">
+      <a class="book-card card" href={bookHref(book)} aria-label={`查看${book.zh}原文逐字對照`}>
         <span class="book-zh">{book.zh}</span>
         <span class="book-en">{book.english}</span>
         <span class="book-osis mono">{book.osis}</span>
-      </div>
+      </a>
     ))}
   </div>
   <h2>新約（{nt.length} 卷）</h2>
   <div class="book-grid">
     {nt.map(book => (
-      <div class="book-card card">
+      <a class="book-card card" href={bookHref(book)} aria-label={`查看${book.zh}原文逐字對照`}>
         <span class="book-zh">{book.zh}</span>
         <span class="book-en">{book.english}</span>
         <span class="book-osis mono">{book.osis}</span>
-      </div>
+      </a>
     ))}
   </div>
 </section>
