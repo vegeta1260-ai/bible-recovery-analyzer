@@ -2,11 +2,17 @@
 import bookMapData from '../../data/bookMap.json';
 type BookEntry = { osis: string; english: string; zh: string; aliases: string[] };
 const books = bookMapData as BookEntry[];
-const ot = books.filter(b => ['Gen', 'Exod', 'Ps'].includes(b.osis));
-const nt = books.filter(b => !['Gen', 'Exod', 'Ps'].includes(b.osis));
+// 新約 27 卷 OSIS（其餘即為舊約 39 卷）。filter 保留 bookMap.json 的標準聖經順序。
+const NT_OSIS = new Set([
+  'Matt', 'Mark', 'Luke', 'John', 'Acts', 'Rom', '1Cor', '2Cor', 'Gal', 'Eph',
+  'Phil', 'Col', '1Thess', '2Thess', '1Tim', '2Tim', 'Titus', 'Phlm', 'Heb',
+  'Jas', '1Pet', '2Pet', '1John', '2John', '3John', 'Jude', 'Rev',
+]);
+const ot = books.filter(b => !NT_OSIS.has(b.osis));
+const nt = books.filter(b => NT_OSIS.has(b.osis));
 ---
 <section class="book-grid-section">
-  <h2>舊約（已收錄）</h2>
+  <h2>舊約（{ot.length} 卷）</h2>
   <div class="book-grid">
     {ot.map(book => (
       <div class="book-card card">
@@ -16,7 +22,7 @@ const nt = books.filter(b => !['Gen', 'Exod', 'Ps'].includes(b.osis));
       </div>
     ))}
   </div>
-  <h2>新約</h2>
+  <h2>新約（{nt.length} 卷）</h2>
   <div class="book-grid">
     {nt.map(book => (
       <div class="book-card card">
