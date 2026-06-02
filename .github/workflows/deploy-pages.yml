@@ -25,7 +25,15 @@ jobs:
       - run: rm -f package-lock.json && npm install
         working-directory: web
 
+      - name: Unit tests
+        run: npm test
+        working-directory: web
+
       - run: npm run build
+        working-directory: web
+
+      - name: Build smoke test (dist/ 產物檢查，失敗則不部署)
+        run: bash scripts/smoke-test-build.sh
         working-directory: web
 
       - name: Deploy to gh-pages branch

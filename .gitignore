@@ -1,5 +1,8 @@
 .claude/
 .DS_Store
 *.db
+*.log
 asvs-server.log
 .worktrees/
+node_modules/
+.astro/

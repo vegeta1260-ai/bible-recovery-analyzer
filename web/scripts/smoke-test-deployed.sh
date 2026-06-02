@@ -72,7 +72,6 @@ echo ""
 echo "[3] 靜態 JSON 資料"
 check_json_count "NT tokens (John)" "$BASE/data/tokens/John.json" 15000
 check_json_count "OT tokens (Gen)" "$BASE/data/tokens/Gen.json" 20000
-check_json_count "Lexicon" "$BASE/data/lexicon.json" 14000
 echo ""
 
 echo "[4] SEO meta tags"

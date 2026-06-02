@@ -28,7 +28,7 @@
 | 音效 | Howler.js | 2.x | 環境音樂播放、書卷風格切換、淡入淡出 |
 | 程序化音效 | Web Audio API | 原生 | 翻頁聲、鐘聲（~3KB，無外部依賴） |
 | 樣式 | CSS Modules + OKLCH | — | Design tokens，暖色系亮色/深色雙模式 |
-| 測試 | Vitest | 4.x | 61 個單元測試 + 28 項部署煙霧測試 |
+| 測試 | Vitest | 4.x | 61 個單元測試 + 27 項煙霧測試（build 與部署各一支） |
 | 字體 | Noto Serif/Sans TC, Ezra SIL, GentiumPlus | Google Fonts + self-host | 中文 + 原文（SIL OFL 授權） |
 | 外部 API | LSM Recovery Version API | — | 恢復本經文（Basic auth，CORS OK） |
 
@@ -105,6 +105,16 @@ npm run build        # 產出 14,203 頁靜態檔案到 dist/（約 30 秒）
 npm run preview      # 預覽 build 結果
 ```
 
+### Build 後煙霧測試（本地 / CI，不打網路）
+
+```bash
+npm run test:smoke   # 針對 dist/ 產物做 27 項檔案系統檢查
+```
+
+在 `npm run build` 之後執行，於 **push / 部署前**就攔下壞掉的 build（例如 getStaticPaths 靜默壞掉導致頁數驟減、JSON 資料缺漏、SEO tag 不見）。
+CI 也會在 build 後、deploy 前自動跑這支（見 `.github/workflows/deploy-pages.yml`），失敗則不部署。
+與下方「部署後煙霧測試」互補：此支查產物、下方查線上版本（含 LSM API live）。
+
 ### 部署後煙霧測試
 
 ```bash
@@ -112,7 +122,7 @@ bash scripts/smoke-test-deployed.sh                              # 測試線上�
 bash scripts/smoke-test-deployed.sh https://your-domain.com/path  # 測試自訂 URL
 ```
 
-驗證 28 項：頁面存取、JSON 資料、SEO tags、JSON-LD、JS bundles、導覽連結、LSM API、音檔。
+驗證 27 項：頁面存取、JSON 資料、SEO tags、JSON-LD、JS bundles、導覽連結、LSM API、音檔。
 
 ---
 
@@ -130,11 +140,11 @@ web/
 │   │   ├── ambient-apocalypse.mp3  # 啟示錄 — 管風琴合唱
 │   │   └── ambient-default.mp3     # 預設/書信 — 安靜鋼琴
 │   ├── data/
-│   │   ├── tokens/            # 按書卷分割的原文 token JSON（66 檔）
-│   │   │   ├── Gen.json       # 創世記 20,629 tokens
-│   │   │   ├── John.json      # 約翰福音 15,438 tokens
-│   │   │   └── ...            # 其餘 64 卷
-│   │   └── lexicon.json       # 14,197 筆 Strong's 字典（動態載入用）
+│   │   └── tokens/            # 按書卷分割的原文 token JSON（66 檔，runtime 動態載入）
+│   │       ├── Gen.json       # 創世記 20,629 tokens
+│   │       ├── John.json      # 約翰福音 15,438 tokens
+│   │       └── ...            # 其餘 64 卷
+│   │   # 註：lexicon 為 build 時嵌入（src/data/lexicon.json），不放 public，避免重複與 drift
 │   ├── fonts/                 # self-host 字體 (Ezra SIL, GentiumPlus)
 │   ├── og-default.png         # OG 社群分享預覽圖
 │   └── lottie/                # Lottie 動畫 JSON
@@ -149,7 +159,7 @@ web/
 │   ├── audio/                 # 音樂/音效控制模組
 │   ├── data/                  # Build 時嵌入的 JSON
 │   │   ├── bookMap.json       # 66 卷書對照表
-│   │   ├── lexicon.json       # 14,197 筆 Strong's（build 時用）
+│   │   ├── lexicon.json       # 14,197 筆 Strong's（build 時嵌入；全站唯一來源）
 │   │   └── analyticalCodes.json # 分析碼圖例 + 文法注記
 │   ├── lib/                   # 7 個 TypeScript 邏輯模組
 │   └── styles/
@@ -162,7 +172,8 @@ web/
 │   ├── build-full-bookmap.py  # 產生完整 66 卷 bookMap.json
 │   ├── build-lexicon.py       # 產生完整 Strong's lexicon.json
 │   ├── fill-gloss.py          # 從 lexicon 反查填入 token 英文 gloss
-│   └── smoke-test-deployed.sh # 部署後 28 項煙霧測試
+│   ├── smoke-test-build.sh    # build 後 27 項本地/CI 煙霧測試（查 dist/ 產物）
+│   └── smoke-test-deployed.sh # 部署後 27 項煙霧測試（查線上版本 + LSM API live）
 └── tests/                     # 61 個單元測試（9 test files）
 ```
 
@@ -195,6 +206,14 @@ web/
 | LSM Recovery Version | `https://api.lsm.org/recver/txo.php` | Basic auth (APP_ID:TOKEN) | `Access-Control-Allow-Origin: *` |
 
 前端直接呼叫，無需代理。含自動重試（1 次，間隔 2 秒）和錯誤降級。
+
+> **關於 `lsmApi.ts` 內的 APP_ID / TOKEN**
+> LSM = Living Stream Ministry（水流職事站），恢復本聖經的出版者，**與 AI/LLM 無關**。
+> 恢復本中文經文為 LSM 版權所有、不可離線打包，必須 runtime 向 LSM API 認證後取得。
+> 程式碼中的憑證是 LSM 針對網頁應用核發、**設計即供瀏覽器端公開使用**的 web token
+> （`web_` 前綴即此分級），已確認可公開隨靜態 bundle 上線，**不視為機密洩漏**。
+> 純靜態站無 server 可代理，憑證必然落在 client 端，此為預期取捨。
+> 這與後端 `bible_recovery_analyzer/` 使用的 LSM 憑證是不同來源、不同機制（後端走 env、禁寫進 repo）。
 
 ---
 
@@ -258,9 +277,11 @@ web/
 |------|--------|------|
 | 1. push 到 main | 開發者 | 任何檔案變更都會觸發 |
 | 2. `npm install` | GitHub Actions | 在 CI 環境安裝依賴 |
-| 3. `npm run build` | GitHub Actions | Astro build 14,203 頁（~30 秒） |
-| 4. 推到 gh-pages | `peaceiris/actions-gh-pages` | 自動將 `dist/` 推到 `gh-pages` 分支 |
-| 5. 發布 | GitHub Pages | 偵測 `gh-pages` 分支變更，自動發布 |
+| 3. `npm test` | GitHub Actions | 61 個單元測試，失敗則中止、不部署 |
+| 4. `npm run build` | GitHub Actions | Astro build 14,203 頁（~30 秒） |
+| 5. `npm run test:smoke` | GitHub Actions | dist/ 產物 27 項煙霧測試，失敗則中止、不部署 |
+| 6. 推到 gh-pages | `peaceiris/actions-gh-pages` | 自動將 `dist/` 推到 `gh-pages` 分支 |
+| 7. 發布 | GitHub Pages | 偵測 `gh-pages` 分支變更，自動發布 |
 
 - Workflow 檔案：`.github/workflows/deploy-pages.yml`
 - GitHub Pages 設定：Source = **Deploy from a branch**, Branch = **gh-pages / root**
@@ -269,7 +290,7 @@ web/
 
 ```bash
 bash web/scripts/smoke-test-deployed.sh
-# 28 項檢查：頁面、資料、SEO、API、音檔
+# 27 項檢查：頁面、資料、SEO、API、音檔
 ```
 
 ### 手動部署（備用）
@@ -294,10 +315,11 @@ git push origin gh-pages --force
 1. 修改程式碼
 2. 本地測試：npm test（61 tests）
 3. 本地預覽：npm run dev → http://localhost:4321/bible-recovery-analyzer/
-4. commit + push main
-5. GitHub Actions 自動 build + deploy（~1 分鐘）
-6. 煙霧測試：bash scripts/smoke-test-deployed.sh（28 項）
-7. 確認線上：https://vegeta1260-ai.github.io/bible-recovery-analyzer/
+4. （建議）本地 build 煙霧測試：npm run build && npm run test:smoke（27 項，push 前先攔壞 build）
+5. commit + push main
+6. GitHub Actions 自動 test + build + smoke + deploy（~1 分鐘；任一步失敗則不部署）
+7. 部署後煙霧測試：bash scripts/smoke-test-deployed.sh（27 項，含 LSM API live）
+8. 確認線上：https://vegeta1260-ai.github.io/bible-recovery-analyzer/
 ```
 
 ### SOP 2：新增靜態頁面
@@ -377,13 +399,13 @@ git push origin gh-pages --force
 ```
 1. 下載最新 Strong's 資料：
    git clone --depth 1 https://github.com/openscriptures/strongs.git /tmp/strongs
-2. 執行腳本：
+2. 執行腳本（輸出唯一來源 src/data/lexicon.json）：
    python3 web/scripts/build-lexicon.py
-3. 複製到 public/data/：
-   cp web/src/data/lexicon.json web/public/data/lexicon.json
-4. npm run build（會重新產生 14,197 個 lexicon 頁面）
-5. commit + push
+3. npm run build（build 時嵌入，重新產生 14,197 個 lexicon 頁面）
+4. commit + push
 ```
+
+> 註：lexicon 只有 `src/data/lexicon.json` 一份來源，build 時嵌入頁面，**不需也不要**再複製到 `public/`（先前的 public 副本為死檔，已移除）。
 
 ### SOP 8：新增 D3 圖表
 
