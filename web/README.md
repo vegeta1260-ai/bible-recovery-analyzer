@@ -6,10 +6,12 @@
 - **444,339 筆原文 token**（137,554 新約希臘文 + 306,785 舊約希伯來文），按書卷動態載入 + IndexedDB 快取
 - **14,197 筆 Strong's 字典**（5,523 希臘文 + 8,674 希伯來文），每筆有獨立頁面含 JSON-LD
 - **66 卷書完整對照表**（OSIS / 英文 / 中文 / 別名）
+- **1,189 個逐章研經落地頁**（`/study/[book]/[chapter]`）：靜態原文逐字對照 + 本章導覽地圖（A）+ 本章概要（B）+ 恢復本 runtime 疊加；每章含 JSON-LD（BreadcrumbList + Article）。站內入口＝書卷卡（首頁 / `/books`）連該卷第 1 章
+- **每書卷 OG 分享卡 66 張**（`public/og/{osis}.png`，本機 macOS 產出後 commit）
 - 恢復本經文由前端直接呼叫 LSM API（Basic auth，已確認 CORS OK）
 - 12 種視覺特效 + 5 風格環境音樂
 - OKLCH 暖色系 + 動態字體 + 響應式 + 深色模式
-- SEO/AEO：14,203 頁預渲染 HTML + JSON-LD + OG tags
+- SEO/AEO：**15,392 頁**預渲染 HTML + JSON-LD + OG tags + `sitemap.xml`（@astrojs/sitemap，含全部頁面）+ `robots.txt`
 
 線上網址：https://vegeta1260-ai.github.io/bible-recovery-analyzer/
 
@@ -28,7 +30,9 @@
 | 音效 | Howler.js | 2.x | 環境音樂播放、書卷風格切換、淡入淡出 |
 | 程序化音效 | Web Audio API | 原生 | 翻頁聲、鐘聲（~3KB，無外部依賴） |
 | 樣式 | CSS Modules + OKLCH | — | Design tokens，暖色系亮色/深色雙模式 |
-| 測試 | Vitest | 4.x | 61 個單元測試 + 27 項煙霧測試（build 與部署各一支） |
+| 測試 | Vitest | 4.x | 61 個單元測試 + 51 項 build 煙霧測試 + 部署煙霧測試 |
+| Sitemap | @astrojs/sitemap | 3.x | build 產 sitemap-index.xml + sitemap-0.xml（含 15,392 URL） |
+| OG 圖 | @resvg/resvg-js | 2.x | 本機產 66 張書卷 OG 卡（CJK 用 macOS 系統字型） |
 | 字體 | Noto Serif/Sans TC, Ezra SIL, GentiumPlus | Google Fonts + self-host | 中文 + 原文（SIL OFL 授權） |
 | 外部 API | LSM Recovery Version API | — | 恢復本經文（Basic auth，CORS OK） |
 
@@ -101,14 +105,14 @@ npm run test:watch   # 監控模式
 ### Build
 
 ```bash
-npm run build        # 產出 14,203 頁靜態檔案到 dist/（約 30 秒）
+npm run build        # 產出 15,392 頁靜態檔案到 dist/（約 60 秒）
 npm run preview      # 預覽 build 結果
 ```
 
 ### Build 後煙霧測試（本地 / CI，不打網路）
 
 ```bash
-npm run test:smoke   # 針對 dist/ 產物做 27 項檔案系統檢查
+npm run test:smoke   # 針對 dist/ 產物做 51 項檔案系統檢查
 ```
 
 在 `npm run build` 之後執行，於 **push / 部署前**就攔下壞掉的 build（例如 getStaticPaths 靜默壞掉導致頁數驟減、JSON 資料缺漏、SEO tag 不見）。
@@ -146,21 +150,25 @@ web/
 │   │       └── ...            # 其餘 64 卷
 │   │   # 註：lexicon 為 build 時嵌入（src/data/lexicon.json），不放 public，避免重複與 drift
 │   ├── fonts/                 # self-host 字體 (Ezra SIL, GentiumPlus)
-│   ├── og-default.png         # OG 社群分享預覽圖
+│   ├── og/                    # 書卷 OG 分享卡 66 張（本機 macOS 產出後 commit；CI 不重產）
+│   ├── og-default.png         # 預設 OG 社群分享預覽圖
+│   ├── robots.txt             # 指向 sitemap
 │   └── lottie/                # Lottie 動畫 JSON
 ├── src/
 │   ├── layouts/
 │   │   └── BaseLayout.astro   # 共用版面（SEO meta, OG tags, 防閃爍 script）
-│   ├── pages/                 # 路由頁面（14,203 頁）
+│   ├── pages/                 # 路由頁面（15,392 頁）
+│   │   └── study/[book]/[chapter].astro  # 逐章研經落地頁（getStaticPaths 產 1,189 頁）
 │   ├── components/
-│   │   ├── islands/           # React Islands（12 個互動元件）
-│   │   └── static/            # Astro 純靜態元件（6 個，零 JS）
+│   │   ├── islands/           # React Islands（含 ChapterRecovery：逐章頁恢復本 runtime 疊加）
+│   │   └── static/            # Astro 純靜態元件（含 BookGrid：書卷卡連逐章頁）
 │   ├── effects/               # 12 個視覺特效 React 元件
 │   ├── audio/                 # 音樂/音效控制模組
 │   ├── data/                  # Build 時嵌入的 JSON
 │   │   ├── bookMap.json       # 66 卷書對照表
 │   │   ├── lexicon.json       # 14,197 筆 Strong's（build 時嵌入；全站唯一來源）
-│   │   └── analyticalCodes.json # 分析碼圖例 + 文法注記
+│   │   ├── analyticalCodes.json # 分析碼圖例 + 文法注記
+│   │   └── chapter-outlines/  # 逐章頁「本章概要」(B)，66 檔，選填
 │   ├── lib/                   # 7 個 TypeScript 邏輯模組
 │   └── styles/
 │       ├── tokens.css         # OKLCH design tokens（亮色 + 深色）
@@ -172,8 +180,9 @@ web/
 │   ├── build-full-bookmap.py  # 產生完整 66 卷 bookMap.json
 │   ├── build-lexicon.py       # 產生完整 Strong's lexicon.json
 │   ├── fill-gloss.py          # 從 lexicon 反查填入 token 英文 gloss
-│   ├── smoke-test-build.sh    # build 後 27 項本地/CI 煙霧測試（查 dist/ 產物）
-│   └── smoke-test-deployed.sh # 部署後 27 項煙霧測試（查線上版本 + LSM API live）
+│   ├── build-og-images.mjs    # 產 66 張書卷 OG 卡（resvg + macOS 系統字型，本機執行）
+│   ├── smoke-test-build.sh    # build 後 51 項本地/CI 煙霧測試（查 dist/ 產物）
+│   └── smoke-test-deployed.sh # 部署後煙霧測試（查線上版本 + LSM API live）
 └── tests/                     # 61 個單元測試（9 test files）
 ```
 
@@ -198,6 +207,7 @@ web/
 | `bookMap.json` | 66 | 完整 66 卷書（OSIS/英文/中文/別名） |
 | `lexicon.json` | 14,197 | Strong's 字典（5,523 Greek + 8,674 Hebrew） |
 | `analyticalCodes.json` | 35 codes | 分析碼圖例 + 縮寫 + 11 條文法注記 |
+| `chapter-outlines/{osis}.json` | 66 檔 / 1,188 章 | 逐章頁的「本章概要」(B)，選填（`import.meta.glob` 載入，有則顯示）；多 Sonnet 平行生成、受版權約束（禁貼近恢復本綱目）。Joel/Mal 因希伯來 vs 中文版本章節差，少數章對不上、優雅降級 |
 
 ### 外部 API（runtime）
 
@@ -236,14 +246,15 @@ web/
 
 | 路由 | 頁面 | 類型 | 頁數 |
 |------|------|------|------|
-| `/` | 首頁（搜尋 + 書卷入口 + ScrollUnfold） | 靜態 + Islands | 1 |
+| `/` | 首頁（搜尋 + 書卷入口；hero 直接渲染保 LCP） | 靜態 + Islands | 1 |
 | `/study` | 研經主頁（SearchBox + D3 圖表） | Islands | 1 |
-| `/books` | 書卷總覽（66 卷） | 純靜態（零 JS） | 1 |
+| `/study/[book]/[chapter]` | 逐章研經落地頁（靜態原文對照 + A 導覽 + B 概要 + 恢復本 runtime + JSON-LD） | 預渲染 | 1,189 |
+| `/books` | 書卷總覽（66 卷，卡片連逐章頁） | 純靜態（零 JS） | 1 |
 | `/legend` | 分析碼圖例 | 純靜態（零 JS） | 1 |
 | `/lexicon` | 字典列表 | 靜態 | 1 |
-| `/lexicon/[id]` | 個別 Strong's（含 JSON-LD + D3） | 預渲染 | 14,197 |
+| `/lexicon/[id]` | 個別 Strong's（標題以 transliteration 開頭 + JSON-LD + D3） | 預渲染 | 14,197 |
 | `/resources` | 事工資源 | 純靜態（零 JS） | 1 |
-| **合計** | | | **14,203** |
+| **合計** | | | **15,392** |
 
 ---
 
@@ -279,8 +290,8 @@ web/
 | 1. push 到 main | 開發者 | 任何檔案變更都會觸發 |
 | 2. `npm install` | GitHub Actions | 在 CI 環境安裝依賴 |
 | 3. `npm test` | GitHub Actions | 61 個單元測試，失敗則中止、不部署 |
-| 4. `npm run build` | GitHub Actions | Astro build 14,203 頁（~30 秒） |
-| 5. `npm run test:smoke` | GitHub Actions | dist/ 產物 27 項煙霧測試，失敗則中止、不部署 |
+| 4. `npm run build` | GitHub Actions | Astro build 15,392 頁（~60 秒） |
+| 5. `npm run test:smoke` | GitHub Actions | dist/ 產物 51 項煙霧測試，失敗則中止、不部署 |
 | 6. 推到 gh-pages | `peaceiris/actions-gh-pages` | 自動將 `dist/` 推到 `gh-pages` 分支 |
 | 7. 發布 | GitHub Pages | 偵測 `gh-pages` 分支變更，自動發布 |
 
@@ -293,6 +304,20 @@ web/
 bash web/scripts/smoke-test-deployed.sh
 # 27 項檢查：頁面、資料、SEO、API、音檔
 ```
+
+### 環境變數
+
+| 變數 | 用途 | 設定處 | 未設時 |
+|------|------|--------|--------|
+| `PUBLIC_CF_BEACON_TOKEN` | Cloudflare Web Analytics beacon token（公開值） | GitHub repo **Variables**（`deploy-pages.yml` build 步驟已接 env） | 不注入 beacon，build 正常 |
+
+取得 token：Cloudflare Dashboard → Analytics & Logs → Web Analytics → Add a site → 取 `data-cf-beacon` 內的 `token`。
+
+### Sitemap / robots
+
+- `npm run build` 由 `@astrojs/sitemap` 產出 `dist/sitemap-index.xml` + `dist/sitemap-0.xml`（含全部 15,392 URL）。
+- `public/robots.txt` 指向 sitemap。
+- ⚠️ GitHub Pages 專案站的爬蟲認的是**網域根** robots.txt（不在本 repo）；正式讓 Google 吃 sitemap 需到 **Search Console 提交** sitemap 網址。
 
 ### 手動部署（備用）
 
@@ -316,7 +341,7 @@ git push origin gh-pages --force
 1. 修改程式碼
 2. 本地測試：npm test（61 tests）
 3. 本地預覽：npm run dev → http://localhost:4321/bible-recovery-analyzer/
-4. （建議）本地 build 煙霧測試：npm run build && npm run test:smoke（27 項，push 前先攔壞 build）
+4. （建議）本地 build 煙霧測試：npm run build && npm run test:smoke（51 項，push 前先攔壞 build）
 5. commit + push main
 6. GitHub Actions 自動 test + build + smoke + deploy（~1 分鐘；任一步失敗則不部署）
 7. 部署後煙霧測試：bash scripts/smoke-test-deployed.sh（27 項，含 LSM API live）
@@ -434,6 +459,36 @@ git push origin gh-pages --force
 6. commit + push
 ```
 
+### SOP 10：產生 / 更新書卷 OG 分享卡（66 張）
+
+```
+1. 改書名/配色 → 編輯 web/scripts/build-og-images.mjs
+2. 【必須在本機 macOS 執行】（CJK 靠系統字型；CI 是 ubuntu 無中文字型）：
+   cd web && node scripts/build-og-images.mjs   # 產出 public/og/{osis}.png 66 張
+3. 用 Read/預覽抽看 1~2 張，確認中文未變豆腐、最長書名不溢出
+4. commit public/og/*.png（PNG 進 repo；CI 只當靜態資產複製，不重產）
+5. push
+```
+
+> ⚠️ 絕不可把產圖加進 `npm build`：CI（ubuntu）無中文字型，會產出豆腐字 OG 卡。
+
+### SOP 11：更新逐章頁「本章概要」(B)
+
+```
+1. B 為選填：web/src/data/chapter-outlines/{osis}.json（key=章號字串 → 概要文字）
+   逐章頁有則顯示概要、無則只顯示 A 導覽（優雅降級）。
+2. 撰寫約束（硬性）：純描述性、神學中性、3–4 行、繁中、
+   禁抄襲或貼近恢復本（Recovery Version）章首綱目。
+3. 大量產出用多個 Sonnet agent 平行（一卷一檔，互不衝突）。
+4. 驗證章數對齊「實際 token 章節」（OSHB/MorphGNT 版本；Joel 4 章、Mal 3 章）：
+   node -e "const d=require('./src/data/chapter-outlines/Xxx.json');console.log(Object.keys(d).length)"
+5. npm run build && npm run test:smoke
+6. commit + push
+```
+
+> 逐章頁本身（`src/pages/study/[book]/[chapter].astro`）由 token 動態產生，
+> 不需手改；改 `getStaticPaths` 後務必 smoke 確認頁數不掉（gate 下限 1,000 章 / 15,000 總頁）。
+
 ---
 
 ## Troubleshooting
@@ -444,7 +499,7 @@ git push origin gh-pages --force
 |------|------|------|
 | `Invalid Version` | package-lock.json 中 sharp 可選依賴空版本 | Workflow 已設定 `rm -f package-lock.json && npm install` |
 | `Module not found @/...` | Vite alias 未設定 | 確認 `astro.config.mjs` 有 `vite.resolve.alias` 指向 `src/` |
-| Build timeout | 14,203 頁面 build 通常 30 秒 | 如超時檢查是否有無限迴圈的 getStaticPaths |
+| Build timeout | 15,392 頁面 build 通常 60 秒 | 如超時檢查是否有無限迴圈的 getStaticPaths |
 
 ### 本地開發問題
 

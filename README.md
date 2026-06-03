@@ -19,9 +19,10 @@
 
 - **444,339 筆原文 token**（137,554 NT 希臘文 + 306,785 OT 希伯來文），按書卷動態載入 + IndexedDB 快取
 - **14,197 筆 Strong's 字典**，每筆獨立頁面含 JSON-LD
-- **66 卷書完整對照表**（OSIS／英文／中文／別名）
+- **1,189 個逐章研經落地頁**（`/study/[book]/[chapter]`）：靜態原文對照 + 本章導覽 + 本章概要 + 恢復本 runtime + JSON-LD
+- **66 卷書完整對照表**（OSIS／英文／中文／別名）+ 每書卷 OG 分享卡
 - 恢復本經文由前端直接呼叫 LSM API（Basic auth，CORS OK）
-- 視覺特效 + 環境音樂 + OKLCH 暖色系 + 響應式 + 深色模式 + SEO/AEO 預渲染
+- 視覺特效 + 環境音樂 + OKLCH 暖色系 + 響應式 + 深色模式 + SEO/AEO 預渲染（15,392 頁 + sitemap）
 
 線上網址：<https://vegeta1260-ai.github.io/bible-recovery-analyzer/>
 

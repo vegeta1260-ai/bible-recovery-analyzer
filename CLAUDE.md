@@ -21,16 +21,21 @@
 - **lexicon 只有 `web/src/data/lexicon.json` 一份來源**（build 時嵌入頁面）。**不要**再複製一份到 `web/public/`（舊的 public 副本是無人載入的死檔，已移除）。
 - **push 偶爾撞 `Connection closed by 198.18.0.42 port 22`**（本機 VPN/zero-trust 攔 SSH）：非權限/repo 問題，重試幾次即可。
 - **token JSON「筆數對但內容全 null」是已發生過的事故**：`web/scripts/compress-tokens.py` 原地覆寫且無防呆，重複執行會把短 key 當原始讀（`t.get("verse_ref")` → None），整批 token 歸零（新約曾被雙壓成 `{"r":null,...}`，舊約倖免）。腳本已改為冪等（偵測短 key 即 SKIP）；`smoke-test-build.sh` 已加「有效內容」gate（只計 `r` 非空者）。**驗 token 一律看「有效筆數」，別只看 `len()`。**
+- **OG 書卷卡（`web/public/og/*.png`，66 張）由 `web/scripts/build-og-images.mjs` 在「本機 macOS」產出後 commit**：CJK 靠 macOS 系統字型（resvg）。CI 是 ubuntu、**無中文字型**，所以**絕不可**把產圖加進 `npm build`，否則中文變豆腐。改書名/配色 → 本機 `node scripts/build-og-images.mjs` 重跑 → commit PNG。
+- **token 章節是希伯來/希臘原文版本（OSHB/MorphGNT），與中文恢復本章節可能不同**：逐章頁由 token 產生，故 Joel 是 4 章、Mal 是 3 章（希伯來），但 B 概要（`web/src/data/chapter-outlines/*.json`）用中文慣例（Joel 3、Mal 4）→ 少數章 B 對不上（優雅降級：有則顯示、無則只顯示 A）。動到 Joel/Mal 對位時要留意。
+- **`og:image` 等資產 URL 必須含 base path**（站在 `/bible-recovery-analyzer/` 子路徑）：曾漏 base 導致分享卡圖 404。`BaseLayout` 已用 `siteUrl + base + ogImage` 組；smoke 有 gate。換自訂網域時連同 `astro.config.mjs` 的 `site`/`base`、`robots.txt`、OG 圖 URL 一起改。
 
 ## 開發紀律
 
 - **直接在 `main` 開發**（依 SOP，push main 即觸發部署），不需另開分支。
-- **CI 有 gate**：push main → `npm test` → `npm run build` → `npm run test:smoke` → deploy，**任一失敗則不部署**（`.github/workflows/deploy-pages.yml`）。
+- **CI 有 gate**：push main → `npm test` → `npm run build` → `npm run test:smoke` → deploy，**任一失敗則不部署**（`.github/workflows/deploy-pages.yml`）。smoke 已從 27 項擴到 51 項（含 token 有效內容、sitemap、逐章頁、og:image base、書卷卡入口）。
+- **逐章研經落地頁**：`web/src/pages/study/[book]/[chapter].astro` 由 token 動態產 1,189 頁（靜態原文對照 + A 導覽 + B 概要 + 恢復本 runtime）。站內入口＝書卷卡（首頁 / `/books`）連該卷第 1 章。改 `getStaticPaths` 後務必 `npm run test:smoke` 確認頁數不掉。
+- **Cloudflare Web Analytics**：build 讀 `PUBLIC_CF_BEACON_TOKEN`（GitHub repo variable），未設則不注入 beacon。CI 已接線（`deploy-pages.yml` build 步驟的 env）。
 - 改 `web/` 後，push 前建議本地先跑：`cd web && npm test && npm run build && npm run test:smoke`。
 - 改動 token/憑證/版權相關行為前，先讀 `bible_recovery_analyzer/docs/lsm_api_preparation.md`。
 
 ## 文件導覽
 
 - 根 `README.md` — 兩產品定位、共用資料、憑證處理差異
-- `web/README.md` — 前端完整 SOP（含 9 條 SOP）、資料架構、Troubleshooting
+- `web/README.md` — 前端完整 SOP、資料架構、逐章頁、OG 圖、sitemap、CF Analytics、Troubleshooting
 - `bible_recovery_analyzer/README.md` — GPT Actions API、provider 架構、本機執行
