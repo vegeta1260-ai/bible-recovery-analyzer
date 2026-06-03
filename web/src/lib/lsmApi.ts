@@ -14,12 +14,14 @@ const LSM_AUTH = 'Basic ' + btoa(`${LSM_APP_ID}:${LSM_TOKEN}`);
 
 export interface RecoveryVerse {
   ref: string;
-  text: string;
+  text: string;    // 繁體中文（zho）
+  textEn?: string; // 英文（eng）；英文取不到時為 undefined
 }
 
 export interface RecoveryResult {
   verses: RecoveryVerse[];
-  text: string;
+  text: string;     // 中文整段（主）
+  textEn?: string;  // 英文整段
   inputstring: string;
   detected: string;
   message: string;
@@ -40,10 +42,10 @@ const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 const RETRY_DELAY_MS = 2000;
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-async function doFetch(ref: string): Promise<RecoveryResult> {
-  // Lang=zho：取繁體中文恢復本（ISO 639-3）。不傳 Lang 時 API 預設吐英文 text-only 版，
-  // 本站全繁中故寫死 zho。此 web token 已授權 eng/zho/spa/por，其餘語言碼回 500。
-  const params = new URLSearchParams({ String: ref, Out: 'json', Lang: 'zho' });
+// 取單一語言的恢復本。Lang 為 ISO 639-3 三碼；此 web token 已授權 eng/zho/spa/por，
+// 其餘語言碼會回 500。不傳 Lang 時 API 預設英文。
+async function doFetchLang(ref: string, lang: string): Promise<RecoveryResult> {
+  const params = new URLSearchParams({ String: ref, Out: 'json', Lang: lang });
   const resp = await fetch(`${LSM_API_URL}?${params}`, {
     headers: { Authorization: LSM_AUTH },
   });
@@ -87,6 +89,26 @@ export function __resetLsmCache(): void {
   successCache.clear();
 }
 
+// 單一語言 + 退避重試一次（網路例外或可重試狀態才重試）。永遠不丟出，失敗回 errorResult。
+async function fetchLangWithRetry(ref: string, lang: string): Promise<RecoveryResult> {
+  try {
+    return await doFetchLang(ref, lang);
+  } catch {
+    await sleep(RETRY_DELAY_MS);
+    try {
+      return await doFetchLang(ref, lang);
+    } catch (retryErr) {
+      return errorResult(retryErr instanceof Error ? retryErr.message : 'Unknown error');
+    }
+  }
+}
+
+// 由本地化的 ref（"創 1:1" / "John 1:1"）抽出節號，用來把中英兩份回應逐節對齊。
+function verseNum(ref: string): string | null {
+  const m = ref.match(/:(\d+)/) ?? ref.match(/(\d+)\s*$/);
+  return m ? m[1] : null;
+}
+
 export async function fetchRecoveryText(ref: string): Promise<RecoveryResult> {
   const key = ref.trim();
 
@@ -97,17 +119,25 @@ export async function fetchRecoveryText(ref: string): Promise<RecoveryResult> {
   if (pending) return pending;
 
   const task = (async (): Promise<RecoveryResult> => {
-    try {
-      return await doFetch(key);
-    } catch {
-      // 網路例外或可重試狀態 → 退避 2 秒後重試一次
-      await sleep(RETRY_DELAY_MS);
-      try {
-        return await doFetch(key);
-      } catch (retryErr) {
-        return errorResult(retryErr instanceof Error ? retryErr.message : 'Unknown error');
+    // 中英並行各取一次；中文為主（決定成敗、版權、節號），英文逐節併入。
+    const [zh, en] = await Promise.all([
+      fetchLangWithRetry(key, 'zho'),
+      fetchLangWithRetry(key, 'eng'),
+    ]);
+    if (zh.error) return zh;
+
+    const enByNum = new Map<string, string>();
+    if (!en.error) {
+      for (const v of en.verses) {
+        const n = verseNum(v.ref);
+        if (n) enByNum.set(n, v.text);
       }
     }
+    const verses = zh.verses.map((v) => {
+      const n = verseNum(v.ref);
+      return { ...v, textEn: n ? enByNum.get(n) : undefined };
+    });
+    return { ...zh, verses, textEn: en.error ? '' : en.text };
   })();
 
   inflight.set(key, task);

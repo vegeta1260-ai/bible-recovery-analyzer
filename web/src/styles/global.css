@@ -49,6 +49,9 @@ code, .mono { font-family: var(--font-mono); }
 .recovery-block { margin-bottom: 1.5rem; }
 .recovery-verse-text { font-size: var(--font-lg); line-height: 1.8; margin-bottom: 0.5rem; }
 .recovery-copyright { font-size: var(--font-xs); color: var(--color-text-muted); margin-top: 0.5rem; }
+/* 恢復本中英對照：英文上、中文下（中文以 secondary 色與英文區隔）。逐章頁 slot 與搜尋結果共用。 */
+.rec-en { display: block; }
+.rec-zh { display: block; color: var(--color-text-secondary); margin-top: 0.2rem; }
 .error-card { background: #f5e6e6; border-color: #d9534f; color: #5a1515; }
 .error-detail { font-size: var(--font-xs); margin-top: 0.3rem; }
 .token-card-grid { display: grid; gap: 1rem; }

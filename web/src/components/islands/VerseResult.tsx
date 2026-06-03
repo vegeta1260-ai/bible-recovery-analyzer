@@ -50,7 +50,10 @@ export default function VerseResult({ osisRef, tokens, recovery, loading }: Prop
         <div className="recovery-block card">
           {recovery.verses.length > 0
             ? recovery.verses.map((v, i) => (
-                <p key={i} className="recovery-verse-text">{v.text}</p>
+                <p key={i} className="recovery-verse-text">
+                  {v.textEn && <span className="rec-en">{v.textEn}</span>}
+                  <span className="rec-zh">{v.text}</span>
+                </p>
               ))
             : recovery.text && <p className="recovery-verse-text">{recovery.text}</p>
           }

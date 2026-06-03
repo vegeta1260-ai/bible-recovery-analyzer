@@ -27,7 +27,10 @@ export default function ChapterRecovery({ chapterRef, slotPrefix }: Props) {
         const m = v.ref.match(/:(\d+)/) ?? v.ref.match(/(\d+)\s*$/);
         if (!m) continue;
         const el = document.getElementById(`${slotPrefix}${m[1]}`);
-        if (el) el.innerHTML = `<strong>恢復本：</strong>${v.text}`;
+        if (!el) continue;
+        // 英文上、中文下（中文以 secondary 色區隔兩行）
+        const en = v.textEn ? `<span class="rec-en">${v.textEn}</span>` : '';
+        el.innerHTML = `<strong>恢復本：</strong>${en}<span class="rec-zh">${v.text}</span>`;
       }
       setStatus('done');
     });
