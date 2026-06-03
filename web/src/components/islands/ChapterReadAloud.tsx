@@ -16,12 +16,17 @@ interface LangDef {
   bcp47: string;
   /** 挑選語音時優先比對的 lang 前綴（小寫） */
   voicePrefixes: string[];
+  /** 偏好的高品質語音名稱（小寫子字串），依序命中；跨平台常見好語音 */
+  preferred: string[];
 }
 
 const LANGS: LangDef[] = [
-  { key: 'zh',  label: '中文', source: 'zh', bcp47: 'zh-TW', voicePrefixes: ['zh-tw', 'zh-hant', 'cmn', 'zh'] },
-  { key: 'en',  label: '英文', source: 'en', bcp47: 'en-US', voicePrefixes: ['en'] },
-  { key: 'yue', label: '粵語', source: 'zh', bcp47: 'zh-HK', voicePrefixes: ['zh-hk', 'yue', 'zh-hant-hk'] },
+  { key: 'zh',  label: '中文', source: 'zh', bcp47: 'zh-TW', voicePrefixes: ['zh-tw', 'zh-hant', 'cmn', 'zh'],
+    preferred: ['meijia', 'mei-jia', 'tingting', 'ting-ting', 'google 國語', 'google 普通話', 'hanhan', 'yaoyao'] },
+  { key: 'en',  label: '英文', source: 'en', bcp47: 'en-US', voicePrefixes: ['en'],
+    preferred: ['samantha', 'alex', 'aaron', 'ava', 'allison', 'google us english', 'microsoft zira', 'microsoft david', 'microsoft mark', 'karen', 'daniel', 'serena'] },
+  { key: 'yue', label: '粵語', source: 'zh', bcp47: 'zh-HK', voicePrefixes: ['yue', 'zh-hk', 'zh-hant-hk'],
+    preferred: ['sinji', 'sin-ji', 'google 粵語', '美玲'] },
 ];
 
 /**
@@ -54,12 +59,24 @@ export default function ChapterReadAloud({ slotPrefix }: Props) {
     return out;
   }, [slotPrefix]);
 
-  const pickVoice = (prefixes: string[]): SpeechSynthesisVoice | undefined => {
+  // 挑語音：只在能命中「已知好語音」時才明確指定，否則回 undefined
+  // → 不設 utterance.voice，讓瀏覽器用該語言的系統預設（通常就是好的那顆）。
+  // 重點：別傻挑「第一顆符合語言的」——macOS 那顆常是 Albert/Bad News 等新奇語音，會很怪。
+  const pickVoice = (lang: LangDef): SpeechSynthesisVoice | undefined => {
     const voices = window.speechSynthesis.getVoices();
-    for (const p of prefixes) {
-      const v = voices.find((vo) => vo.lang.toLowerCase().replace('_', '-').startsWith(p));
+    const cands = voices.filter((v) =>
+      lang.voicePrefixes.some((p) => v.lang.toLowerCase().replace('_', '-').startsWith(p)),
+    );
+    if (cands.length === 0) return undefined;
+    // 1) 偏好清單（跨平台常見的高品質語音）依序命中
+    for (const name of lang.preferred) {
+      const v = cands.find((c) => c.name.toLowerCase().includes(name));
       if (v) return v;
     }
+    // 2) 符合語言的系統預設語音
+    const def = cands.find((c) => c.default);
+    if (def) return def;
+    // 3) 都沒有 → undefined，交給瀏覽器用 u.lang 自選
     return undefined;
   };
 
@@ -72,7 +89,7 @@ export default function ChapterReadAloud({ slotPrefix }: Props) {
     const parts = collect(lang.source);
     if (parts.length === 0) return; // 經文尚未載入
     window.speechSynthesis.cancel();
-    const voice = pickVoice(lang.voicePrefixes);
+    const voice = pickVoice(lang);
     parts.forEach((text, i) => {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = lang.bcp47;
