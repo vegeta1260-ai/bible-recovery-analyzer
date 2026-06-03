@@ -130,6 +130,7 @@ check_grep "逐章頁 H1" "study/John/3/index.html" "第3章"
 check_grep "逐章頁 JSON-LD Breadcrumb" "study/John/3/index.html" "BreadcrumbList"
 check_grep "逐章頁 og:type=article" "study/John/3/index.html" 'content="article"'
 check_grep "逐章頁逐字對照" "study/John/3/index.html" "分析碼"
+check_grep "逐章頁章次內鏈" "study/John/3/index.html" 'study/John/2"'
 CHAPTER_PAGES=$(find "$DIST/study" -mindepth 2 -name 'index.html' 2>/dev/null | wc -l | tr -d ' ')
 check_min "逐章頁總數" "${CHAPTER_PAGES:-0}" 1000
 echo ""
@@ -150,6 +151,8 @@ check_grep "og:title" "index.html" "og:title"
 check_grep "twitter:card" "index.html" "twitter:card"
 check_grep "canonical" "index.html" "canonical"
 check_grep "lang=zh-Hant" "index.html" 'lang="zh-Hant"'
+# og:image 必須含 base path（曾漏 base → 分享卡圖 404）
+check_grep "og:image 含 base path" "index.html" 'og:image" content="https://vegeta1260-ai.github.io/bible-recovery-analyzer/'
 echo ""
 
 echo "[6] Lexicon 頁面 SEO"

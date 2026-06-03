@@ -46,6 +46,7 @@ export async function getStaticPaths() {
       vmap.get(vs)!.push(t);
     }
 
+    const allChapters = [...chapters.keys()].map(Number).sort((a, c) => a - c);
     for (const [ch, vmap] of chapters) {
       const verses = [...vmap.entries()]
         .map(([num, vt]) => ({
@@ -80,6 +81,7 @@ export async function getStaticPaths() {
           verses, tokenCount,
           verseCount: verses.length,
           topLemmas, strongsHotspots,
+          chapterNums: allChapters,
         },
       });
     }
@@ -87,7 +89,12 @@ export async function getStaticPaths() {
   return paths;
 }
 
-const { osis, bookZh, bookEn, chapter, verses, tokenCount, verseCount, topLemmas, strongsHotspots } = Astro.props;
+const { osis, bookZh, bookEn, chapter, verses, tokenCount, verseCount, topLemmas, strongsHotspots, chapterNums } = Astro.props;
+
+// 章次內鏈：prev/next + 同書全章清單（使逐章頁互連、爬蟲可爬完整本書）
+const chIdx = chapterNums.indexOf(chapter);
+const prevCh = chIdx > 0 ? chapterNums[chIdx - 1] : null;
+const nextCh = chIdx >= 0 && chIdx < chapterNums.length - 1 ? chapterNums[chIdx + 1] : null;
 
 // 選填概要
 const outlineMod = outlineFiles[`../../../data/chapter-outlines/${osis}.json`];
@@ -140,6 +147,21 @@ const jsonLd = {
 
     <h1>{bookZh} 第{chapter}章 <span class="en">{bookEn} {chapter}</span></h1>
     <p class="lede">原文逐字對照 · 恢復本經文對照 · 共 {verseCount} 節 / {tokenCount} 個原文 token</p>
+
+    <nav class="chapter-nav" aria-label="本書章次">
+      {prevCh ? <a class="cn-arrow" href={`${base}/study/${osis}/${prevCh}`} rel="prev">← 第{prevCh}章</a> : <span class="cn-arrow disabled">←</span>}
+      <details class="cn-list">
+        <summary>{bookZh} 全 {chapterNums.length} 章</summary>
+        <div class="cn-grid">
+          {chapterNums.map((n: number) => (
+            n === chapter
+              ? <span class="cn cur" aria-current="page">{n}</span>
+              : <a class="cn" href={`${base}/study/${osis}/${n}`}>{n}</a>
+          ))}
+        </div>
+      </details>
+      {nextCh ? <a class="cn-arrow" href={`${base}/study/${osis}/${nextCh}`} rel="next">第{nextCh}章 →</a> : <span class="cn-arrow disabled">→</span>}
+    </nav>
 
     {outline && (
       <section class="outline">
@@ -221,7 +243,15 @@ const jsonLd = {
   .crumb a { color: var(--color-primary); }
   h1 { font-size: var(--font-2xl); }
   h1 .en { font-size: var(--font-base); color: var(--color-text-muted); font-weight: 400; }
-  .lede { color: var(--color-text-secondary); margin: 0.3rem 0 1.2rem; }
+  .lede { color: var(--color-text-secondary); margin: 0.3rem 0 0.8rem; }
+  .chapter-nav { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.2rem; font-size: var(--font-sm); }
+  .cn-arrow { color: var(--color-primary); white-space: nowrap; }
+  .cn-arrow.disabled { color: var(--color-text-muted); }
+  .cn-list { flex: 1; min-width: 200px; }
+  .cn-list summary { cursor: pointer; color: var(--color-text-secondary); }
+  .cn-grid { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+  .cn { display: inline-block; min-width: 1.8rem; text-align: center; padding: 0.1rem 0.3rem; border: 1px solid var(--color-border, #ddd); border-radius: 4px; color: var(--color-primary); }
+  .cn.cur { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
   .outline { background: var(--color-surface, #f6f1e7); border-left: 4px solid var(--color-primary); padding: 0.8rem 1rem; border-radius: 4px; margin-bottom: 1.2rem; }
   .outline h2 { font-size: var(--font-base); color: var(--color-primary); margin-bottom: 0.4rem; }
   .map { border: 1px solid var(--color-border, #ddd); border-radius: 6px; padding: 0.5rem 0.8rem; margin-bottom: 1.5rem; }
