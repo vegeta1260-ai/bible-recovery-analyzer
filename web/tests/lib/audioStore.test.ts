@@ -25,13 +25,13 @@ beforeEach(() => {
     writable: true,
     configurable: true,
   });
-  // Reset to default enabled state
-  setAudioEnabled(true);
+  // Reset to default (disabled) state
+  setAudioEnabled(false);
 });
 
 describe('audioStore', () => {
-  it('defaults to enabled', () => {
-    expect(isAudioEnabled()).toBe(true);
+  it('defaults to disabled (no autoplay)', () => {
+    expect(isAudioEnabled()).toBe(false);
   });
 
   it('setAudioEnabled persists to localStorage', () => {

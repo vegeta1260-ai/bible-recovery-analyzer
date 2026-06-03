@@ -9,7 +9,7 @@ import { playBell } from '@/audio/webAudioEffects';
 import { setMusicMuted } from '@/audio/musicManager';
 
 export default function AudioController() {
-  const [enabled, setEnabled] = useState(true);
+  const [enabled, setEnabled] = useState(false); // 預設靜音，見 audioStore
   const [announcement, setAnnouncement] = useState('');
 
   useEffect(() => {
