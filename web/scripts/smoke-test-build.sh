@@ -67,6 +67,40 @@ check_min() {
   fi
 }
 
+# token 檔「有效內容」筆數 >= 下限（非只陣列長度）。
+# 防的是 compress-tokens 雙壓事故：檔案筆數不變、但每筆變 {"r":null,...}，
+# 舊的 check_json_count 只看長度會放行。此檢查只計 r 非空者。
+check_valid_tokens() {
+  local name="$1" rel="$2" min_count="$3" count
+  count=$(python3 -c "import json; t=json.load(open('$DIST/$rel')); print(sum(1 for x in t if x.get('r')))" 2>/dev/null || echo "0")
+  if [ "$count" -ge "$min_count" ]; then
+    echo "  PASS  $name (有效 $count >= $min_count)"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL  $name (有效 $count < $min_count) — 疑似 token 歸零/雙壓"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+# 全部 token 檔有效筆數總量不變式（一次抓全經料庫歸零）。
+check_total_valid_tokens() {
+  local name="$1" min_count="$2" total
+  total=$(python3 -c "
+import json, glob, os
+tot = 0
+for f in glob.glob(os.path.join('$DIST', 'data', 'tokens', '*.json')):
+    tot += sum(1 for x in json.load(open(f)) if x.get('r'))
+print(tot)
+" 2>/dev/null || echo "0")
+  if [ "$total" -ge "$min_count" ]; then
+    echo "  PASS  $name (全經有效 $total >= $min_count)"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL  $name (全經有效 $total < $min_count) — token 大規模歸零"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
 echo "=== Build 煙霧測試: $DIST ==="
 echo ""
 
@@ -90,8 +124,13 @@ check_min "HTML 總頁數" "$TOTAL_PAGES" 14000
 echo ""
 
 echo "[4] 靜態 JSON 資料（按書卷動態載入的 token；lexicon 為 build 時嵌入，不在 public）"
-check_json_count "NT tokens (John)" "data/tokens/John.json" 15000
-check_json_count "OT tokens (Gen)" "data/tokens/Gen.json" 20000
+check_json_count "NT tokens (John) 筆數" "data/tokens/John.json" 15000
+check_json_count "OT tokens (Gen) 筆數" "data/tokens/Gen.json" 20000
+# 有效內容檢查（防雙壓歸零；筆數對但內容全 null 時，上面 check_json_count 會放行）
+check_valid_tokens "NT tokens (John) 有效內容" "data/tokens/John.json" 15000
+check_valid_tokens "NT tokens (Matt) 有效內容" "data/tokens/Matt.json" 18000
+check_valid_tokens "OT tokens (Gen) 有效內容" "data/tokens/Gen.json" 20000
+check_total_valid_tokens "全 66 卷 token 有效總量" 440000
 echo ""
 
 echo "[5] SEO meta tags（首頁）"
