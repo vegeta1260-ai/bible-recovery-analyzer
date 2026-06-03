@@ -41,7 +41,9 @@ const RETRY_DELAY_MS = 2000;
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function doFetch(ref: string): Promise<RecoveryResult> {
-  const params = new URLSearchParams({ String: ref, Out: 'json' });
+  // Lang=zho：取繁體中文恢復本（ISO 639-3）。不傳 Lang 時 API 預設吐英文 text-only 版，
+  // 本站全繁中故寫死 zho。此 web token 已授權 eng/zho/spa/por，其餘語言碼回 500。
+  const params = new URLSearchParams({ String: ref, Out: 'json', Lang: 'zho' });
   const resp = await fetch(`${LSM_API_URL}?${params}`, {
     headers: { Authorization: LSM_AUTH },
   });

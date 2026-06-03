@@ -27,6 +27,7 @@ describe('fetchRecoveryText', () => {
     expect(url.origin + url.pathname).toBe('https://api.lsm.org/recver/txo.php');
     expect(url.searchParams.get('String')).toBe('John 1:1');
     expect(url.searchParams.get('Out')).toBe('json');
+    expect(url.searchParams.get('Lang')).toBe('zho'); // 繁體中文恢復本（不傳則 API 預設英文）
   });
 
   it('parses verses from response', async () => {
