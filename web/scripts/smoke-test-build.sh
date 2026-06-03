@@ -131,6 +131,9 @@ check_grep "逐章頁 JSON-LD Breadcrumb" "study/John/3/index.html" "BreadcrumbL
 check_grep "逐章頁 og:type=article" "study/John/3/index.html" 'content="article"'
 check_grep "逐章頁逐字對照" "study/John/3/index.html" "分析碼"
 check_grep "逐章頁章次內鏈" "study/John/3/index.html" 'study/John/2"'
+check_file "書卷 OG 卡 (John)" "og/John.png"
+check_file "書卷 OG 卡 (Gen)" "og/Gen.png"
+check_grep "逐章頁用書卷 OG 卡" "study/John/3/index.html" 'og/John.png'
 CHAPTER_PAGES=$(find "$DIST/study" -mindepth 2 -name 'index.html' 2>/dev/null | wc -l | tr -d ' ')
 check_min "逐章頁總數" "${CHAPTER_PAGES:-0}" 1000
 echo ""
