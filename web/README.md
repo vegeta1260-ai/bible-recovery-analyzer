@@ -207,7 +207,7 @@ web/
 | `bookMap.json` | 66 | 完整 66 卷書（OSIS/英文/中文/別名） |
 | `lexicon.json` | 14,197 | Strong's 字典（5,523 Greek + 8,674 Hebrew） |
 | `analyticalCodes.json` | 35 codes | 分析碼圖例 + 縮寫 + 11 條文法注記 |
-| `chapter-outlines/{osis}.json` | 66 檔 / 1,188 章 | 逐章頁的「本章概要」(B)，選填（`import.meta.glob` 載入，有則顯示）；多 Sonnet 平行生成、受版權約束（禁貼近恢復本綱目）。Joel/Mal 因希伯來 vs 中文版本章節差，少數章對不上、優雅降級 |
+| `chapter-outlines/{osis}.json` | 66 檔 / 1,189 章 | 逐章頁的「本章概要」(B)，選填（`import.meta.glob` 載入，有則顯示）；多 Sonnet 平行生成、受版權約束（禁貼近恢復本綱目）。全 1,189 章皆有 B（Joel/Mal token 已重對映為恢復本章節，見 SOP 6） |
 
 ### 外部 API（runtime）
 
@@ -414,9 +414,10 @@ git push origin gh-pages --force
 2. 執行 ETL 腳本：
    python3 web/scripts/etl-morphgnt.py    # 產生 NT token JSON
    python3 web/scripts/etl-oshb.py        # 產生 OT token JSON
-   python3 web/scripts/compress-tokens.py # 壓縮
+   python3 web/scripts/compress-tokens.py # 壓縮（冪等：偵測已壓縮即跳過）
    python3 web/scripts/fill-gloss.py      # 從 lexicon 填入英文 gloss
-3. npm run build 確認
+   python3 web/scripts/remap-joel-mal-versification.py  # ⚠️ 必跑：Joel/Mal 希伯來→恢復本章節
+3. npm run build && npm run test:smoke 確認（51 項，含 token 有效內容）
 4. commit + push
 ```
 

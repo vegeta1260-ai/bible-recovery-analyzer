@@ -22,7 +22,7 @@
 - **push 偶爾撞 `Connection closed by 198.18.0.42 port 22`**（本機 VPN/zero-trust 攔 SSH）：非權限/repo 問題，重試幾次即可。
 - **token JSON「筆數對但內容全 null」是已發生過的事故**：`web/scripts/compress-tokens.py` 原地覆寫且無防呆，重複執行會把短 key 當原始讀（`t.get("verse_ref")` → None），整批 token 歸零（新約曾被雙壓成 `{"r":null,...}`，舊約倖免）。腳本已改為冪等（偵測短 key 即 SKIP）；`smoke-test-build.sh` 已加「有效內容」gate（只計 `r` 非空者）。**驗 token 一律看「有效筆數」，別只看 `len()`。**
 - **OG 書卷卡（`web/public/og/*.png`，66 張）由 `web/scripts/build-og-images.mjs` 在「本機 macOS」產出後 commit**：CJK 靠 macOS 系統字型（resvg）。CI 是 ubuntu、**無中文字型**，所以**絕不可**把產圖加進 `npm build`，否則中文變豆腐。改書名/配色 → 本機 `node scripts/build-og-images.mjs` 重跑 → commit PNG。
-- **token 章節是希伯來/希臘原文版本（OSHB/MorphGNT），與中文恢復本章節可能不同**：逐章頁由 token 產生，故 Joel 是 4 章、Mal 是 3 章（希伯來），但 B 概要（`web/src/data/chapter-outlines/*.json`）用中文慣例（Joel 3、Mal 4）→ 少數章 B 對不上（優雅降級：有則顯示、無則只顯示 A）。動到 Joel/Mal 對位時要留意。
+- **Joel / Mal 的 token 章節做過「希伯來→恢復本」重對映**：OSHB 用希伯來分章（Joel 4 章、Mal 3 章），恢復本用 Joel 3 章、Mal 4 章。`web/scripts/remap-joel-mal-versification.py` 已把這 2 卷 token 重對映為恢復本章節，使頁面/恢復本層/B 概要一致。⚠️ **重跑 OT ETL（`etl-oshb.py`）會讓 Joel/Mal 退回希伯來分章 → 之後必須再跑一次這支 remap**（見 web/README SOP 6）。腳本冪等，重跑安全。
 - **`og:image` 等資產 URL 必須含 base path**（站在 `/bible-recovery-analyzer/` 子路徑）：曾漏 base 導致分享卡圖 404。`BaseLayout` 已用 `siteUrl + base + ogImage` 組；smoke 有 gate。換自訂網域時連同 `astro.config.mjs` 的 `site`/`base`、`robots.txt`、OG 圖 URL 一起改。
 
 ## 開發紀律
