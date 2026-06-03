@@ -12,7 +12,7 @@ const entry = entries.find(e => e.strongs === id)!;
 const langTag = entry.language === 'Hebrew' ? 'he' : 'grc';
 const langDir = entry.language === 'Hebrew' ? 'rtl' : 'ltr';
 ---
-<BaseLayout title={`${entry.lemma} (${entry.strongs})`} description={`Strong's ${entry.strongs} ${entry.lemma}: ${entry.short_definition}`}>
+<BaseLayout title={`${entry.transliteration} ${entry.lemma}（${entry.strongs}）`} description={`${entry.transliteration} ${entry.lemma}（Strong's ${entry.strongs}）原文字義：${entry.short_definition}`}>
   <article style="margin: 2rem 0;">
     <h1>
       <span lang={langTag} dir={langDir}>{entry.lemma}</span>

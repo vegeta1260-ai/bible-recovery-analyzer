@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchRecoveryText, type RecoveryResult } from '@/lib/lsmApi';
+import { fetchRecoveryText, __resetLsmCache, type RecoveryResult } from '@/lib/lsmApi';
 
 const mockResponse = {
   verses: [{ ref: 'John 1:1', text: 'In the beginning was the Word...' }],
@@ -12,6 +12,7 @@ const mockResponse = {
 describe('fetchRecoveryText', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    __resetLsmCache(); // 清掉去重/成功快取，避免測試間以相同 ref 互相污染
   });
 
   it('calls LSM API with correct params', async () => {

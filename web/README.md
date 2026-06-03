@@ -205,7 +205,8 @@ web/
 |-----|-----|------|------|
 | LSM Recovery Version | `https://api.lsm.org/recver/txo.php` | Basic auth (APP_ID:TOKEN) | `Access-Control-Allow-Origin: *` |
 
-前端直接呼叫，無需代理。含自動重試（1 次，間隔 2 秒）和錯誤降級。
+前端直接呼叫，無需代理。含自動重試（網路例外或 5xx/429 → 退避 2 秒重試 1 次）、錯誤降級，
+以及同一 ref 的去重 + 成功快取（保護公開 web token 配額）。
 
 > **關於 `lsmApi.ts` 內的 APP_ID / TOKEN**
 > LSM = Living Stream Ministry（水流職事站），恢復本聖經的出版者，**與 AI/LLM 無關**。
@@ -459,7 +460,7 @@ git push origin gh-pages --force
 
 | 問題 | 解法 |
 |------|------|
-| 恢復本經文載入失敗 | `lsmApi.ts` 內建重試 1 次（2 秒），失敗顯示友善訊息 |
+| 恢復本經文載入失敗 | `lsmApi.ts` 對網路例外與 5xx/429 退避 2 秒重試 1 次，失敗顯示友善訊息 |
 | 401/403 錯誤 | 檢查 `lsmApi.ts` 中的 APP_ID 和 TOKEN 是否有效 |
 | CORS 錯誤 | LSM API 支援 `Access-Control-Allow-Origin: *`，出現 CORS 表示 LSM 端有變更 |
 

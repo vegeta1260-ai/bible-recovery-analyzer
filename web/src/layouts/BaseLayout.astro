@@ -17,6 +17,9 @@ const {
 const fullTitle = `${title} | 聖經原文解析`;
 const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
 const canonical = canonicalUrl ?? `${siteUrl}${Astro.url.pathname}`;
+// Cloudflare Web Analytics（免費、無 cookie）。只有設定 PUBLIC_CF_BEACON_TOKEN 才注入 beacon；
+// 未設定則不渲染，build 不受影響。token 由 CF 儀表板取得，於 GitHub repo variable 設定。
+const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
 ---
 <!doctype html>
 <html lang="zh-Hant">
@@ -61,5 +64,13 @@ const canonical = canonicalUrl ?? `${siteUrl}${Astro.url.pathname}`;
         if (scale) document.documentElement.setAttribute('data-font-scale', scale);
       })();
     </script>
+    {cfBeaconToken && (
+      <script
+        is:inline
+        defer
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
+      />
+    )}
   </body>
 </html>
