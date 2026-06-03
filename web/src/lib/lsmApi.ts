@@ -60,9 +60,13 @@ async function doFetchLang(ref: string, lang: string): Promise<RecoveryResult> {
   const verses: RecoveryVerse[] = [];
   if (Array.isArray(data.verses)) {
     for (const v of data.verses) {
-      if (v && typeof v.text === 'string' && v.text.trim()) {
-        verses.push({ ref: v.ref || '', text: v.text.trim() });
-      }
+      if (!v || typeof v.text !== 'string') continue;
+      const text = v.text.trim();
+      // LSM 對查不到的書/節仍回 200 + 文字佔位（"No such reference" / "No such verse in 猶 1"），
+      // 中英文皆以 "No such" 開頭。需濾掉，否則會被當成有效經文塞進頁面
+      // （單章書用 .1-99 大上界取整章時，超出實際節數的尾節都是此佔位）。
+      if (!text || /^No such/i.test(text)) continue;
+      verses.push({ ref: v.ref || '', text });
     }
   }
   const text = typeof data.text === 'string' ? data.text.trim()

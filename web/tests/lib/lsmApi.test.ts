@@ -52,6 +52,29 @@ describe('fetchRecoveryText', () => {
     expect(result.copyright).toBe('恢復本聖經');                  // 版權取中文
   });
 
+  it('filters out LSM "No such" placeholder verses', async () => {
+    // LSM 對查不到的書/節仍回 200 + 文字佔位（中英皆以 "No such" 開頭）。
+    // 單章書用 .1-99 大上界取整章時，超界尾節都是此佔位，必須濾掉而非當經文塞入。
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const lang = new URL(input as string).searchParams.get('Lang');
+      const body = lang === 'eng'
+        ? { verses: [
+            { ref: 'Jude 1:1', text: 'Jude, a slave of Jesus Christ' },
+            { ref: 'Jude 1:2', text: 'No such verse in Jude 1' },
+          ] }
+        : { verses: [
+            { ref: '猶 1:1', text: '耶穌基督的奴僕，雅各的弟兄猶大' },
+            { ref: '猶 1:2', text: 'No such verse in 猶 1' },
+          ] };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+
+    const result = await fetchRecoveryText('Jude.1-99');
+    expect(result.verses.length).toBe(1); // 佔位節被濾掉，只剩真實的第 1 節
+    expect(result.verses[0].text).toBe('耶穌基督的奴僕，雅各的弟兄猶大');
+    expect(result.verses[0].textEn).toBe('Jude, a slave of Jesus Christ');
+  });
+
   it('returns error result on fetch failure', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
 

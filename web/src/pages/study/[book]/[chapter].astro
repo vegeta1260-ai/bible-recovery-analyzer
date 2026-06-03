@@ -110,6 +110,14 @@ const outline = outlineMod?.default?.[String(chapter)] ?? '';
 const meditationMod = meditationFiles[`../../../data/chapter-meditations/${osis}.json`];
 const meditation = meditationMod?.default?.[String(chapter)] ?? '';
 
+// LSM API 可解析的整章引用。LSM 不接受含空格的英文書名（"2 Peter" → 查無），
+// 故一律去空格（"2Peter"）；唯雅歌去空格仍查不到，需用 LSM 簡稱 "SoS"。
+// 單章書（Jude/Obadiah/Philemon/2John/3John）送 "Jude.1" 會被當「第 1 節」只回一節，
+// 必須用範圍取整章；超界尾節由 lsmApi 的 "No such" 過濾掉。
+const lsmBook = osis === 'Song' ? 'SoS' : bookEn.replace(/\s+/g, '');
+const isSingleChapter = chapterNums.length === 1;
+const lsmChapterRef = isSingleChapter ? `${lsmBook}.1-99` : `${lsmBook}.${chapter}`;
+
 const isHebrew = osis !== '' && strongsHotspots.some((s: any) => s.st?.startsWith('H')) || verses[0]?.tokens?.[0]?.st?.startsWith('H');
 const langTag = isHebrew ? 'he' : 'grc';
 const langDir = isHebrew ? 'rtl' : 'ltr';
@@ -216,7 +224,7 @@ const jsonLd = {
     </details>
 
     <div class="reading-bar">
-      <ChapterRecovery client:visible chapterRef={`${bookEn}.${chapter}`} slotPrefix={`rec-${osis}-${chapter}-`} />
+      <ChapterRecovery client:visible chapterRef={lsmChapterRef} slotPrefix={`rec-${osis}-${chapter}-`} />
       {/* client:idle 而非 visible：本元件初始 SSR 為 null（supported 未定），
           client:visible 的 IntersectionObserver 無子元素可觀察會永不水合。 */}
       <ChapterReadAloud client:idle slotPrefix={`rec-${osis}-${chapter}-`} />
