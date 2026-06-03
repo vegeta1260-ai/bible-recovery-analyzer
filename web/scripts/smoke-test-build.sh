@@ -164,6 +164,16 @@ check_file "ambient-default.mp3" "audio/ambient-default.mp3"
 check_file "ambient-gospel.mp3" "audio/ambient-gospel.mp3"
 echo ""
 
+echo "[10] SEO / sitemap / AEO 可發現性（不可缺漏）"
+check_file "robots.txt" "robots.txt"
+check_grep "robots 指向 sitemap" "robots.txt" "Sitemap:"
+check_file "sitemap-index.xml" "sitemap-index.xml"
+check_file "sitemap-0.xml" "sitemap-0.xml"
+check_grep "sitemap 含 lexicon 頁" "sitemap-0.xml" "lexicon/G1"
+SITEMAP_URLS=$(grep -o "<loc>" "$DIST/sitemap-0.xml" 2>/dev/null | wc -l | tr -d ' ')
+check_min "sitemap URL 總數" "${SITEMAP_URLS:-0}" 14000
+echo ""
+
 echo "=== 結果: $PASS passed, $FAIL failed ==="
 if [ "$FAIL" -gt 0 ]; then
   exit 1
