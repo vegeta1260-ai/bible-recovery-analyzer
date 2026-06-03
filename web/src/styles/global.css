@@ -52,6 +52,14 @@ code, .mono { font-family: var(--font-mono); }
 /* 恢復本中英對照：英文上、中文下（中文以 secondary 色與英文區隔）。逐章頁 slot 與搜尋結果共用。 */
 .rec-en { display: block; }
 .rec-zh { display: block; color: var(--color-text-secondary); margin-top: 0.2rem; }
+
+/* 朗讀本章（中文／英文／粵語）。比照 .audio-btn 的圓角方鈕風格，與站上控制元件一致。
+   由 React island 渲染，故樣式必須放 global（astro scoped 樣式照不到 island 元素）。 */
+.read-aloud { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.ra-label { font-size: var(--font-sm); color: var(--color-text-secondary); }
+.ra-btn { background: none; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.3rem 0.7rem; cursor: pointer; color: var(--color-text-secondary); font-size: var(--font-sm); transition: color 0.2s, border-color 0.2s, background 0.2s; }
+.ra-btn:hover { background: var(--color-surface-hover); color: var(--color-primary); border-color: var(--color-primary); }
+.ra-btn--on { color: var(--color-primary); border-color: var(--color-primary); background: var(--color-surface-hover); }
 .error-card { background: #f5e6e6; border-color: #d9534f; color: #5a1515; }
 .error-detail { font-size: var(--font-xs); margin-top: 0.3rem; }
 .token-card-grid { display: grid; gap: 1rem; }
