@@ -7,12 +7,14 @@ interface Props {
   description?: string;
   ogImage?: string;
   canonicalUrl?: string;
+  ogType?: string;
 }
 const {
   title,
   description = '聖經恢復本原文字義解析工具 — 希伯來文、希臘文 Strong\'s 編號、詞形分析、全文搜尋',
   ogImage = '/og-default.png',
   canonicalUrl,
+  ogType = 'website',
 } = Astro.props;
 const fullTitle = `${title} | 聖經原文解析`;
 const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
@@ -33,7 +35,7 @@ const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
     <!-- Open Graph -->
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={`${siteUrl}${ogImage}`} />
     <meta property="og:image:width" content="1200" />

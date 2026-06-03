@@ -1,0 +1,243 @@
+---
+// 逐章研經落地頁 /study/[book]/[chapter]
+// 靜態烤入：原文逐字對照（公版，可索引）+ A 導覽地圖 + JSON-LD。
+// runtime 疊上：恢復本經文（LSM 版權，由 ChapterRecovery island 填入 slot）。
+import fs from 'node:fs';
+import path from 'node:path';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import bookMap from '../../../data/bookMap.json';
+import ChapterRecovery from '../../../components/islands/ChapterRecovery.tsx';
+
+type BookEntry = { osis: string; english: string; zh: string; aliases: string[] };
+// 壓縮 token 的短 key（見 scripts/compress-tokens.py / lib/analyzer.ts）
+type CToken = { r: string; o: number; s: string; l: string; ac?: string; pos?: string; st?: string; ge?: string; tr?: string };
+
+// 選填的本章概要（Phase 2 由 Sonnet 平行撰寫填入；沒有就只顯示 A）
+const outlineFiles = import.meta.glob<{ default: Record<string, string> }>(
+  '../../../data/chapter-outlines/*.json',
+  { eager: true },
+);
+
+export async function getStaticPaths() {
+  const books = bookMap as BookEntry[];
+  const tokensDir = path.join(process.cwd(), 'public', 'data', 'tokens');
+  const paths: any[] = [];
+
+  for (const b of books) {
+    const file = path.join(tokensDir, `${b.osis}.json`);
+    if (!fs.existsSync(file)) continue;
+    let toks: CToken[];
+    try {
+      toks = JSON.parse(fs.readFileSync(file, 'utf-8')) as CToken[];
+    } catch {
+      continue;
+    }
+    // 依 verse_ref（Book.Chapter.Verse）分章、分節
+    const chapters = new Map<string, Map<string, CToken[]>>();
+    for (const t of toks) {
+      if (!t || !t.r) continue;
+      const parts = t.r.split('.');
+      if (parts.length < 3) continue;
+      const ch = parts[1];
+      const vs = parts[2];
+      if (!chapters.has(ch)) chapters.set(ch, new Map());
+      const vmap = chapters.get(ch)!;
+      if (!vmap.has(vs)) vmap.set(vs, []);
+      vmap.get(vs)!.push(t);
+    }
+
+    for (const [ch, vmap] of chapters) {
+      const verses = [...vmap.entries()]
+        .map(([num, vt]) => ({
+          num: Number(num),
+          tokens: vt.sort((a, c) => a.o - c.o),
+        }))
+        .sort((a, c) => a.num - c.num);
+
+      // A 導覽：高頻 lemma、Strong's 熱點、token 數
+      const lemmaCount = new Map<string, number>();
+      const strongsCount = new Map<string, number>();
+      let tokenCount = 0;
+      for (const v of verses) {
+        for (const t of v.tokens) {
+          tokenCount++;
+          if (t.l) lemmaCount.set(t.l, (lemmaCount.get(t.l) ?? 0) + 1);
+          if (t.st) strongsCount.set(t.st, (strongsCount.get(t.st) ?? 0) + 1);
+        }
+      }
+      const topLemmas = [...lemmaCount.entries()]
+        .sort((a, c) => c[1] - a[1]).slice(0, 6)
+        .map(([lemma, count]) => ({ lemma, count }));
+      const strongsHotspots = [...strongsCount.entries()]
+        .sort((a, c) => c[1] - a[1]).slice(0, 6)
+        .map(([st, count]) => ({ st, count }));
+
+      paths.push({
+        params: { book: b.osis, chapter: ch },
+        props: {
+          osis: b.osis, bookZh: b.zh, bookEn: b.english,
+          chapter: Number(ch),
+          verses, tokenCount,
+          verseCount: verses.length,
+          topLemmas, strongsHotspots,
+        },
+      });
+    }
+  }
+  return paths;
+}
+
+const { osis, bookZh, bookEn, chapter, verses, tokenCount, verseCount, topLemmas, strongsHotspots } = Astro.props;
+
+// 選填概要
+const outlineMod = outlineFiles[`../../../data/chapter-outlines/${osis}.json`];
+const outline = outlineMod?.default?.[String(chapter)] ?? '';
+
+const isHebrew = osis !== '' && strongsHotspots.some((s: any) => s.st?.startsWith('H')) || verses[0]?.tokens?.[0]?.st?.startsWith('H');
+const langTag = isHebrew ? 'he' : 'grc';
+const langDir = isHebrew ? 'rtl' : 'ltr';
+
+const pageTitle = `${bookZh} 第${chapter}章 — 原文逐字解析`;
+const keywords = topLemmas.slice(0, 4).map((l: any) => l.lemma).join('、');
+const pageDesc = `${bookZh}（${bookEn}）第${chapter}章希伯來/希臘文逐字對照，含 Strong's、詞形分析與恢復本經文。本章關鍵原文字：${keywords}。`;
+
+const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
+const pageUrl = `${siteUrl}${Astro.url.pathname}`;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '首頁', item: `${siteUrl}${base}/` },
+        { '@type': 'ListItem', position: 2, name: '書卷', item: `${siteUrl}${base}/books` },
+        { '@type': 'ListItem', position: 3, name: bookZh, item: `${siteUrl}${base}/study/${osis}/${chapter}` },
+        { '@type': 'ListItem', position: 4, name: `第${chapter}章` },
+      ],
+    },
+    {
+      '@type': 'Article',
+      headline: pageTitle,
+      description: pageDesc,
+      inLanguage: 'zh-Hant',
+      keywords,
+      isPartOf: { '@type': 'Book', name: `${bookZh}（${bookEn}）` },
+      url: pageUrl,
+    },
+  ],
+};
+---
+
+<BaseLayout title={pageTitle} description={pageDesc} ogType="article">
+  <article class="chapter">
+    <nav class="crumb" aria-label="breadcrumb">
+      <a href={`${base}/`}>首頁</a> ›
+      <a href={`${base}/books`}>書卷</a> ›
+      <span>{bookZh} 第{chapter}章</span>
+    </nav>
+
+    <h1>{bookZh} 第{chapter}章 <span class="en">{bookEn} {chapter}</span></h1>
+    <p class="lede">原文逐字對照 · 恢復本經文對照 · 共 {verseCount} 節 / {tokenCount} 個原文 token</p>
+
+    {outline && (
+      <section class="outline">
+        <h2>本章概要</h2>
+        <p>{outline}</p>
+      </section>
+    )}
+
+    <details class="map">
+      <summary>本章原文導覽（研究工具）</summary>
+      <div class="map-body">
+        {topLemmas.length > 0 && (
+          <div>
+            <strong>本章高頻原文字：</strong>
+            {topLemmas.map((l: any) => (
+              <span class="chip" lang={langTag} dir={langDir}>{l.lemma}<sup>{l.count}</sup></span>
+            ))}
+          </div>
+        )}
+        {strongsHotspots.length > 0 && (
+          <div>
+            <strong>Strong's 熱點：</strong>
+            {strongsHotspots.map((s: any) => (
+              <a class="chip" href={`${base}/lexicon/${s.st}`}>{s.st}<sup>{s.count}</sup></a>
+            ))}
+          </div>
+        )}
+        <div>
+          <strong>逐節入口：</strong>
+          {verses.map((v: any) => (
+            <a class="vlink" href={`#v${v.num}`}>{chapter}:{v.num}</a>
+          ))}
+        </div>
+      </div>
+    </details>
+
+    <ChapterRecovery client:visible chapterRef={`${bookEn}.${chapter}`} slotPrefix={`rec-${osis}-${chapter}-`} />
+
+    <section class="verses">
+      {verses.map((v: any) => (
+        <article class="verse" id={`v${v.num}`}>
+          <h3>{bookZh} {chapter}:{v.num}</h3>
+          <div class="il-scroll">
+            <table class="il">
+              <tbody>
+                <tr class="r-orig">
+                  <th>原文</th>
+                  {v.tokens.map((t: any) => (
+                    <td lang={t.st?.startsWith('H') ? 'he' : 'grc'} dir={t.st?.startsWith('H') ? 'rtl' : 'ltr'}>{t.s}</td>
+                  ))}
+                </tr>
+                <tr class="r-lemma">
+                  <th>原型</th>
+                  {v.tokens.map((t: any) => (
+                    <td lang={langTag} dir={langDir}>{t.l}</td>
+                  ))}
+                </tr>
+                <tr class="r-code">
+                  <th>分析碼</th>
+                  {v.tokens.map((t: any) => (<td class="mono">{t.ac}</td>))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="recovery-slot" id={`rec-${osis}-${chapter}-${v.num}`}></div>
+        </article>
+      ))}
+    </section>
+
+    <p class="attr">恢復本經文版權屬 LSM（Living Stream Ministry）所有，由 LSM Recovery Version API runtime 提供；原文資料來源 SBLGNT/MorphGNT、OSHB/WLC（公共領域）。</p>
+  </article>
+
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+</BaseLayout>
+
+<style>
+  .chapter { max-width: 900px; margin: 1.5rem auto; }
+  .crumb { font-size: var(--font-sm); color: var(--color-text-secondary); margin-bottom: 0.5rem; }
+  .crumb a { color: var(--color-primary); }
+  h1 { font-size: var(--font-2xl); }
+  h1 .en { font-size: var(--font-base); color: var(--color-text-muted); font-weight: 400; }
+  .lede { color: var(--color-text-secondary); margin: 0.3rem 0 1.2rem; }
+  .outline { background: var(--color-surface, #f6f1e7); border-left: 4px solid var(--color-primary); padding: 0.8rem 1rem; border-radius: 4px; margin-bottom: 1.2rem; }
+  .outline h2 { font-size: var(--font-base); color: var(--color-primary); margin-bottom: 0.4rem; }
+  .map { border: 1px solid var(--color-border, #ddd); border-radius: 6px; padding: 0.5rem 0.8rem; margin-bottom: 1.5rem; }
+  .map summary { cursor: pointer; font-weight: 700; color: var(--color-primary); }
+  .map-body { margin-top: 0.7rem; display: grid; gap: 0.6rem; font-size: var(--font-sm); }
+  .chip { display: inline-block; margin: 0.15rem 0.3rem 0.15rem 0; padding: 0.1rem 0.5rem; background: var(--color-surface, #efe8da); border-radius: 12px; }
+  .chip sup { color: var(--color-text-muted); margin-left: 2px; }
+  .vlink { display: inline-block; margin: 0.1rem 0.4rem 0.1rem 0; color: var(--color-primary); }
+  .verse { padding: 0.8rem 0; border-bottom: 1px solid var(--color-border, #eee); scroll-margin-top: 1rem; }
+  .verse h3 { font-size: var(--font-base); color: var(--color-primary); margin-bottom: 0.4rem; }
+  .il-scroll { overflow-x: auto; }
+  .il { border-collapse: collapse; }
+  .il th { text-align: right; padding-right: 0.6rem; color: var(--color-text-secondary); font-size: var(--font-sm); white-space: nowrap; }
+  .il td { padding: 0.15rem 0.5rem; text-align: center; border-bottom: 1px dotted var(--color-border, #eee); }
+  .il .r-orig td { font-size: var(--font-lg); }
+  .mono { font-family: monospace; font-size: var(--font-sm); }
+  .recovery-slot:not(:empty) { margin-top: 0.5rem; padding: 0.5rem 0.7rem; background: var(--color-surface, #f3eee2); border-radius: 4px; }
+  .attr { font-size: var(--font-xs, 0.75rem); color: var(--color-text-muted); margin-top: 1.5rem; }
+</style>

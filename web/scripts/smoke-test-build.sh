@@ -120,7 +120,18 @@ echo ""
 
 echo "[3] 頁數總量不變式（防 getStaticPaths 靜默壞掉）"
 TOTAL_PAGES=$(find "$DIST" -name 'index.html' | wc -l | tr -d ' ')
-check_min "HTML 總頁數" "$TOTAL_PAGES" 14000
+check_min "HTML 總頁數" "$TOTAL_PAGES" 15000
+echo ""
+
+echo "[3b] 逐章研經落地頁（/study/[book]/[chapter]）"
+check_file "約翰福音3章頁" "study/John/3/index.html"
+check_file "創世記1章頁" "study/Gen/1/index.html"
+check_grep "逐章頁 H1" "study/John/3/index.html" "第3章"
+check_grep "逐章頁 JSON-LD Breadcrumb" "study/John/3/index.html" "BreadcrumbList"
+check_grep "逐章頁 og:type=article" "study/John/3/index.html" 'content="article"'
+check_grep "逐章頁逐字對照" "study/John/3/index.html" "分析碼"
+CHAPTER_PAGES=$(find "$DIST/study" -mindepth 2 -name 'index.html' 2>/dev/null | wc -l | tr -d ' ')
+check_min "逐章頁總數" "${CHAPTER_PAGES:-0}" 1000
 echo ""
 
 echo "[4] 靜態 JSON 資料（按書卷動態載入的 token；lexicon 為 build 時嵌入，不在 public）"
@@ -171,7 +182,7 @@ check_file "sitemap-index.xml" "sitemap-index.xml"
 check_file "sitemap-0.xml" "sitemap-0.xml"
 check_grep "sitemap 含 lexicon 頁" "sitemap-0.xml" "lexicon/G1"
 SITEMAP_URLS=$(grep -o "<loc>" "$DIST/sitemap-0.xml" 2>/dev/null | wc -l | tr -d ' ')
-check_min "sitemap URL 總數" "${SITEMAP_URLS:-0}" 14000
+check_min "sitemap URL 總數" "${SITEMAP_URLS:-0}" 15000
 echo ""
 
 echo "=== 結果: $PASS passed, $FAIL failed ==="
