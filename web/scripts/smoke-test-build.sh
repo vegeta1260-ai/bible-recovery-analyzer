@@ -164,6 +164,8 @@ check_grep "G1 lang=grc" "lexicon/G1/index.html" 'lang="grc"'
 echo ""
 
 echo "[7] 導覽連結含正確 base path"
+check_grep "書卷卡連逐章頁(首頁)" "index.html" 'href="/bible-recovery-analyzer/study/John/1"'
+check_grep "書卷卡連逐章頁(書卷頁)" "books/index.html" 'href="/bible-recovery-analyzer/study/Gen/1"'
 check_grep "study 連結" "index.html" 'href="/bible-recovery-analyzer/study"'
 check_grep "books 連結" "index.html" 'href="/bible-recovery-analyzer/books"'
 check_grep "lexicon 連結" "index.html" 'href="/bible-recovery-analyzer/lexicon"'

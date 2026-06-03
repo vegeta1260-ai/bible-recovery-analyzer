@@ -11,14 +11,15 @@ const NT_OSIS = new Set([
 const ot = books.filter(b => !NT_OSIS.has(b.osis));
 const nt = books.filter(b => NT_OSIS.has(b.osis));
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-// 點書卷 → 研經頁帶入該卷 1:1 自動搜尋（每卷皆有第 1 章第 1 節）
-const bookHref = (book: BookEntry) => `${base}/study?ref=${encodeURIComponent(book.zh + '1:1')}`;
+// 點書卷 → 該卷第 1 章逐章頁（原文逐字對照 + 本章概要 + 恢復本）。
+// 逐章頁內有「全 N 章」導覽可跳任一章，這也是逐章頁的站內主入口。
+const bookHref = (book: BookEntry) => `${base}/study/${book.osis}/1`;
 ---
 <section class="book-grid-section">
   <h2>舊約（{ot.length} 卷）</h2>
   <div class="book-grid">
     {ot.map(book => (
-      <a class="book-card card" href={bookHref(book)} aria-label={`查看${book.zh}原文逐字對照`}>
+      <a class="book-card card" href={bookHref(book)} aria-label={`閱讀${book.zh}逐章原文與概要`}>
         <span class="book-zh">{book.zh}</span>
         <span class="book-en">{book.english}</span>
         <span class="book-osis mono">{book.osis}</span>
@@ -28,7 +29,7 @@ const bookHref = (book: BookEntry) => `${base}/study?ref=${encodeURIComponent(bo
   <h2>新約（{nt.length} 卷）</h2>
   <div class="book-grid">
     {nt.map(book => (
-      <a class="book-card card" href={bookHref(book)} aria-label={`查看${book.zh}原文逐字對照`}>
+      <a class="book-card card" href={bookHref(book)} aria-label={`閱讀${book.zh}逐章原文與概要`}>
         <span class="book-zh">{book.zh}</span>
         <span class="book-en">{book.english}</span>
         <span class="book-osis mono">{book.osis}</span>
