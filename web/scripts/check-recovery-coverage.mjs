@@ -18,7 +18,7 @@ const LSM_AUTH =
   Buffer.from('ai.vegeta1260.biblerecoveryanalyzer:web_9972c275-24f4-4720-bd42-8b5c0d9c6fd7').toString('base64');
 
 // 與 src/lib/lsmApi.ts buildLsmChapterRef 同源（見該檔註解）。
-const LSM_BOOK_OVERRIDE = { Song: 'SoS', Prov: 'Prv', Ezek: 'Ezk', Mark: 'Mrk' };
+const LSM_BOOK_OVERRIDE = { Song: 'SoS', Prov: 'Prv', Ezek: 'Ezk', Mark: 'Mrk', Judg: 'Jdg', Phlm: 'Phm' };
 function buildLsmChapterRef(osis, bookEn, chapter, totalChapters) {
   const book = LSM_BOOK_OVERRIDE[osis] ?? bookEn.replace(/\s+/g, '');
   return totalChapters === 1 ? `${book}.1-99` : `${book}.${chapter}`;
@@ -82,10 +82,14 @@ let failed = 0;
 for (const b of books) {
   const ref = buildLsmChapterRef(b.osis, b.english, 1, b.n);
   const [zh, en] = await Promise.all([fetchVerses(ref, 'zho'), fetchVerses(ref, 'eng')]);
-  const pass = zh.ok && en.ok;
+  // 嚴格：中英都要取到，且節數一致。中文只回 1 節（書名在中文模式被誤解析）這種曾被
+  // 「zho>=1 就算過」放過（Judg/Phlm），故改為要求 zho.count === eng.count。
+  const pass = zh.ok && en.ok && zh.count === en.count;
   if (!pass) failed++;
   const tag = pass ? 'OK  ' : 'FAIL';
-  const detail = pass ? `zho=${zh.count} eng=${en.count}` : `zho=${zh.count}(${zh.reason}) eng=${en.count}(${en.reason})`;
+  const detail = pass
+    ? `zho=${zh.count} eng=${en.count}`
+    : `zho=${zh.count}(${zh.reason}) eng=${en.count}(${en.reason})${zh.count !== en.count ? ' 節數不一致' : ''}`;
   console.log(`  ${tag}  ${b.osis.padEnd(8)} ${ref.padEnd(16)} ${detail}`);
 }
 

@@ -22,6 +22,10 @@ const LSM_BOOK_OVERRIDE: Record<string, string> = {
   Prov: 'Prv',
   Ezek: 'Ezk',
   Mark: 'Mrk',
+  // 中文模式下，"Judges"/"Judg" 會被 LSM 誤解析為「猶（猶大書）」、"Philemon" 誤為「腓」只回一節；
+  // 只有這兩個縮寫中英皆正確對到士師記（士）與腓利門書（門）。
+  Judg: 'Jdg',
+  Phlm: 'Phm',
 };
 
 /**

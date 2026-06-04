@@ -1,0 +1,699 @@
+{
+  "1Chr": {
+    "5": {
+      "type": "review",
+      "origMax": 41,
+      "recMax": 26
+    },
+    "6": {
+      "type": "review",
+      "origMax": 66,
+      "recMax": 81
+    },
+    "12": {
+      "type": "review",
+      "origMax": 41,
+      "recMax": 40
+    }
+  },
+  "1Kgs": {
+    "4": {
+      "type": "review",
+      "origMax": 20,
+      "recMax": 34
+    },
+    "5": {
+      "type": "review",
+      "origMax": 32,
+      "recMax": 18
+    },
+    "22": {
+      "type": "review",
+      "origMax": 54,
+      "recMax": 53
+    }
+  },
+  "1Sam": {
+    "21": {
+      "type": "review",
+      "origMax": 16,
+      "recMax": 15
+    },
+    "23": {
+      "type": "review",
+      "origMax": 28,
+      "recMax": 29
+    },
+    "24": {
+      "type": "review",
+      "origMax": 23,
+      "recMax": 22
+    }
+  },
+  "2Chr": {
+    "1": {
+      "type": "review",
+      "origMax": 18,
+      "recMax": 17
+    },
+    "2": {
+      "type": "review",
+      "origMax": 17,
+      "recMax": 18
+    },
+    "13": {
+      "type": "review",
+      "origMax": 23,
+      "recMax": 22
+    },
+    "14": {
+      "type": "review",
+      "origMax": 14,
+      "recMax": 15
+    }
+  },
+  "2Cor": {
+    "13": {
+      "type": "review",
+      "origMax": 13,
+      "recMax": 14
+    }
+  },
+  "2Kgs": {
+    "11": {
+      "type": "review",
+      "origMax": 20,
+      "recMax": 21
+    },
+    "12": {
+      "type": "review",
+      "origMax": 22,
+      "recMax": 21
+    }
+  },
+  "2Sam": {
+    "18": {
+      "type": "review",
+      "origMax": 32,
+      "recMax": 33
+    },
+    "19": {
+      "type": "review",
+      "origMax": 44,
+      "recMax": 43
+    }
+  },
+  "3John": {
+    "1": {
+      "type": "merge",
+      "merges": {
+        "14": [
+          14,
+          15
+        ]
+      }
+    }
+  },
+  "Acts": {
+    "19": {
+      "type": "review",
+      "origMax": 40,
+      "recMax": 41
+    }
+  },
+  "Dan": {
+    "3": {
+      "type": "review",
+      "origMax": 33,
+      "recMax": 30
+    },
+    "4": {
+      "type": "review",
+      "origMax": 34,
+      "recMax": 37
+    },
+    "5": {
+      "type": "review",
+      "origMax": 30,
+      "recMax": 31
+    },
+    "6": {
+      "type": "review",
+      "origMax": 29,
+      "recMax": 28
+    }
+  },
+  "Deut": {
+    "12": {
+      "type": "review",
+      "origMax": 31,
+      "recMax": 32
+    },
+    "13": {
+      "type": "review",
+      "origMax": 19,
+      "recMax": 18
+    },
+    "22": {
+      "type": "review",
+      "origMax": 29,
+      "recMax": 30
+    },
+    "23": {
+      "type": "review",
+      "origMax": 26,
+      "recMax": 25
+    },
+    "28": {
+      "type": "review",
+      "origMax": 69,
+      "recMax": 68
+    },
+    "29": {
+      "type": "review",
+      "origMax": 28,
+      "recMax": 29
+    }
+  },
+  "Eccl": {
+    "4": {
+      "type": "review",
+      "origMax": 17,
+      "recMax": 16
+    },
+    "5": {
+      "type": "review",
+      "origMax": 19,
+      "recMax": 20
+    }
+  },
+  "Exod": {
+    "7": {
+      "type": "review",
+      "origMax": 29,
+      "recMax": 25
+    },
+    "8": {
+      "type": "review",
+      "origMax": 28,
+      "recMax": 32
+    },
+    "21": {
+      "type": "review",
+      "origMax": 37,
+      "recMax": 36
+    },
+    "22": {
+      "type": "review",
+      "origMax": 30,
+      "recMax": 31
+    }
+  },
+  "Ezek": {
+    "20": {
+      "type": "review",
+      "origMax": 44,
+      "recMax": 49
+    },
+    "21": {
+      "type": "review",
+      "origMax": 37,
+      "recMax": 32
+    }
+  },
+  "Gen": {
+    "31": {
+      "type": "review",
+      "origMax": 54,
+      "recMax": 55
+    },
+    "32": {
+      "type": "review",
+      "origMax": 33,
+      "recMax": 32
+    }
+  },
+  "Hos": {
+    "1": {
+      "type": "review",
+      "origMax": 9,
+      "recMax": 11
+    },
+    "2": {
+      "type": "review",
+      "origMax": 25,
+      "recMax": 23
+    },
+    "11": {
+      "type": "review",
+      "origMax": 11,
+      "recMax": 12
+    },
+    "12": {
+      "type": "review",
+      "origMax": 15,
+      "recMax": 14
+    },
+    "13": {
+      "type": "review",
+      "origMax": 15,
+      "recMax": 16
+    },
+    "14": {
+      "type": "review",
+      "origMax": 10,
+      "recMax": 9
+    }
+  },
+  "Isa": {
+    "8": {
+      "type": "review",
+      "origMax": 23,
+      "recMax": 22
+    },
+    "9": {
+      "type": "review",
+      "origMax": 20,
+      "recMax": 21
+    },
+    "64": {
+      "type": "review",
+      "origMax": 11,
+      "recMax": 12
+    }
+  },
+  "Jer": {
+    "8": {
+      "type": "review",
+      "origMax": 23,
+      "recMax": 22
+    },
+    "9": {
+      "type": "review",
+      "origMax": 25,
+      "recMax": 26
+    }
+  },
+  "Job": {
+    "40": {
+      "type": "review",
+      "origMax": 32,
+      "recMax": 24
+    },
+    "41": {
+      "type": "review",
+      "origMax": 26,
+      "recMax": 34
+    }
+  },
+  "John": {
+    "7": {
+      "type": "review",
+      "origMax": 52,
+      "recMax": 53
+    }
+  },
+  "Jonah": {
+    "1": {
+      "type": "review",
+      "origMax": 16,
+      "recMax": 17
+    },
+    "2": {
+      "type": "review",
+      "origMax": 11,
+      "recMax": 10
+    }
+  },
+  "Lev": {
+    "5": {
+      "type": "review",
+      "origMax": 26,
+      "recMax": 19
+    },
+    "6": {
+      "type": "review",
+      "origMax": 23,
+      "recMax": 30
+    }
+  },
+  "Mic": {
+    "4": {
+      "type": "review",
+      "origMax": 14,
+      "recMax": 13
+    },
+    "5": {
+      "type": "review",
+      "origMax": 14,
+      "recMax": 15
+    }
+  },
+  "Nah": {
+    "1": {
+      "type": "review",
+      "origMax": 14,
+      "recMax": 15
+    },
+    "2": {
+      "type": "review",
+      "origMax": 14,
+      "recMax": 13
+    }
+  },
+  "Neh": {
+    "3": {
+      "type": "review",
+      "origMax": 38,
+      "recMax": 32
+    },
+    "4": {
+      "type": "review",
+      "origMax": 17,
+      "recMax": 23
+    },
+    "7": {
+      "type": "review",
+      "origMax": 72,
+      "recMax": 73
+    },
+    "9": {
+      "type": "review",
+      "origMax": 37,
+      "recMax": 38
+    },
+    "10": {
+      "type": "review",
+      "origMax": 40,
+      "recMax": 39
+    }
+  },
+  "Num": {
+    "16": {
+      "type": "review",
+      "origMax": 35,
+      "recMax": 50
+    },
+    "17": {
+      "type": "review",
+      "origMax": 28,
+      "recMax": 13
+    },
+    "25": {
+      "type": "review",
+      "origMax": 19,
+      "recMax": 18
+    },
+    "29": {
+      "type": "review",
+      "origMax": 39,
+      "recMax": 40
+    },
+    "30": {
+      "type": "review",
+      "origMax": 17,
+      "recMax": 16
+    }
+  },
+  "Ps": {
+    "3": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "4": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "5": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "6": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "7": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "8": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "9": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "12": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "18": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "19": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "20": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "21": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "22": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "30": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "31": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "34": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "36": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "38": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "39": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "40": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "41": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "42": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "44": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "45": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "46": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "47": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "48": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "49": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "51": {
+      "type": "offset",
+      "recToOrig": 2
+    },
+    "52": {
+      "type": "offset",
+      "recToOrig": 2
+    },
+    "53": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "54": {
+      "type": "offset",
+      "recToOrig": 2
+    },
+    "55": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "56": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "57": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "58": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "59": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "60": {
+      "type": "offset",
+      "recToOrig": 2
+    },
+    "61": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "62": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "63": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "64": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "65": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "67": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "68": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "69": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "70": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "75": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "76": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "77": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "80": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "81": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "83": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "84": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "85": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "88": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "89": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "92": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "102": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "108": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "140": {
+      "type": "offset",
+      "recToOrig": 1
+    },
+    "142": {
+      "type": "offset",
+      "recToOrig": 1
+    }
+  },
+  "Rom": {
+    "16": {
+      "type": "review",
+      "origMax": 24,
+      "recMax": 27
+    }
+  },
+  "Song": {
+    "6": {
+      "type": "review",
+      "origMax": 12,
+      "recMax": 13
+    },
+    "7": {
+      "type": "review",
+      "origMax": 14,
+      "recMax": 13
+    }
+  },
+  "Zech": {
+    "1": {
+      "type": "review",
+      "origMax": 17,
+      "recMax": 21
+    },
+    "2": {
+      "type": "review",
+      "origMax": 17,
+      "recMax": 13
+    }
+  }
+}
