@@ -12,6 +12,36 @@ const LSM_APP_ID = 'ai.vegeta1260.biblerecoveryanalyzer';
 const LSM_TOKEN = 'web_9972c275-24f4-4720-bd42-8b5c0d9c6fd7';
 const LSM_AUTH = 'Basic ' + btoa(`${LSM_APP_ID}:${LSM_TOKEN}`);
 
+// LSM 書名特例（key = OSIS）：去空格的英文書名仍無法被 LSM 正確解析者，
+// 改用 LSM 認得的簡稱。實測（見 scripts/check-recovery-coverage.mjs）：
+//  - Song：英文名去空格仍查無，用 "SoS"。
+//  - Prov/Ezek/Mark：英文全名在「中文」查詢模式下解析失敗（zho 回 0 節、detected="1."），
+//    但英文模式正常；LSM 中文書名表只認這三卷的三字母縮寫 Prv/Ezk/Mrk（中英皆通）。
+const LSM_BOOK_OVERRIDE: Record<string, string> = {
+  Song: 'SoS',
+  Prov: 'Prv',
+  Ezek: 'Ezk',
+  Mark: 'Mrk',
+};
+
+/**
+ * 由書卷資訊組出 LSM API 可解析的整章引用（供 study 逐章頁 ChapterRecovery 使用）。
+ * LSM 的書名解析有三個雷（皆已實測，見 scripts/check-recovery-coverage.mjs）：
+ *  - 不接受含空格的英文書名（"2 Peter" 查無）→ 一律去空格（"2Peter"）。
+ *  - 部分書名去空格仍查無、或僅中文模式查無 → 用 LSM_BOOK_OVERRIDE 的簡稱。
+ *  - 單章書（Jude/Obadiah/Philemon/2John/3John）送 ".1" 會被當「第 1 節」只回一節，
+ *    需用範圍 ".1-99" 取整章（超界尾節由 doFetchLang 的 "No such" 過濾掉）。
+ */
+export function buildLsmChapterRef(
+  osis: string,
+  bookEn: string,
+  chapter: number,
+  totalChapters: number,
+): string {
+  const book = LSM_BOOK_OVERRIDE[osis] ?? bookEn.replace(/\s+/g, '');
+  return totalChapters === 1 ? `${book}.1-99` : `${book}.${chapter}`;
+}
+
 export interface RecoveryVerse {
   ref: string;
   text: string;    // 繁體中文（zho）

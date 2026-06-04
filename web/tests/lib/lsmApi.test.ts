@@ -1,5 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchRecoveryText, __resetLsmCache, type RecoveryResult } from '@/lib/lsmApi';
+import { fetchRecoveryText, buildLsmChapterRef, __resetLsmCache, type RecoveryResult } from '@/lib/lsmApi';
+
+describe('buildLsmChapterRef', () => {
+  it('單字英文書名：原樣 + 章號', () => {
+    expect(buildLsmChapterRef('Gen', 'Genesis', 1, 50)).toBe('Genesis.1');
+    expect(buildLsmChapterRef('John', 'John', 3, 21)).toBe('John.3');
+  });
+
+  it('含空格英文書名：去空格（LSM 不接受空格）', () => {
+    expect(buildLsmChapterRef('2Pet', '2 Peter', 1, 3)).toBe('2Peter.1');
+    expect(buildLsmChapterRef('1Cor', '1 Corinthians', 5, 16)).toBe('1Corinthians.5');
+  });
+
+  it('LSM 書名特例：用 override 簡稱', () => {
+    expect(buildLsmChapterRef('Song', 'Song of Solomon', 1, 8)).toBe('SoS.1'); // 去空格仍查無
+    expect(buildLsmChapterRef('Prov', 'Proverbs', 1, 31)).toBe('Prv.1');       // 中文模式只認 Prv
+    expect(buildLsmChapterRef('Ezek', 'Ezekiel', 1, 48)).toBe('Ezk.1');        // 中文模式只認 Ezk
+    expect(buildLsmChapterRef('Mark', 'Mark', 1, 16)).toBe('Mrk.1');           // 中文模式只認 Mrk
+  });
+
+  it('單章書：用範圍 .1-99 取整章（避免被當第 1 節）', () => {
+    expect(buildLsmChapterRef('Jude', 'Jude', 1, 1)).toBe('Jude.1-99');
+    expect(buildLsmChapterRef('3John', '3 John', 1, 1)).toBe('3John.1-99'); // 去空格 + 範圍
+    expect(buildLsmChapterRef('Obad', 'Obadiah', 1, 1)).toBe('Obadiah.1-99');
+  });
+});
 
 const mockResponse = {
   verses: [{ ref: 'John 1:1', text: 'In the beginning was the Word...' }],

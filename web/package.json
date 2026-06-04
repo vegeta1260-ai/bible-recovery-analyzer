@@ -12,7 +12,8 @@
     "astro": "astro",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:smoke": "bash scripts/smoke-test-build.sh"
+    "test:smoke": "bash scripts/smoke-test-build.sh",
+    "check:recovery": "node scripts/check-recovery-coverage.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.4",
