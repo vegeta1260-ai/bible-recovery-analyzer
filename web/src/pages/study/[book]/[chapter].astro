@@ -220,7 +220,7 @@ const jsonLd = {
     </details>
 
     <div class="reading-bar">
-      <ChapterRecovery client:visible chapterRef={lsmChapterRef} slotPrefix={`rec-${osis}-${chapter}-`} />
+      <ChapterRecovery client:visible chapterRef={lsmChapterRef} slotPrefix={`rec-${osis}-${chapter}-`} osis={osis} chapter={chapter} />
       {/* client:idle 而非 visible：本元件初始 SSR 為 null（supported 未定），
           client:visible 的 IntersectionObserver 無子元素可觀察會永不水合。 */}
       <ChapterReadAloud client:idle slotPrefix={`rec-${osis}-${chapter}-`} />
