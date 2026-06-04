@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { switchMusic } from '@/audio/musicManager';
-import { isAudioEnabled, subscribeAudio } from '@/audio/audioStore';
+import { switchMusic, setMusicMuted } from '@/audio/musicManager';
+import { initAudioStore, isAudioEnabled, subscribeAudio } from '@/audio/audioStore';
 
 interface Props {
   /** OSIS 書卷代碼，用於選對應的書卷類型配樂 */
@@ -15,9 +15,18 @@ interface Props {
  */
 export default function ChapterMusic({ osis }: Props) {
   useEffect(() => {
-    if (isAudioEnabled()) switchMusic(osis);
+    initAudioStore(); // 接上跨島同步 + 讀 localStorage（本島自己的單例需初始化）
+    if (isAudioEnabled()) {
+      switchMusic(osis);
+      setMusicMuted(false);
+    }
     const unsub = subscribeAudio((enabled) => {
-      if (enabled) switchMusic(osis);
+      if (enabled) {
+        switchMusic(osis);    // 切到本卷曲目（同型別則內部略過，音樂續播）
+        setMusicMuted(false); // 確保 unmute（switchMusic 同型別 return 時不會自己 unmute）
+      } else {
+        setMusicMuted(true);  // 關閉：靜音本島正在播的曲目
+      }
     });
     return unsub;
   }, [osis]);
