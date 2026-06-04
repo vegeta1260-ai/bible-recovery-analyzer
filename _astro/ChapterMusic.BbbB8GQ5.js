@@ -1,1 +1,0 @@
-import{j as a}from"./jsx-runtime.u17CrQMm.js";import{a as r}from"./index.UEuQJ2Tp.js";import{i,a as c,c as e,s as n,b as t}from"./musicManager.BV7Peblt.js";function m({osis:s}){return r.useEffect(()=>(i(),c()&&(e(s),t(!1)),n(u=>{u?(e(s),t(!1)):t(!0)})),[s]),a.jsx("span",{"data-chapter-music":s,hidden:!0})}export{m as default};
