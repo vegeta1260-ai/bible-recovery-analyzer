@@ -41,19 +41,20 @@ const BASE = typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
   ? import.meta.env.BASE_URL.replace(/\/$/, '')
   : '';
 
-// 方向確認版：8 類書卷暫全指同一段公共領域素歌（Veni Sancte Spiritus，
-// Wikimedia Commons，作者 Membeth 釋出公共領域），供確認「素歌方向」是否合適。
-// 確認後再為 8 類書卷分化不同的開放授權聖樂曲目（舊 ambient-*.mp3 暫保留未用）。
-const CHANT = `${BASE}/audio/ambient-chant.mp3`;
+// 開放授權（PD/CC0、可商用無 share-alike）且夠長的素歌有限——Wikimedia 多為
+// CC-BY-SA。故以 2 段公共領域素歌分 2 組氛圍（莊嚴 vs 將臨期待）；若日後取得更多
+// 乾淨授權音源，可再細分 8 類。皆 Membeth 釋出公共領域（Wikimedia Commons）。
+const VENI = `${BASE}/audio/ambient-chant.mp3`;     // Veni Sancte Spiritus（2:37，莊嚴）
+const RORATE = `${BASE}/audio/ambient-rorate.mp3`;  // Rorate Caeli（1:02，將臨期待、安靜）
 const TRACK_MAP: Record<BookType, string> = {
-  pentateuch: CHANT,
-  history:    CHANT,
-  wisdom:     CHANT,
-  prophecy:   CHANT,
-  gospel:     CHANT,
-  epistle:    CHANT,
-  apocalypse: CHANT,
-  default:    CHANT,
+  pentateuch: VENI,    // 律法—莊嚴
+  history:    VENI,    // 歷史—莊嚴
+  gospel:     VENI,    // 福音—莊嚴
+  epistle:    VENI,    // 書信—莊嚴
+  default:    VENI,
+  wisdom:     RORATE,  // 智慧詩歌—安靜
+  prophecy:   RORATE,  // 先知—盼望期待
+  apocalypse: RORATE,  // 啟示—盼望
 };
 
 const FADE_DURATION = 2000; // ms
