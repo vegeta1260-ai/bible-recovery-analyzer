@@ -78,17 +78,19 @@ export function switchMusic(osisBook: string): void {
     src: [trackSrc],
     loop: true,
     volume: 0,
-    html5: true, // streaming-friendly
+    // 用 Web Audio（非 html5）：背景循環樂在使用者手勢解鎖 AudioContext 後播放可靠，
+    // 且無 html5 模式的「HTML5 Audio pool exhausted / locked audio object」問題（會導致無聲）。
+    html5: false,
     onloaderror: () => {
       // Audio file missing (placeholder) — silently ignore
     },
   });
 
-  // Fade out current track
+  // Fade out current track（fade 完 stop 並 unload 釋放資源，避免重複切換累積）
   if (_current) {
     const prev = _current;
     prev.fade(prev.volume() as number, 0, FADE_DURATION);
-    setTimeout(() => prev.stop(), FADE_DURATION + 50);
+    setTimeout(() => { prev.stop(); prev.unload(); }, FADE_DURATION + 50);
   }
 
   next.play();
