@@ -1,0 +1,54 @@
+---
+// 聖經地圖頁。目前以靜態圖呈現公共領域古地圖（給神父確認底圖風格/內容）；
+// 互動縮放與中文地名標示（Leaflet ImageOverlay）為下一階段。
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const maps = [
+  {
+    src: `${base}/maps/exodus-sinai-1873.jpg`,
+    title: '出埃及與西奈半島',
+    alt: '1873 年出版的西奈半島與出埃及路線古地圖',
+  },
+  {
+    src: `${base}/maps/paul-journeys-1873.jpg`,
+    title: '使徒保羅的行程',
+    alt: '1873 年出版的使徒保羅宣教旅程古地圖',
+  },
+];
+---
+
+<BaseLayout title="聖經地圖" description="聖經地名與重要事件的古地圖（公共領域），含出埃及路線與使徒保羅的行程。">
+  <article class="maps">
+    <nav class="crumb" aria-label="breadcrumb">
+      <a href={`${base}/`}>首頁</a> › <span>聖經地圖</span>
+    </nav>
+    <h1>聖經地圖</h1>
+    <p class="lede">採用 1873 年出版的公共領域古地圖。互動縮放與中文地名標示為下一階段。</p>
+
+    {maps.map((m) => (
+      <figure class="map-fig">
+        <h2>{m.title}</h2>
+        <a href={m.src} target="_blank" rel="noopener">
+          <img src={m.src} alt={m.alt} loading="lazy" />
+        </a>
+        <figcaption>點圖可開啟原始大圖</figcaption>
+      </figure>
+    ))}
+
+    <p class="attr">地圖來源：Wikimedia Commons，公共領域（1873 年出版，已逾著作權保護期）。</p>
+  </article>
+</BaseLayout>
+
+<style>
+  .maps { max-width: 900px; margin: 1.5rem auto; }
+  .crumb { font-size: var(--font-sm); color: var(--color-text-secondary); margin-bottom: 0.5rem; }
+  .crumb a { color: var(--color-primary); }
+  h1 { font-size: var(--font-2xl); }
+  .lede { color: var(--color-text-secondary); margin: 0.3rem 0 1.4rem; }
+  .map-fig { margin: 0 0 2rem; }
+  .map-fig h2 { font-size: var(--font-lg); color: var(--color-primary); margin-bottom: 0.5rem; }
+  .map-fig img { width: 100%; height: auto; border: 1px solid var(--color-border, #ddd); border-radius: 6px; background: #fff; }
+  .map-fig figcaption { font-size: var(--font-sm); color: var(--color-text-muted); margin-top: 0.3rem; }
+  .attr { font-size: var(--font-xs, 0.75rem); color: var(--color-text-muted); margin-top: 1.5rem; }
+</style>

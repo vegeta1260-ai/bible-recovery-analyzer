@@ -41,15 +41,19 @@ const BASE = typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
   ? import.meta.env.BASE_URL.replace(/\/$/, '')
   : '';
 
+// 方向確認版：8 類書卷暫全指同一段公共領域素歌（Veni Sancte Spiritus，
+// Wikimedia Commons，作者 Membeth 釋出公共領域），供確認「素歌方向」是否合適。
+// 確認後再為 8 類書卷分化不同的開放授權聖樂曲目（舊 ambient-*.mp3 暫保留未用）。
+const CHANT = `${BASE}/audio/ambient-chant.mp3`;
 const TRACK_MAP: Record<BookType, string> = {
-  pentateuch: `${BASE}/audio/ambient-pentateuch.mp3`,
-  history:    `${BASE}/audio/ambient-history.mp3`,
-  wisdom:     `${BASE}/audio/ambient-wisdom.mp3`,
-  prophecy:   `${BASE}/audio/ambient-prophecy.mp3`,
-  gospel:     `${BASE}/audio/ambient-gospel.mp3`,
-  epistle:    `${BASE}/audio/ambient-epistle.mp3`,
-  apocalypse: `${BASE}/audio/ambient-apocalypse.mp3`,
-  default:    `${BASE}/audio/ambient-default.mp3`,
+  pentateuch: CHANT,
+  history:    CHANT,
+  wisdom:     CHANT,
+  prophecy:   CHANT,
+  gospel:     CHANT,
+  epistle:    CHANT,
+  apocalypse: CHANT,
+  default:    CHANT,
 };
 
 const FADE_DURATION = 2000; // ms
