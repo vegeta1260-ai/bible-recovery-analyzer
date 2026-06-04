@@ -22,7 +22,10 @@
 - **push 偶爾撞 `Connection closed by 198.18.0.42 port 22`**（本機 VPN/zero-trust 攔 SSH）：非權限/repo 問題，重試幾次即可。
 - **token JSON「筆數對但內容全 null」是已發生過的事故**：`web/scripts/compress-tokens.py` 原地覆寫且無防呆，重複執行會把短 key 當原始讀（`t.get("verse_ref")` → None），整批 token 歸零（新約曾被雙壓成 `{"r":null,...}`，舊約倖免）。腳本已改為冪等（偵測短 key 即 SKIP）；`smoke-test-build.sh` 已加「有效內容」gate（只計 `r` 非空者）。**驗 token 一律看「有效筆數」，別只看 `len()`。**
 - **OG 書卷卡（`web/public/og/*.png`，66 張）由 `web/scripts/build-og-images.mjs` 在「本機 macOS」產出後 commit**：CJK 靠 macOS 系統字型（resvg）。CI 是 ubuntu、**無中文字型**，所以**絕不可**把產圖加進 `npm build`，否則中文變豆腐。改書名/配色 → 本機 `node scripts/build-og-images.mjs` 重跑 → commit PNG。
-- **Joel / Mal 的 token 章節做過「希伯來→恢復本」重對映**：OSHB 用希伯來分章（Joel 4 章、Mal 3 章），恢復本用 Joel 3 章、Mal 4 章。`web/scripts/remap-joel-mal-versification.py` 已把這 2 卷 token 重對映為恢復本章節，使頁面/恢復本層/B 概要一致。⚠️ **重跑 OT ETL（`etl-oshb.py`）會讓 Joel/Mal 退回希伯來分章 → 之後必須再跑一次這支 remap**（見 web/README SOP 6）。腳本冪等，重跑安全。
+- **原文↔恢復本 versification（分章/分節）差異已做 token 重對映**：OSHB(WLC)/MorphGNT 與恢復本（英文慣例）的分章分節邊界不同，否則逐章頁 slot 會與 runtime 恢復本錯位。兩支腳本（皆冪等、token 在 git 可還原）：
+  - `web/scripts/remap-joel-mal-versification.py`：Joel/Mal 章層級（Joel 希伯來 4 章→恢 3 章、Mal 反之）。
+  - `web/scripts/remap-versification.py`：**節層級，涵蓋 24 卷**（Gen/Exod/Lev/Num/Deut/撒上下/王上下/代上下/Neh/Job/Eccl/Song/Isa/Jer/Ezek/Dan/Hos/Jonah/Mic/Nah/Zech），依 `web/scripts/eng-versification.json`（Copenhagen-Alliance 權威表）把 token 章節重對映為恢復本系統。排除詩篇（題注改由 ChapterRecovery 的 offset 處理，見 `web/src/data/versification.json`）、Joel/Mal（上一支處理）、新約（eng.json 未涵蓋；Acts19/Rom16/2Cor13/John7 等希臘文差異仍待處理）。Num25:19 為 WLC 特有、表中未列，腳本內 EXTRA_MAP 手動補。
+  - ⚠️ **重跑 OT ETL（`etl-oshb.py`）會讓這些卷退回原文分節 → 之後必須「兩支 remap 都再跑一次」**。驗證：`node web/scripts/scan-versification.mjs` 後 `versification.json` 的 review 應只剩新約 4 章（其餘為詩篇 offset 62 + 3John merge）。
 - **`og:image` 等資產 URL 必須含 base path**（站在 `/bible-recovery-analyzer/` 子路徑）：曾漏 base 導致分享卡圖 404。`BaseLayout` 已用 `siteUrl + base + ogImage` 組；smoke 有 gate。換自訂網域時連同 `astro.config.mjs` 的 `site`/`base`、`robots.txt`、OG 圖 URL 一起改。
 
 ## 開發紀律
