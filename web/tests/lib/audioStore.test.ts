@@ -7,77 +7,63 @@ import {
   subscribeAudio,
 } from '@/audio/audioStore';
 
-// Reset module state between tests via re-import trick — we use a storage mock instead.
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => { store[key] = value; },
-    removeItem: (key: string) => { delete store[key]; },
-    clear: () => { store = {}; },
-  };
-})();
-
 beforeEach(() => {
-  localStorageMock.clear();
-  Object.defineProperty(globalThis, 'localStorage', {
-    value: localStorageMock,
-    writable: true,
-    configurable: true,
-  });
-  // Reset to default (disabled) state
+  // 重置為預設（關閉）狀態
   setAudioEnabled(false);
 });
 
 describe('audioStore', () => {
-  it('defaults to disabled (no autoplay)', () => {
+  it('預設關閉（不自動播放）', () => {
     expect(isAudioEnabled()).toBe(false);
   });
 
-  it('setAudioEnabled persists to localStorage', () => {
-    setAudioEnabled(false);
-    expect(localStorageMock.getItem('bra_audio_enabled')).toBe('false');
-    expect(isAudioEnabled()).toBe(false);
-  });
-
-  it('setAudioEnabled(true) persists true', () => {
-    setAudioEnabled(false);
+  it('setAudioEnabled 改變狀態', () => {
     setAudioEnabled(true);
-    expect(localStorageMock.getItem('bra_audio_enabled')).toBe('true');
     expect(isAudioEnabled()).toBe(true);
+    setAudioEnabled(false);
+    expect(isAudioEnabled()).toBe(false);
   });
 
-  it('toggleAudio flips the state', () => {
+  it('toggleAudio 翻轉狀態', () => {
     setAudioEnabled(true);
     const result = toggleAudio();
     expect(result).toBe(false);
     expect(isAudioEnabled()).toBe(false);
   });
 
-  it('initAudioStore reads from localStorage', () => {
-    localStorageMock.setItem('bra_audio_enabled', 'false');
-    initAudioStore();
-    expect(isAudioEnabled()).toBe(false);
+  it('不跨頁記憶：不寫入 localStorage（避免新頁面顯示開啟卻無聲）', () => {
+    const setItem = vi.fn();
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: { setItem, getItem: () => null, removeItem: () => {}, clear: () => {} },
+      writable: true,
+      configurable: true,
+    });
+    setAudioEnabled(true);
+    expect(setItem).not.toHaveBeenCalled();
   });
 
-  it('initAudioStore treats missing key as enabled', () => {
-    localStorageMock.clear();
-    // Set to false first, then reinit without stored value
+  it('initAudioStore 不從儲存恢復狀態（一律維持關閉起始）', () => {
     setAudioEnabled(false);
-    // No stored key — initAudioStore should not change state
-    initAudioStore(); // stored === null → no-op
-    // State remains false (we set it false above, init won't override without stored value)
-    // But stored is now 'false' from setAudioEnabled, so init will read 'false'
+    initAudioStore();
     expect(isAudioEnabled()).toBe(false);
   });
 
   it('subscribeAudio fires listener on change', () => {
     const spy = vi.fn();
     const unsub = subscribeAudio(spy);
-    setAudioEnabled(false);
-    expect(spy).toHaveBeenCalledWith(false);
-    unsub();
     setAudioEnabled(true);
-    expect(spy).toHaveBeenCalledTimes(1); // not called after unsub
+    expect(spy).toHaveBeenCalledWith(true);
+    unsub();
+    setAudioEnabled(false);
+    expect(spy).toHaveBeenCalledTimes(1); // 退訂後不再呼叫
+  });
+
+  it('window 事件跨島同步：收到廣播時更新狀態並通知 listeners', () => {
+    const spy = vi.fn();
+    subscribeAudio(spy);
+    // 模擬「另一個島」的 setAudioEnabled 廣播
+    window.dispatchEvent(new CustomEvent('bra-audio-changed', { detail: true }));
+    expect(isAudioEnabled()).toBe(true);
+    expect(spy).toHaveBeenCalledWith(true);
   });
 });
