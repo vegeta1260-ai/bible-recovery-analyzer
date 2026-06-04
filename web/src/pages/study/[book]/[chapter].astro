@@ -63,6 +63,16 @@ export async function getStaticPaths() {
         }))
         .sort((a, c) => a.num - c.num);
 
+      // 恢復本有、原文古卷多無的節（如 Rom 16:25-27 頌讚）：補空原文 slot，
+      // 讓 runtime 恢復本各自分行顯示（原文逐字對照區標示古卷多無）。
+      const extraVerses = (
+        { Rom: { 16: [25, 26, 27] } } as Record<string, Record<number, number[]>>
+      )[b.osis]?.[Number(ch)] ?? [];
+      for (const n of extraVerses) {
+        if (!verses.some((v) => v.num === n)) verses.push({ num: n, tokens: [] as CToken[] });
+      }
+      if (extraVerses.length) verses.sort((a, c) => a.num - c.num);
+
       // A 導覽：高頻 lemma、Strong's 熱點、token 數
       const lemmaCount = new Map<string, number>();
       const strongsCount = new Map<string, number>();
@@ -234,6 +244,9 @@ const jsonLd = {
           <h3>{bookZh} {chapter}:{v.num}</h3>
           {/* 經文置頂：恢復本（中英）為主，runtime 填入；原文逐字對照收進折疊（研究時再展開） */}
           <div class="recovery-slot" id={`rec-${osis}-${chapter}-${v.num}`}></div>
+          {v.tokens.length === 0 ? (
+            <p class="no-orig">（此節恢復本所有；原文古卷多無，故無逐字對照）</p>
+          ) : (
           <details class="il-detail">
             <summary>原文逐字對照</summary>
             <div class="il-scroll">
@@ -259,6 +272,7 @@ const jsonLd = {
               </table>
             </div>
           </details>
+          )}
         </article>
       ))}
     </section>
@@ -307,6 +321,7 @@ const jsonLd = {
   .il .r-orig td { font-size: var(--font-lg); }
   .mono { font-family: monospace; font-size: var(--font-sm); }
   .recovery-slot:not(:empty) { padding: 0.6rem 0.8rem; background: var(--color-surface, #f3eee2); border-radius: 4px; font-size: var(--font-lg); line-height: 1.85; }
+  .no-orig { font-size: var(--font-sm); color: var(--color-text-muted); margin-top: 0.4rem; }
   .recovery-slot strong { color: var(--color-recovery, #8a6d3b); font-size: var(--font-sm); }
   .attr { font-size: var(--font-xs, 0.75rem); color: var(--color-text-muted); margin-top: 1.5rem; }
 </style>

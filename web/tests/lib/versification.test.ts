@@ -18,7 +18,7 @@ describe('recoveryVerseToOrigSlots', () => {
     expect(recoveryVerseToOrigSlots('Acts', 19, 41)).toEqual([40]); // 希臘19:40=英文40+41
     expect(recoveryVerseToOrigSlots('2Cor', 13, 13)).toEqual([12]);
     expect(recoveryVerseToOrigSlots('2Cor', 13, 14)).toEqual([13]);
-    expect(recoveryVerseToOrigSlots('Rom', 16, 27)).toEqual([24]);  // 頌讚併入16:24
+    expect(recoveryVerseToOrigSlots('Rom', 16, 27)).toEqual([27]);  // Rom16 改補 slot 分行，同號填入
     expect(recoveryVerseToOrigSlots('John', 7, 53)).toEqual([52]);  // pericope
     expect(recoveryVerseToOrigSlots('Acts', 19, 5)).toEqual([5]);   // 非對映節不變
   });

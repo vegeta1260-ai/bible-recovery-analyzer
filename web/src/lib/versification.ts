@@ -17,9 +17,10 @@ const table = data as Record<string, Record<string, Entry>>;
 // 故手動對映「恢復本節 → 原文 slot」；多節對同 slot 者由 ChapterRecovery 合併顯示。
 const NT_REMAP: Record<string, Record<number, Record<number, number>>> = {
   Acts: { 19: { 41: 40 } },                 // 希臘 Acts 19:40 = 英文 19:40+41
-  Rom: { 16: { 25: 24, 26: 24, 27: 24 } },  // 頌讚 16:25-27（原文古卷多無）併入 16:24
   '2Cor': { 13: { 13: 12, 14: 13 } },       // 希臘 13:12=英文12+13；希臘 13:13=英文14
   John: { 7: { 53: 52 } },                  // 7:53（pericope adulterae 開頭）原文正文無
+  // Rom 16:25-27（頌讚，原文古卷多無）：改為補空 slot 各自分行（見 [chapter].astro
+  // 的 extraVerses），故此處不再併入 16:24，恢復本 25-27 以同號填入補出的 slot。
 };
 
 function entryOf(osis: string, chapter: number): Entry | undefined {
