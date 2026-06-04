@@ -11,11 +11,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const holylandImage = `${base}/maps/holyland-mitchell-1853.jpg`;
 const holylandPlaces: Place[] = [
   { zh: '地中海', x: 430, y: 2150 },
+  { zh: '推羅', x: 1380, y: 700 },
   { zh: '加利利海', x: 2120, y: 1210 },
+  { zh: '拿撒勒', x: 1820, y: 1300 },
+  { zh: '該撒利亞', x: 980, y: 1640 },
+  { zh: '撒瑪利亞', x: 1560, y: 2050 },
+  { zh: '約帕', x: 900, y: 2200 },
   { zh: '約旦河', x: 2020, y: 1950 },
-  { zh: '死海（鹽海）', x: 2090, y: 2680 },
+  { zh: '耶利哥', x: 1950, y: 2470 },
   { zh: '耶路撒冷', x: 1690, y: 2520 },
   { zh: '伯利恆', x: 1690, y: 2700 },
+  { zh: '死海（鹽海）', x: 2090, y: 2680 },
+  { zh: '希伯崙', x: 1620, y: 2920 },
+  { zh: '別是巴', x: 1400, y: 3180 },
 ];
 
 const oldMaps = [
@@ -30,7 +38,7 @@ const oldMaps = [
       <a href={`${base}/`}>首頁</a> › <span>聖經地圖</span>
     </nav>
     <h1>聖經地圖</h1>
-    <p class="lede">以 1853 年公共領域古地圖為底，可縮放/平移；紅點為中文地名標註（持續增補與校位中）。</p>
+    <p class="lede">以 1853 年公共領域古地圖為底，可縮放/平移，標註聖經主要地名。</p>
 
     <MapView
       client:visible
@@ -50,7 +58,7 @@ const oldMaps = [
       ))}
     </div>
 
-    <p class="attr">地圖來源：Wikimedia Commons，公共領域（1853 Mitchell、1873 古地圖，均已逾著作權保護期）。中文地名為自行標註。</p>
+    <p class="attr">地圖來源：Wikimedia Commons，公共領域（1853 Mitchell、1873 古地圖，均已逾著作權保護期）。中文地名為對照標註，位置為近似標示。</p>
   </article>
 </BaseLayout>
 
