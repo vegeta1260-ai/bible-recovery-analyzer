@@ -8,6 +8,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import bookMap from '../../../data/bookMap.json';
 import ChapterRecovery from '../../../components/islands/ChapterRecovery.tsx';
 import ChapterReadAloud from '../../../components/islands/ChapterReadAloud.tsx';
+import ChapterMusic from '../../../components/islands/ChapterMusic.tsx';
 import { buildLsmChapterRef } from '../../../lib/lsmApi';
 
 type BookEntry = { osis: string; english: string; zh: string; aliases: string[] };
@@ -224,6 +225,7 @@ const jsonLd = {
       {/* client:idle 而非 visible：本元件初始 SSR 為 null（supported 未定），
           client:visible 的 IntersectionObserver 無子元素可觀察會永不水合。 */}
       <ChapterReadAloud client:idle slotPrefix={`rec-${osis}-${chapter}-`} />
+      <ChapterMusic client:idle osis={osis} />
     </div>
 
     <section class="verses">
