@@ -193,6 +193,17 @@ SITEMAP_URLS=$(grep -o "<loc>" "$DIST/sitemap-0.xml" 2>/dev/null | wc -l | tr -d
 check_min "sitemap URL 總數" "${SITEMAP_URLS:-0}" 15000
 echo ""
 
+echo "[11] 逐章頁配樂與恢復本島全覆蓋（缺任一頁則不部署）"
+# 每個逐章頁（study/[book]/[chapter]/index.html）都應掛 ChapterMusic 島（背景配樂）
+# 與恢復本 slot；用「含標記的頁數 >= 1189」確保 1,189 章全覆蓋，缺一頁即 FAIL。
+STUDY_TOTAL=$(find "$DIST/study" -mindepth 2 -name index.html 2>/dev/null | wc -l | tr -d ' ')
+MUSIC_PAGES=$(find "$DIST/study" -mindepth 2 -name index.html -exec grep -l 'data-chapter-music' {} \; 2>/dev/null | wc -l | tr -d ' ')
+RECOVERY_PAGES=$(find "$DIST/study" -mindepth 2 -name index.html -exec grep -l 'recovery-slot' {} \; 2>/dev/null | wc -l | tr -d ' ')
+echo "  (逐章頁總數 ${STUDY_TOTAL})"
+check_min "逐章頁配樂島覆蓋" "${MUSIC_PAGES:-0}" 1189
+check_min "逐章頁恢復本 slot 覆蓋" "${RECOVERY_PAGES:-0}" 1189
+echo ""
+
 echo "=== 結果: $PASS passed, $FAIL failed ==="
 if [ "$FAIL" -gt 0 ]; then
   exit 1
