@@ -12,6 +12,16 @@ type Entry = OffsetEntry | MergeEntry | ReviewEntry;
 
 const table = data as Record<string, Record<string, Entry>>;
 
+// 新約少數章：恢復本（英文傳統）比原文（SBLGNT/MorphGNT）多節——章末長句拆兩節、
+// 頌讚位置、pericope adulterae 開頭等。Copenhagen eng.json（希伯來 OT 基準）未涵蓋，
+// 故手動對映「恢復本節 → 原文 slot」；多節對同 slot 者由 ChapterRecovery 合併顯示。
+const NT_REMAP: Record<string, Record<number, Record<number, number>>> = {
+  Acts: { 19: { 41: 40 } },                 // 希臘 Acts 19:40 = 英文 19:40+41
+  Rom: { 16: { 25: 24, 26: 24, 27: 24 } },  // 頌讚 16:25-27（原文古卷多無）併入 16:24
+  '2Cor': { 13: { 13: 12, 14: 13 } },       // 希臘 13:12=英文12+13；希臘 13:13=英文14
+  John: { 7: { 53: 52 } },                  // 7:53（pericope adulterae 開頭）原文正文無
+};
+
 function entryOf(osis: string, chapter: number): Entry | undefined {
   return table[osis]?.[String(chapter)];
 }
@@ -23,6 +33,8 @@ function entryOf(osis: string, chapter: number): Entry | undefined {
  * - review / 無對映：維持原行為（同號），暫不調整（待後續逐章定對映）。
  */
 export function recoveryVerseToOrigSlots(osis: string, chapter: number, recVerse: number): number[] {
+  const nt = NT_REMAP[osis]?.[chapter]?.[recVerse];
+  if (nt) return [nt]; // 新約手動對映（恢復本多出的節併入指定原文 slot）
   const e = entryOf(osis, chapter);
   if (!e) return [recVerse];
   if (e.type === 'offset') return [recVerse + e.recToOrig];

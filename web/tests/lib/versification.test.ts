@@ -14,6 +14,15 @@ describe('recoveryVerseToOrigSlots', () => {
     expect(recoveryVerseToOrigSlots('3John', 1, 1)).toEqual([1]); // 其餘節不變
   });
 
+  it('新約 NT_REMAP：恢復本多出的節併入指定原文 slot', () => {
+    expect(recoveryVerseToOrigSlots('Acts', 19, 41)).toEqual([40]); // 希臘19:40=英文40+41
+    expect(recoveryVerseToOrigSlots('2Cor', 13, 13)).toEqual([12]);
+    expect(recoveryVerseToOrigSlots('2Cor', 13, 14)).toEqual([13]);
+    expect(recoveryVerseToOrigSlots('Rom', 16, 27)).toEqual([24]);  // 頌讚併入16:24
+    expect(recoveryVerseToOrigSlots('John', 7, 53)).toEqual([52]);  // pericope
+    expect(recoveryVerseToOrigSlots('Acts', 19, 5)).toEqual([5]);   // 非對映節不變
+  });
+
   it('無分節差異的卷章：恢復本節號即原文 slot', () => {
     expect(recoveryVerseToOrigSlots('John', 3, 16)).toEqual([16]);
     expect(recoveryVerseToOrigSlots('Gen', 1, 1)).toEqual([1]);

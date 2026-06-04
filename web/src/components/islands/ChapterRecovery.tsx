@@ -34,10 +34,18 @@ export default function ChapterRecovery({ chapterRef, slotPrefix, osis, chapter 
         // 英文上、中文下（中文以 secondary 色區隔兩行）
         const en = v.textEn ? `<span class="rec-en">${v.textEn}</span>` : '';
         const html = `<strong>恢復本：</strong>${en}<span class="rec-zh">${v.text}</span>`;
-        // 把恢復本節號轉成正確的原文 slot（詩篇題注 offset、3John 末節合併等）
+        // 把恢復本節號轉成正確的原文 slot（詩篇題注 offset、3John 末節合併、新約章末多節等）
         for (const slot of recoveryVerseToOrigSlots(osis, chapter, Number(m[1]))) {
           const el = document.getElementById(`${slotPrefix}${slot}`);
-          if (el) el.innerHTML = html;
+          if (!el) continue;
+          if (el.dataset.recFilled) {
+            // 多個恢復本節對同一原文 slot（如希臘長句拆兩節、頌讚併入）→ 附加，不覆蓋
+            const en2 = v.textEn ? ` <span class="rec-en">${v.textEn}</span>` : '';
+            el.innerHTML += `${en2}<span class="rec-zh"> ${v.text}</span>`;
+          } else {
+            el.innerHTML = html;
+            el.dataset.recFilled = '1';
+          }
         }
       }
       // 被恢復本空出的題注 slot（如詩篇希伯來題注）標示，不留空也不填錯位經文
