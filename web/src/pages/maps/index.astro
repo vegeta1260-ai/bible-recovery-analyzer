@@ -1,54 +1,83 @@
 ---
-// 聖經地圖頁。目前以靜態圖呈現公共領域古地圖（給神父確認底圖風格/內容）；
-// 互動縮放與中文地名標示（Leaflet ImageOverlay）為下一階段。
+// 聖經地圖頁。主圖：1853 Mitchell 聖地圖以 Leaflet 互動呈現（可縮放/平移），
+// 疊上自繪的中文地名。另保留兩張 1873 古地圖作補充（靜態）。
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import MapView, { type Place } from '../../components/islands/MapView.tsx';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const maps = [
-  {
-    src: `${base}/maps/exodus-sinai-1873.jpg`,
-    title: '出埃及與西奈半島',
-    alt: '1873 年出版的西奈半島與出埃及路線古地圖',
-  },
-  {
-    src: `${base}/maps/paul-journeys-1873.jpg`,
-    title: '使徒保羅的行程',
-    alt: '1873 年出版的使徒保羅宣教旅程古地圖',
-  },
+
+// Mitchell 1853「Palestine & Adjacent Countries」原始像素 3500×4312。
+// 中文地名座標為底圖像素 (x 左→右, y 上→下)；初版為目視估計，會依實際 Leaflet 渲染微調。
+const holylandImage = `${base}/maps/holyland-mitchell-1853.jpg`;
+const holylandPlaces: Place[] = [
+  { zh: '地中海', x: 430, y: 2150 },
+  { zh: '加利利海', x: 2120, y: 1210 },
+  { zh: '約旦河', x: 2020, y: 1950 },
+  { zh: '死海（鹽海）', x: 2090, y: 2680 },
+  { zh: '耶路撒冷', x: 1690, y: 2520 },
+  { zh: '伯利恆', x: 1690, y: 2700 },
+];
+
+const oldMaps = [
+  { src: `${base}/maps/exodus-sinai-1873.jpg`, title: '西奈半島（1873）', alt: '1873 年西奈半島古地圖' },
+  { src: `${base}/maps/paul-journeys-1873.jpg`, title: '希伯來人所知的世界（1873）', alt: '1873 年古地圖：希伯來人所知的世界' },
 ];
 ---
 
-<BaseLayout title="聖經地圖" description="聖經地名與重要事件的古地圖（公共領域），含出埃及路線與使徒保羅的行程。">
+<BaseLayout title="聖經地圖" description="聖地與周邊的互動古地圖（1853 Mitchell 公共領域），疊上中文地名標註。">
   <article class="maps">
     <nav class="crumb" aria-label="breadcrumb">
       <a href={`${base}/`}>首頁</a> › <span>聖經地圖</span>
     </nav>
     <h1>聖經地圖</h1>
-    <p class="lede">採用 1873 年出版的公共領域古地圖。互動縮放與中文地名標示為下一階段。</p>
+    <p class="lede">以 1853 年公共領域古地圖為底，可縮放/平移；紅點為中文地名標註（持續增補與校位中）。</p>
 
-    {maps.map((m) => (
-      <figure class="map-fig">
-        <h2>{m.title}</h2>
-        <a href={m.src} target="_blank" rel="noopener">
-          <img src={m.src} alt={m.alt} loading="lazy" />
-        </a>
-        <figcaption>點圖可開啟原始大圖</figcaption>
-      </figure>
-    ))}
+    <MapView
+      client:visible
+      image={holylandImage}
+      width={3500}
+      height={4312}
+      places={holylandPlaces}
+    />
 
-    <p class="attr">地圖來源：Wikimedia Commons，公共領域（1873 年出版，已逾著作權保護期）。</p>
+    <h2 class="sub">其他古地圖</h2>
+    <div class="old-maps">
+      {oldMaps.map((m) => (
+        <figure class="map-fig">
+          <h3>{m.title}</h3>
+          <a href={m.src} target="_blank" rel="noopener"><img src={m.src} alt={m.alt} loading="lazy" /></a>
+        </figure>
+      ))}
+    </div>
+
+    <p class="attr">地圖來源：Wikimedia Commons，公共領域（1853 Mitchell、1873 古地圖，均已逾著作權保護期）。中文地名為自行標註。</p>
   </article>
 </BaseLayout>
 
+<style is:global>
+  .map-zh-label {
+    background: rgba(255, 252, 245, 0.92);
+    border: 1px solid #b5651d;
+    border-radius: 4px;
+    color: #5a2d0c;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 1px 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .map-zh-label::before { display: none; } /* 去掉 Leaflet tooltip 小三角 */
+</style>
+
 <style>
-  .maps { max-width: 900px; margin: 1.5rem auto; }
+  .maps { max-width: 1000px; margin: 1.5rem auto; }
   .crumb { font-size: var(--font-sm); color: var(--color-text-secondary); margin-bottom: 0.5rem; }
   .crumb a { color: var(--color-primary); }
   h1 { font-size: var(--font-2xl); }
-  .lede { color: var(--color-text-secondary); margin: 0.3rem 0 1.4rem; }
-  .map-fig { margin: 0 0 2rem; }
-  .map-fig h2 { font-size: var(--font-lg); color: var(--color-primary); margin-bottom: 0.5rem; }
+  .lede { color: var(--color-text-secondary); margin: 0.3rem 0 1rem; }
+  .sub { font-size: var(--font-lg); color: var(--color-primary); margin: 2rem 0 0.8rem; }
+  .old-maps { display: grid; gap: 1.5rem; }
+  .map-fig { margin: 0; }
+  .map-fig h3 { font-size: var(--font-base); color: var(--color-primary); margin-bottom: 0.4rem; }
   .map-fig img { width: 100%; height: auto; border: 1px solid var(--color-border, #ddd); border-radius: 6px; background: #fff; }
-  .map-fig figcaption { font-size: var(--font-sm); color: var(--color-text-muted); margin-top: 0.3rem; }
   .attr { font-size: var(--font-xs, 0.75rem); color: var(--color-text-muted); margin-top: 1.5rem; }
 </style>
