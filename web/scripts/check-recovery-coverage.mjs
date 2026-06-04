@@ -38,11 +38,35 @@ function chapterCount(osis) {
   return max;
 }
 
-async function fetchVerses(ref, lang) {
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchOnce(ref, lang) {
   const params = new URLSearchParams({ String: ref, Out: 'json', Lang: lang });
   const resp = await fetch(`${LSM_API_URL}?${params}`, { headers: { Authorization: LSM_AUTH } });
-  if (!resp.ok) return { ok: false, count: 0, reason: `HTTP ${resp.status}` };
-  const data = await resp.json();
+  if (!resp.ok) {
+    const e = new Error(`HTTP ${resp.status}`);
+    e.retryable = RETRYABLE_STATUS.has(resp.status);
+    throw e;
+  }
+  return resp.json();
+}
+
+async function fetchVerses(ref, lang) {
+  // 此腳本是 deploy gate（任一卷失敗即不發佈），故對網路例外 / 5xx / 429 退避重試一次，
+  // 避免 LSM 短暫抖動誤擋部署；4xx（如 401/404）視為真失敗，不重試。
+  let data;
+  try {
+    data = await fetchOnce(ref, lang);
+  } catch (e1) {
+    if (e1.retryable === false) return { ok: false, count: 0, reason: e1.message };
+    await sleep(2000);
+    try {
+      data = await fetchOnce(ref, lang);
+    } catch (e2) {
+      return { ok: false, count: 0, reason: e2.message };
+    }
+  }
   const verses = Array.isArray(data.verses) ? data.verses : [];
   // 與 doFetchLang 一致：濾掉空字串與 "No such..." 佔位
   const valid = verses.filter((v) => v && typeof v.text === 'string' && v.text.trim() && !/^No such/i.test(v.text.trim()));
