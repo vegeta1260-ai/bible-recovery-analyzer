@@ -318,6 +318,7 @@ bash web/scripts/smoke-test-deployed.sh
 - `npm run build` 由 `@astrojs/sitemap` 產出 `dist/sitemap-index.xml` + `dist/sitemap-0.xml`（含全部 15,392 URL）。
 - `public/robots.txt` 指向 sitemap。
 - ⚠️ GitHub Pages 專案站的爬蟲認的是**網域根** robots.txt（不在本 repo）；正式讓 Google 吃 sitemap 需到 **Search Console 提交** sitemap 網址。
+- 🔁 **換正式網域時**：照 [`docs/domain-switch-sop.md`](docs/domain-switch-sop.md) 一次改完 `astro.config` / robots / OG / smoke 斷言 / CNAME，再 push；域名定案前**先別**提交 Search Console（免得用臨時網址建索引後重做）。
 
 ### 手動部署（備用）
 
