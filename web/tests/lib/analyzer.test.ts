@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { getVerseTokens, lookupStrongs, lookupWord, lookupLemma, loadBookTokens } from '@/lib/analyzer';
 
 // Pre-load test books so async tests work against real data
@@ -50,5 +50,20 @@ describe('async token APIs', () => {
   it('lookupLemma returns array', async () => {
     const results = await lookupLemma('λόγος');
     expect(Array.isArray(results)).toBe(true);
+  });
+
+  // 回歸：字詞/Lemma 搜尋過去只掃 bookTokenCache（剛進站為空）→ 搜零本書 → 「沒反應」。
+  // 現在固定掃全 66 卷；此處用 mock fetch 計次驗證確實嘗試載入多卷。
+  it('lookupWord scans all books even with empty cache (regression)', async () => {
+    const calls: string[] = [];
+    const orig = globalThis.fetch;
+    // 回傳 ok:false 使每卷得 [] 不快取、不早退 → 應遍歷全部書卷
+    globalThis.fetch = vi.fn(async (url: any) => {
+      calls.push(String(url));
+      return { ok: false } as Response;
+    });
+    await lookupWord('zzz-不存在的字-zzz');
+    globalThis.fetch = orig;
+    expect(calls.length).toBeGreaterThanOrEqual(60);
   });
 });

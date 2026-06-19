@@ -27,6 +27,7 @@ export default function SearchBox() {
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('verse');
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [verseResults, setVerseResults] = useState<VerseData[]>([]);
   const [tokenResults, setTokenResults] = useState<Token[]>([]);
   const [searchResults, setSearchResults] = useState<{ refs: string[]; matchedLemmas: string[]; matchedStrongs: string[] } | null>(null);
@@ -44,6 +45,7 @@ export default function SearchBox() {
     setTokenResults([]);
     setSearchResults(null);
     setError('');
+    setSearched(false);
   };
 
   const handleSearch = useCallback(async () => {
@@ -53,6 +55,7 @@ export default function SearchBox() {
     ensureAudioStarted();
     clearResults();
     setLoading(true);
+    setSearched(true);
 
     try {
       if (mode === 'verse') {
@@ -219,6 +222,11 @@ export default function SearchBox() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* 字詞/Lemma 查無結果時的提示（否則畫面像「沒反應」） */}
+      {(mode === 'word' || mode === 'lemma') && searched && !loading && tokenResults.length === 0 && !error && (
+        <div className="card"><p className="no-data">查無「{query.trim()}」的{mode === 'lemma' ? ' Lemma ' : '字詞'}結果。請確認輸入的是原文（希伯來文／希臘文）或音譯。</p></div>
       )}
 
       {/* Search results */}

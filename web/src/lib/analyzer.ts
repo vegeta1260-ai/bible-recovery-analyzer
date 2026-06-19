@@ -1,5 +1,10 @@
 import lexiconData from '@/data/lexicon.json';
+import bookMap from '@/data/bookMap.json';
 import { normalizeStrongs } from '@/lib/strongs';
+
+// 全部書卷 OSIS（正典順序）。字詞/Lemma 搜尋預設掃全 66 卷——
+// 不可只掃 bookTokenCache（剛進站時為空，會導致搜尋「沒反應」）。
+const ALL_BOOKS: string[] = (bookMap as { osis: string }[]).map((b) => b.osis);
 
 export interface Token {
   verse_ref: string;
@@ -180,7 +185,7 @@ export function lookupStrongs(rawId: string): LexiconEntry | null {
 
 export async function lookupWord(query: string, book?: string): Promise<Token[]> {
   const q = query.trim();
-  const books = book ? [book] : Array.from(bookTokenCache.keys());
+  const books = book ? [book] : ALL_BOOKS;
   const results: Token[] = [];
   for (const b of books) {
     const tokens = await loadBookTokens(b);
@@ -196,7 +201,7 @@ export async function lookupWord(query: string, book?: string): Promise<Token[]>
 }
 
 export async function lookupLemma(lemma: string, book?: string): Promise<Token[]> {
-  const books = book ? [book] : Array.from(bookTokenCache.keys());
+  const books = book ? [book] : ALL_BOOKS;
   const results: Token[] = [];
   for (const b of books) {
     const tokens = await loadBookTokens(b);
