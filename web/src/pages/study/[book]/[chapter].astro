@@ -16,7 +16,12 @@ type BookEntry = { osis: string; english: string; zh: string; aliases: string[] 
 // 壓縮 token 的短 key（見 scripts/compress-tokens.py / lib/analyzer.ts）
 type CToken = { r: string; o: number; s: string; l: string; ac?: string; pos?: string; st?: string; ge?: string; tr?: string };
 
-// 選填的本章概要（Phase 2 由 Sonnet 平行撰寫填入；沒有就只顯示 A）
+// 較深的逐章概要（~250 字，LLM 逐章生成；有就優先用於「本章概要」）
+const summaryFiles = import.meta.glob<{ default: Record<string, string> }>(
+  '../../../data/chapter-summaries/*.json',
+  { eager: true },
+);
+// 簡短概要（~100 字，舊版；無較深概要時的退路）
 const outlineFiles = import.meta.glob<{ default: Record<string, string> }>(
   '../../../data/chapter-outlines/*.json',
   { eager: true },
@@ -131,9 +136,11 @@ const chIdx = chapterNums.indexOf(chapter);
 const prevCh = chIdx > 0 ? chapterNums[chIdx - 1] : null;
 const nextCh = chIdx >= 0 && chIdx < chapterNums.length - 1 ? chapterNums[chIdx + 1] : null;
 
-// 選填概要
+// 選填概要：優先用較深概要，無則退回簡短 outline
+const summaryMod = summaryFiles[`../../../data/chapter-summaries/${osis}.json`];
+const deepSummary = summaryMod?.default?.[String(chapter)] ?? '';
 const outlineMod = outlineFiles[`../../../data/chapter-outlines/${osis}.json`];
-const outline = outlineMod?.default?.[String(chapter)] ?? '';
+const outline = deepSummary || (outlineMod?.default?.[String(chapter)] ?? '');
 
 // 選填默想/禱讀引導
 const meditationMod = meditationFiles[`../../../data/chapter-meditations/${osis}.json`];

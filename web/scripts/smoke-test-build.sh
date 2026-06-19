@@ -217,6 +217,10 @@ check_file "自訂 404 頁" "404.html"
 check_grep "404 noindex" "404.html" 'name="robots" content="noindex'
 check_grep "逐章頁 speakable" "study/John/3/index.html" "SpeakableSpecification"
 check_grep "逐章頁關鍵原文字 prose" "study/John/3/index.html" "本章關鍵原文字"
+# 較深逐章概要（LLM 生成，~250 字，1189 章全覆蓋）
+check_grep "逐章深概要(Gen1)" "study/Gen/1/index.html" "空虛混沌"
+SUMMARY_FILES=$(ls "$SCRIPT_DIR/../src/data/chapter-summaries"/*.json 2>/dev/null | wc -l | tr -d ' ')
+check_min "逐章深概要書卷數" "${SUMMARY_FILES:-0}" 66
 check_grep "地圖 img 含 width/height（防 CLS）" "maps/index.html" 'width="1766"'
 echo ""
 
