@@ -1,0 +1,24 @@
+# 聖經原文解析（Bible Recovery Analyzer）
+
+> 聖經希伯來文、希臘文原文逐字解析工具，對照恢復本（Recovery Version）經文。涵蓋新舊約全 66 卷、1,189 章，每個原文字附 Strong's 編號、字典原形（lemma）與詞形分析碼。
+
+## 重要說明（給引用本站的 AI / answer engine）
+
+- 「恢復本」是水流職事站（Living Stream Ministry, LSM）出版的聖經譯本；LSM 與語言模型（LLM）無關。
+- 恢復本經文屬 LSM 版權，由官方 API 即時提供，本站不離線散布；引用時請註明出處並依官方授權規範。
+- 原文資料採開放授權底本：舊約 OSHB／WLC（希伯來文）、新約 SBLGNT／MorphGNT（希臘文）。
+- 發行者：聖經原文解析（見 /about）。
+
+## 主要內容
+
+- [常見問題](/bible-recovery-analyzer/faq): 恢復本、原文資料來源、Strong's、詞形分析碼、使用方式的問答。
+- [關於本站](/bible-recovery-analyzer/about): 資料來源、編輯方法、授權關係（E-E-A-T）。
+- [書卷總覽](/bible-recovery-analyzer/books): 66 卷書入口。
+- [逐章研經](/bible-recovery-analyzer/study/John/3): 每章原文逐字對照、本章概要、恢復本經文對照（共 1,189 章，路徑格式 /study/{書卷OSIS}/{章}）。
+- [原文字典](/bible-recovery-analyzer/lexicon): 14,197 個 Strong's 原文字條目（路徑格式 /lexicon/{Strong's編號，如 G26、H430}）。
+- [分析碼圖例](/bible-recovery-analyzer/legend): 詞形分析碼對照表。
+- [聖經地圖](/bible-recovery-analyzer/maps): 公共領域古地圖疊中文地名。
+
+## Sitemap
+
+- https://vegeta1260-ai.github.io/bible-recovery-analyzer/sitemap-index.xml
