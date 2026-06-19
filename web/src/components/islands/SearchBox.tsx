@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { normalizeRef, splitOsisRange } from '@/lib/reference';
 import { getVerseTokens, lookupWord, lookupLemma } from '@/lib/analyzer';
 import { search as fullTextSearch } from '@/lib/search';
@@ -132,6 +132,12 @@ export default function SearchBox() {
     { value: 'morphology', label: '詞形' },
   ];
 
+  // 圖表用 token：彙整目前查詢結果（經文逐字 + 字詞/Lemma 命中），供 D3 圖即時統計。
+  const chartTokens = useMemo(
+    () => [...tokenResults, ...verseResults.flatMap((v) => v.tokens)],
+    [tokenResults, verseResults],
+  );
+
   return (
     <div className="search-box-container">
       <div className="search-modes">
@@ -235,17 +241,18 @@ export default function SearchBox() {
         </div>
       )}
 
-      {/* D3 charts — shown when there are any results, desktop only */}
-      {(verseResults.length > 0 || tokenResults.length > 0 || searchResults !== null) && (
+      {/* D3 charts — 視覺化「目前查詢結果」的 token（高頻 lemma、詞性分布）。
+          原本讀全站空的 tokens.json 致圖表全空白；改用結果 token 即時統計。 */}
+      {chartTokens.length > 0 && (
         <div className="d3-charts-section" style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
           <div className="card" style={{ padding: '1rem' }}>
             <Suspense fallback={<div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B6914' }}>載入圖表中...</div>}>
-              <LemmaFrequencyChart />
+              <LemmaFrequencyChart tokens={chartTokens} />
             </Suspense>
           </div>
           <div className="card" style={{ padding: '1rem', display: 'flex', justifyContent: 'center' }}>
             <Suspense fallback={<div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B6914' }}>載入圖表中...</div>}>
-              <AnalyticalCodePie />
+              <AnalyticalCodePie tokens={chartTokens} />
             </Suspense>
           </div>
         </div>

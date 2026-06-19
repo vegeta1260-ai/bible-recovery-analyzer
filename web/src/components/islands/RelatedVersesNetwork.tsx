@@ -1,6 +1,5 @@
 import { useRef, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
-import tokensData from '@/data/tokens.json';
 
 interface Token {
   verse_ref: string;
@@ -24,13 +23,11 @@ const NODE_STROKE = '#8B4513';
 const LINK_COLOR = '#D4A017';
 const LABEL_COLOR = '#3a2810';
 
-export default function RelatedVersesNetwork() {
+export default function RelatedVersesNetwork({ tokens }: { tokens: Token[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { nodes, links } = useMemo(() => {
-    const tokens = tokensData as Token[];
-
     // Build map: lemma -> Set of verse_refs
     const lemmaToVerses = new Map<string, Set<string>>();
     for (const t of tokens) {
@@ -62,7 +59,7 @@ export default function RelatedVersesNetwork() {
 
     const nodeList: Node[] = Array.from(nodeSet).map(id => ({ id }));
     return { nodes: nodeList, links: linkList };
-  }, []);
+  }, [tokens]);
 
   useEffect(() => {
     if (!svgRef.current) return;

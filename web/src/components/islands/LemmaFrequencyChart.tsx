@@ -1,6 +1,5 @@
 import { useRef, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
-import tokensData from '@/data/tokens.json';
 
 interface Token {
   lemma: string;
@@ -22,11 +21,10 @@ const WARM_COLORS = [
   '#8B6914', '#B8860B', '#CD853F', '#D2691E', '#A67C52',
 ];
 
-export default function LemmaFrequencyChart() {
+export default function LemmaFrequencyChart({ tokens }: { tokens: Token[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const lemmaData: LemmaCount[] = useMemo(() => {
-    const tokens = tokensData as Token[];
     const countMap = new Map<string, { count: number; strongs: string; gloss: string }>();
     for (const t of tokens) {
       if (!t.lemma) continue;
@@ -41,7 +39,7 @@ export default function LemmaFrequencyChart() {
       .map(([lemma, { count, strongs, gloss }]) => ({ lemma, count, strongs, gloss }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 20);
-  }, []);
+  }, [tokens]);
 
   useEffect(() => {
     if (!svgRef.current || lemmaData.length === 0) return;

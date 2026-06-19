@@ -1,6 +1,5 @@
 import { useRef, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
-import tokensData from '@/data/tokens.json';
 
 interface Token {
   part_of_speech: string;
@@ -29,11 +28,10 @@ const LABEL_MAP: Record<string, string> = {
   article: '冠詞',
 };
 
-export default function AnalyticalCodePie() {
+export default function AnalyticalCodePie({ tokens }: { tokens: Token[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const posData: PosSlice[] = useMemo(() => {
-    const tokens = tokensData as Token[];
     const countMap = new Map<string, number>();
     for (const t of tokens) {
       if (!t.part_of_speech) continue;
@@ -42,7 +40,7 @@ export default function AnalyticalCodePie() {
     return Array.from(countMap.entries())
       .map(([pos, count]) => ({ pos, count }))
       .sort((a, b) => b.count - a.count);
-  }, []);
+  }, [tokens]);
 
   useEffect(() => {
     if (!svgRef.current || posData.length === 0) return;
