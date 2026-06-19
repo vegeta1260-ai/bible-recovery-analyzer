@@ -199,6 +199,18 @@ if [ "${LEX_IDX_KB:-9999}" -lt 500 ]; then echo "  PASS  字典索引輕量化 (
 check_grep "新約逐章頁 Strong's 熱點" "study/John/3/index.html" 'href="/bible-recovery-analyzer/lexicon/G'
 echo ""
 
+echo "[6c] 字型 self-host（去 Google 依賴）"
+check_file "fonts.css" "fonts/fonts.css"
+FONT_CNT=$(ls "$DIST/fonts"/*.woff2 2>/dev/null | wc -l | tr -d ' ')
+check_min "self-host woff2 數" "${FONT_CNT:-0}" 500
+check_grep "首頁引用本地 fonts.css" "index.html" 'fonts/fonts.css'
+if grep -rqI "fonts.googleapis\|fonts.gstatic" "$DIST/index.html" "$DIST/study/John/3/index.html"; then
+  echo "  FAIL  仍殘留 Google Fonts 外部引用"; FAIL=$((FAIL+1))
+else
+  echo "  PASS  無 Google Fonts 外部引用"; PASS=$((PASS+1))
+fi
+echo ""
+
 echo "[6b] AEO/GEO 補強（llms.txt / 404 / speakable / 地圖 CLS）"
 check_file "llms.txt" "llms.txt"
 check_file "自訂 404 頁" "404.html"

@@ -97,23 +97,11 @@ const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
     <!-- 全站結構化資料（Organization + WebSite/SearchAction） -->
     <script type="application/ld+json" set:html={JSON.stringify(siteLd)} />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- 字型非阻塞載入：以 preload 取代 global.css 內的 @import（@import 須先下載 CSS
-         才發現字型請求、且 render-blocking 並序列化，拖累 LCP）。onload 後切回 stylesheet；
-         noscript 退路保證無 JS 環境仍套用。 -->
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap"
-      />
-    </noscript>
+    <!-- 字型 self-host（去 Google 依賴）：woff2 與 fonts.css 同置 /fonts/，CSS 內用相對 url
+         （與 base path 無關）。保留 unicode-range 分塊，瀏覽器只抓實際用到的字（含 runtime 恢復本經文）。
+         非阻塞載入 + noscript 退路。 -->
+    <link rel="preload" as="style" href={`${base}/fonts/fonts.css`} onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href={`${base}/fonts/fonts.css`} /></noscript>
   </head>
   <body>
     <Header />
