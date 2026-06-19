@@ -99,9 +99,9 @@ const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
 
     <!-- 字型 self-host（去 Google 依賴）：woff2 與 fonts.css 同置 /fonts/，CSS 內用相對 url
          （與 base path 無關）。保留 unicode-range 分塊，瀏覽器只抓實際用到的字（含 runtime 恢復本經文）。
-         非阻塞載入 + noscript 退路。 -->
-    <link rel="preload" as="style" href={`${base}/fonts/fonts.css`} onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href={`${base}/fonts/fonts.css`} /></noscript>
+         以正常 stylesheet 載入（同源、僅 @font-face、gzip 後小）：讓 font-display:optional 有套用窗口，
+         字型未及時則用系統 fallback 且「不再 swap」→ 消除字型重排造成的 CLS。 -->
+    <link rel="stylesheet" href={`${base}/fonts/fonts.css`} />
   </head>
   <body>
     <Header />
