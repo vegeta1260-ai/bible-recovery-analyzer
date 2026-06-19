@@ -128,6 +128,8 @@ check_file "約翰福音3章頁" "study/John/3/index.html"
 check_file "創世記1章頁" "study/Gen/1/index.html"
 check_grep "逐章頁 H1" "study/John/3/index.html" "第3章"
 check_grep "逐章頁 JSON-LD Breadcrumb" "study/John/3/index.html" "BreadcrumbList"
+check_grep "逐章頁 Article publisher" "study/John/3/index.html" '"publisher"'
+check_grep "逐章頁 Article datePublished" "study/John/3/index.html" '"datePublished"'
 check_grep "逐章頁 og:type=article" "study/John/3/index.html" 'content="article"'
 check_grep "逐章頁逐字對照" "study/John/3/index.html" "分析碼"
 check_grep "逐章頁章次內鏈" "study/John/3/index.html" 'study/John/2"'
@@ -156,6 +158,16 @@ check_grep "canonical" "index.html" "canonical"
 check_grep "lang=zh-Hant" "index.html" 'lang="zh-Hant"'
 # og:image 必須含 base path（曾漏 base → 分享卡圖 404）
 check_grep "og:image 含 base path" "index.html" 'og:image" content="https://vegeta1260-ai.github.io/bible-recovery-analyzer/'
+# robots meta（可被索引）+ 全站 Organization/WebSite schema（AEO/GEO 來源歸因 + sitelinks）
+check_grep "robots meta index" "index.html" 'name="robots" content="index'
+check_grep "Organization schema" "index.html" '"Organization"'
+check_grep "WebSite SearchAction" "index.html" '"SearchAction"'
+echo ""
+
+echo "[5b] FAQ 頁（AEO FAQPage schema）"
+check_file "FAQ 頁" "faq/index.html"
+check_grep "FAQPage schema" "faq/index.html" '"FAQPage"'
+check_grep "FAQ Question 條目" "faq/index.html" '"Question"'
 echo ""
 
 echo "[6] Lexicon 頁面 SEO"

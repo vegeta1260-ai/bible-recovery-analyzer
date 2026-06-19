@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// 常見問題：AEO（answer engine optimization）核心頁。
+// 每則 Q&A 同時以可見 HTML（給人與一般爬蟲）+ FAQPage JSON-LD（給 Google/AI 摘要）呈現。
+// 內容兼顧「實體澄清」（恢復本／LSM／資料來源／版權）與「操作教學」（Strong's／分析碼／查字），
+// 這兩類正是 answer engine 最常被問、也最容易引用本站的查詢。
+const faqs = [
+  {
+    q: '什麼是聖經恢復本？',
+    a: '聖經恢復本（Recovery Version）是水流職事站（Living Stream Ministry，簡稱 LSM）出版的中英文聖經譯本，特色是依原文精譯並附大量研讀註解與綱目。本站逐章對照恢復本經文，協助讀者把中文譯文與希伯來文、希臘文原文逐字對應起來。',
+  },
+  {
+    q: 'LSM 是什麼？和語言模型（LLM）有關係嗎？',
+    a: 'LSM 指 Living Stream Ministry（水流職事站），是聖經恢復本的出版機構，與人工智慧或語言模型（LLM）完全無關，只是英文縮寫相近。本站的恢復本經文即透過 LSM 官方 API 即時取得。',
+  },
+  {
+    q: '本站的原文資料來自哪裡？',
+    a: '舊約希伯來文採用 OSHB／WLC（Westminster Leningrad Codex），新約希臘文採用 SBLGNT 與 MorphGNT 的詞形標註，皆為開放授權資料。每個原文字都附 Strong\'s 編號、lemma（字典原形）與詞形分析碼。恢復本中文／英文經文則為 LSM 版權內容，由官方 API 即時提供。',
+  },
+  {
+    q: 'Strong\'s 編號是什麼？怎麼用？',
+    a: 'Strong\'s 編號是一套為聖經每個原文字編配的索引號碼，希伯來文以 H 開頭、希臘文以 G 開頭（例如 H430 指神 Elohim、G26 指愛 agapē）。透過編號可以跨經文追蹤同一個原文字的所有出現處與字義。在本站的原文字典輸入編號或字詞即可查詢。',
+  },
+  {
+    q: '詞形分析碼（morphology）怎麼讀？',
+    a: '詞形分析碼標示每個原文字在該處的文法形態，例如動詞的時態、語態、語氣、人稱，名詞的性、數、格等。本站「圖例」頁提供完整的分析碼對照表，逐章頁與字典頁也會將代碼展開為中文說明，幫助判讀原文的精確語意。',
+  },
+  {
+    q: '如何查一個原文字的字義？',
+    a: '有三種方式：（1）在首頁或研經頁切換到「字詞」或「Lemma」模式輸入原文或音譯；（2）直接前往「字典」頁瀏覽或搜尋 Strong\'s 編號；（3）進入任一章的逐章研經頁，點選經文中的原文字查看其字義、詞形與出現分布。',
+  },
+  {
+    q: '可以離線下載恢復本經文嗎？',
+    a: '不行。恢復本經文屬 LSM 版權內容，本站一律於瀏覽時向 LSM 官方 API 即時取得，不離線打包、不重新散布。原文字資料（OSHB／SBLGNT 等開放授權部分）則可自由研究。請依官方授權規範使用恢復本經文。',
+  },
+  {
+    q: '這個網站支援哪些原文與書卷？',
+    a: '涵蓋新舊約全 66 卷書、共 1,189 章，提供舊約希伯來文（含少量亞蘭文）與新約希臘文的逐字解析。每一章都有獨立的研經頁，含原文逐字對照、本章概要與恢復本經文對照。',
+  },
+];
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<BaseLayout
+  title="常見問題"
+  description="關於聖經恢復本、原文資料來源、Strong's 編號、詞形分析碼與本站使用方式的常見問題解答。"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqLd)} />
+
+  <nav class="crumb" aria-label="breadcrumb">
+    <a href={`${base}/`}>首頁</a> › <span>常見問題</span>
+  </nav>
+
+  <h1>常見問題</h1>
+  <p class="lede">關於聖經恢復本、原文資料、Strong's 編號與本站使用方式的解答。</p>
+
+  <div class="faq-list">
+    {faqs.map((f) => (
+      <details class="faq-item">
+        <summary><h2>{f.q}</h2></summary>
+        <p>{f.a}</p>
+      </details>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .crumb { margin: 1.5rem 0 0.5rem; font-size: var(--font-sm); color: var(--color-text-muted); }
+  h1 { font-size: var(--font-2xl); margin-top: 0.5rem; }
+  .lede { color: var(--color-text-secondary); font-size: var(--font-lg); margin: 0.5rem 0 2rem; }
+  .faq-list { max-width: 760px; display: flex; flex-direction: column; gap: 0.75rem; }
+  .faq-item { border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.2rem; background: var(--color-surface); }
+  .faq-item summary { cursor: pointer; list-style: none; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary h2 { display: inline; font-size: var(--font-lg); }
+  .faq-item summary::before { content: '＋'; color: var(--color-primary); margin-right: 0.6rem; font-weight: 700; }
+  .faq-item[open] summary::before { content: '－'; }
+  .faq-item p { margin-top: 0.8rem; line-height: 1.8; color: var(--color-text-secondary); }
+</style>

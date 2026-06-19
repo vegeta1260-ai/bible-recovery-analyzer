@@ -6,8 +6,10 @@ import SearchBox from '../components/islands/SearchBox.tsx';
 <BaseLayout title="研經" description="聖經恢復本原文字義研經工具 — 搜尋經文、逐字對照、原文分析">
   <div class="study-page">
     <h1 style="margin: 2rem 0 0;">研經工具</h1>
-    <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem;">
-      輸入經文引用查看恢復本經文 + 原文逐字對照 + 研究卡。切換模式可搜尋字詞、lemma、詞形。
+    <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; line-height: 1.8;">
+      輸入經文引用（如 <code>約 3:16</code>）查看恢復本經文 + 原文逐字對照 + 研究卡。
+      切換模式還可搜尋原文字詞、lemma（字典原形）、詞形與全文關鍵字，
+      每個原文字皆附 Strong's 編號與詞形分析，協助你逐字研讀希伯來文與希臘文。
     </p>
     <SearchBox client:load />
   </div>

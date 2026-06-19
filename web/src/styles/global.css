@@ -1,5 +1,6 @@
 @import './tokens.css';
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap');
+/* Google Fonts 改由 BaseLayout 以 <link rel="preload"> 非阻塞載入（見該檔 head）。
+   原 @import 須先下載此 CSS 才觸發字型請求且 render-blocking，拖累 LCP，故移除。 */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: var(--font-base); line-height: var(--line-height); -webkit-text-size-adjust: 100%; }
 body { font-family: var(--font-serif); color: var(--color-text); background-color: var(--color-bg); transition: color 0.3s ease, background-color 0.3s ease; }

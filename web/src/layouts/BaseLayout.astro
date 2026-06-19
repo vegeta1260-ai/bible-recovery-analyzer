@@ -6,15 +6,19 @@ interface Props {
   title: string;
   description?: string;
   ogImage?: string;
+  ogImageAlt?: string;
   canonicalUrl?: string;
   ogType?: string;
+  noindex?: boolean;
 }
 const {
   title,
   description = '聖經恢復本原文字義解析工具 — 希伯來文、希臘文 Strong\'s 編號、詞形分析、全文搜尋',
   ogImage = '/og-default.png',
+  ogImageAlt,
   canonicalUrl,
   ogType = 'website',
+  noindex = false,
 } = Astro.props;
 const fullTitle = `${title} | 聖經原文解析`;
 const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
@@ -23,6 +27,40 @@ const canonical = canonicalUrl ?? `${siteUrl}${Astro.url.pathname}`;
 // og/twitter 圖需含 base path（站在 /bible-recovery-analyzer 子路徑下）。
 // ogImage 為 root-relative（如 /og-default.png），缺 base 會 404 → 分享卡無圖。
 const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${base}${ogImage}`;
+
+// 全站結構化資料：Organization（來源歸因，供 answer engine 引用時識別發行者）
+// + WebSite（含 SearchAction，對應首頁 /?ref= 經文查詢端點，可拿 sitelinks searchbox）。
+// 用穩定 @id 讓各頁 Article 的 publisher 可 $ref 這裡，不重複定義實體。
+const orgId = `${siteUrl}${base}/#organization`;
+const siteLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': orgId,
+      name: '聖經原文解析',
+      url: `${siteUrl}${base}/`,
+      logo: `${siteUrl}${base}/og-default.png`,
+      description: '提供聖經希伯來文、希臘文原文逐字解析、Strong\'s 編號與詞形分析的免費研經工具，並對照恢復本經文。',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}${base}/#website`,
+      name: '聖經原文解析',
+      url: `${siteUrl}${base}/`,
+      inLanguage: 'zh-Hant',
+      publisher: { '@id': orgId },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${siteUrl}${base}/?ref={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+};
 // Cloudflare Web Analytics（免費、無 cookie）。只有設定 PUBLIC_CF_BEACON_TOKEN 才注入 beacon；
 // 未設定則不渲染，build 不受影響。token 由 CF 儀表板取得，於 GitHub repo variable 設定。
 const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
@@ -34,6 +72,7 @@ const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large'} />
     <link rel="canonical" href={canonical} />
 
     <!-- Open Graph -->
@@ -44,6 +83,7 @@ const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogImageAlt ?? fullTitle} />
     <meta property="og:site_name" content="聖經原文解析" />
     <meta property="og:locale" content="zh_TW" />
 
@@ -52,9 +92,28 @@ const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={ogImageAlt ?? fullTitle} />
+
+    <!-- 全站結構化資料（Organization + WebSite/SearchAction） -->
+    <script type="application/ld+json" set:html={JSON.stringify(siteLd)} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- 字型非阻塞載入：以 preload 取代 global.css 內的 @import（@import 須先下載 CSS
+         才發現字型請求、且 render-blocking 並序列化，拖累 LCP）。onload 後切回 stylesheet；
+         noscript 退路保證無 JS 環境仍套用。 -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap"
+      />
+    </noscript>
   </head>
   <body>
     <Header />
