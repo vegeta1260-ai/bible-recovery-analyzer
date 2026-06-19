@@ -174,6 +174,9 @@ echo "[6] Lexicon 頁面 SEO"
 check_grep "G1 JSON-LD" "lexicon/G1/index.html" "DefinedTerm"
 check_grep "G1 BreadcrumbList" "lexicon/G1/index.html" "BreadcrumbList"
 check_grep "G1 lang=grc" "lexicon/G1/index.html" 'lang="grc"'
+# 字典頁↔逐章頁互鏈（entity graph）：H7225 出現於 Gen.1，應有連回 /study 的「出現於」連結
+check_grep "字典頁出現章節互鏈" "lexicon/H7225/index.html" 'href="/bible-recovery-analyzer/study/Gen/1"'
+check_grep "字典頁出現於標題" "lexicon/H7225/index.html" "出現於"
 echo ""
 
 echo "[6b] AEO/GEO 補強（llms.txt / 404 / speakable / 地圖 CLS）"

@@ -1,9 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import lexiconData from '../../data/lexicon.json';
+import occurrences from '../../data/strongs-occurrences.json';
+import bookMap from '../../data/bookMap.json';
 import D3OccurrenceChart from '../../components/islands/D3OccurrenceChart';
 type LexiconEntry = { strongs: string; normalized_strongs: string; lemma: string; language: string; transliteration: string; pronunciation_bopomofo: string; short_definition: string; literal_gloss_en: string; common_inflections: string[]; analytical_notes: string[]; };
 const entries = lexiconData as LexiconEntry[];
+const occ = occurrences as Record<string, { n: number; ch: string[] }>;
+const osisZh: Record<string, string> = Object.fromEntries((bookMap as { osis: string; zh: string }[]).map(b => [b.osis, b.zh]));
 export function getStaticPaths() {
   return (lexiconData as LexiconEntry[]).map(e => ({ params: { id: e.strongs } }));
 }
@@ -11,6 +15,13 @@ const { id } = Astro.params;
 const entry = entries.find(e => e.strongs === id)!;
 const langTag = entry.language === 'Hebrew' ? 'he' : 'grc';
 const langDir = entry.language === 'Hebrew' ? 'rtl' : 'ltr';
+
+// 出現章節（entity graph / crawl 互鏈）：列出本字出現的章節，連回逐章研經頁。
+// 常見字可達數百章 → 顯示上限 60，避免單頁連結過多稀釋權重；仍標示總數。
+const MAX_CH = 60;
+const occRec = occ[entry.strongs];
+const occChapters = occRec?.ch ?? [];
+const shownChapters = occChapters.slice(0, MAX_CH);
 
 const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -68,6 +79,25 @@ const lexLd = {
       </div>
     </div>
   </article>
+
+  {occChapters.length > 0 && (
+    <section class="occ" aria-label="出現章節">
+      <h2>出現於（{occRec!.n} 次 · {occChapters.length} 章）</h2>
+      <p class="occ-hint">點選章節查看 <span lang={langTag} dir={langDir}>{entry.lemma}</span> 在該章的原文逐字對照與恢復本經文。</p>
+      <ul class="occ-list">
+        {shownChapters.map((c) => {
+          const [osis, ch] = c.split('.');  // "Gen.1" → ["Gen","1"]；OSIS 書碼無點，可安全分割
+          return (
+            <li><a href={`${base}/study/${osis}/${ch}`}>{osisZh[osis] ?? osis} {ch}</a></li>
+          );
+        })}
+      </ul>
+      {occChapters.length > MAX_CH && (
+        <p class="occ-more">…共 {occChapters.length} 章，顯示前 {MAX_CH} 章。</p>
+      )}
+    </section>
+  )}
+
   <D3OccurrenceChart client:visible strongs={entry.strongs} />
   <script type="application/ld+json" set:html={JSON.stringify(lexLd)} />
 </BaseLayout>
@@ -79,4 +109,12 @@ const lexLd = {
   dt { font-weight: 700; color: var(--color-text-secondary); }
   ul { padding-left: 1.2rem; font-size: var(--font-sm); }
   li { margin-bottom: 0.3rem; }
+  .occ { margin: 2.5rem 0; }
+  .occ h2 { font-size: var(--font-lg); margin-bottom: 0.4rem; }
+  .occ-hint { font-size: var(--font-sm); color: var(--color-text-secondary); margin-bottom: 1rem; }
+  .occ-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; }
+  .occ-list li { margin: 0; }
+  .occ-list a { display: inline-block; padding: 0.2rem 0.6rem; border: 1px solid var(--color-border); border-radius: 999px; font-size: var(--font-sm); white-space: nowrap; }
+  .occ-list a:hover { background: var(--color-surface-hover); }
+  .occ-more { font-size: var(--font-sm); color: var(--color-text-muted); margin-top: 0.8rem; }
 </style>

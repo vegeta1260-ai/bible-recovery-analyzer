@@ -26,6 +26,7 @@
   - `web/scripts/remap-joel-mal-versification.py`：Joel/Mal 章層級（Joel 希伯來 4 章→恢 3 章、Mal 反之）。
   - `web/scripts/remap-versification.py`：**節層級，涵蓋 24 卷**（Gen/Exod/Lev/Num/Deut/撒上下/王上下/代上下/Neh/Job/Eccl/Song/Isa/Jer/Ezek/Dan/Hos/Jonah/Mic/Nah/Zech），依 `web/scripts/eng-versification.json`（Copenhagen-Alliance 權威表）把 token 章節重對映為恢復本系統。排除詩篇（題注改由 ChapterRecovery 的 offset 處理，見 `web/src/data/versification.json`）、Joel/Mal（上一支處理）、新約（eng.json 未涵蓋；Acts19/Rom16/2Cor13/John7 等希臘文差異仍待處理）。Num25:19 為 WLC 特有、表中未列，腳本內 EXTRA_MAP 手動補。
   - ⚠️ **重跑 OT ETL（`etl-oshb.py`）會讓這些卷退回原文分節 → 之後必須「兩支 remap 都再跑一次」**。驗證：`node web/scripts/scan-versification.mjs` 後 `versification.json` 的 review 應只剩新約 4 章（其餘為詩篇 offset 62 + 3John merge）。
+- **Strong's 出現索引（`web/src/data/strongs-occurrences.json`）由 token 衍生**：`web/scripts/build-strongs-occurrences.py` 掃 `public/data/tokens/*.json` 算出「每個 Strong's → 出現章節」，供字典頁靜態列「出現於」連回逐章頁（entity graph / SEO 互鏈，避免 14k 字典頁變爬蟲死路）。冪等可重跑。⚠️ **與 versification remap 同類：重跑任何 token ETL／remap 後，須再跑這支腳本**（章節若改變，索引才正確）。smoke 有 gate（`lexicon/H7225` 應連回 `study/Gen/1`）。
 - **`og:image` 等資產 URL 必須含 base path**（站在 `/bible-recovery-analyzer/` 子路徑）：曾漏 base 導致分享卡圖 404。`BaseLayout` 已用 `siteUrl + base + ogImage` 組；smoke 有 gate。換自訂網域時連同 `astro.config.mjs` 的 `site`/`base`、`robots.txt`、OG 圖 URL 一起改。
 
 ## 開發紀律
