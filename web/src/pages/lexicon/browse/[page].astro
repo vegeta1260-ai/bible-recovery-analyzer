@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import lexiconData from '../../../data/lexicon.json';
+type LexiconEntry = { strongs: string; lemma: string; language: string; transliteration: string; clean_gloss?: string; short_definition: string; };
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+export function getStaticPaths() {
+  const all = (lexiconData as LexiconEntry[])
+    .slice()
+    .sort((a, b) => numKeyStatic(a.strongs) - numKeyStatic(b.strongs));
+  const SIZE = 240;
+  const pages = Math.ceil(all.length / SIZE);
+  return Array.from({ length: pages }, (_, i) => ({
+    params: { page: String(i + 1) },
+    props: { entries: all.slice(i * SIZE, (i + 1) * SIZE), pageNum: i + 1, totalPages: pages },
+  }));
+  function numKeyStatic(s: string) {
+    return (s[0] === 'H' ? 0 : 1) * 1e7 + parseInt(s.slice(1).replace(/\D/g, ''), 10);
+  }
+}
+
+const { entries, pageNum, totalPages } = Astro.props as { entries: LexiconEntry[]; pageNum: number; totalPages: number };
+const prev = pageNum > 1 ? pageNum - 1 : null;
+const next = pageNum < totalPages ? pageNum + 1 : null;
+const from = entries[0].strongs;
+const to = entries[entries.length - 1].strongs;
+---
+<BaseLayout
+  title={`原文字典 ${from}–${to}（第 ${pageNum} 頁）`}
+  description={`聖經原文字典 Strong's ${from} 至 ${to}，含希伯來文、希臘文字義、詞形與出現分布。第 ${pageNum}/${totalPages} 頁。`}
+>
+  <nav class="crumb" aria-label="breadcrumb" style="margin: 1.5rem 0 0; font-size: var(--font-sm); color: var(--color-text-muted);">
+    <a href={`${base}/`}>首頁</a> › <a href={`${base}/lexicon`}>原文字典</a> › <span>{from}–{to}</span>
+  </nav>
+  <h1 style="margin: 0.8rem 0 0.3rem;">原文字典 <span class="mono">{from}–{to}</span></h1>
+  <p style="color: var(--color-text-muted); font-size: var(--font-sm); margin-bottom: 1.2rem;">第 {pageNum} / {totalPages} 頁</p>
+
+  <div class="lexicon-grid">
+    {entries.map(entry => (
+      <a href={`${base}/lexicon/${entry.strongs}`} class="card lexicon-card">
+        <span class="strongs mono">{entry.strongs}</span>
+        <span class="lemma" lang={entry.language === 'Hebrew' ? 'he' : 'grc'} dir={entry.language === 'Hebrew' ? 'rtl' : 'ltr'}>{entry.lemma}</span>
+        <span class="gloss">{entry.clean_gloss || entry.short_definition}</span>
+      </a>
+    ))}
+  </div>
+
+  <nav class="pager" aria-label="字典分頁">
+    {prev ? <a href={`${base}/lexicon/browse/${prev}`} rel="prev">← 上一頁</a> : <span class="disabled">←</span>}
+    <a href={`${base}/lexicon`}>目錄</a>
+    {next ? <a href={`${base}/lexicon/browse/${next}`} rel="next">下一頁 →</a> : <span class="disabled">→</span>}
+  </nav>
+</BaseLayout>
+<style>
+  .lexicon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .lexicon-card { display: flex; flex-direction: column; gap: 0.4rem; text-decoration: none; color: var(--color-text); }
+  .strongs { font-size: var(--font-sm); color: var(--color-text-muted); }
+  .lemma { font-size: var(--font-xl); }
+  .gloss { font-size: var(--font-sm); color: var(--color-text-secondary); }
+  .pager { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin: 2.5rem 0 1rem; font-size: var(--font-base); }
+  .pager .disabled { color: var(--color-text-muted); }
+</style>

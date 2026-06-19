@@ -120,7 +120,7 @@ const { osis, bookZh, bookEn, chapter, verses, tokenCount, verseCount, topLemmas
 
 // 本章關鍵原文字 prose（GEO）：內容詞 Strong's × lexicon 字義接成自然語言敘述，
 // 給 answer engine 可索引、可引用的內容（純本站分析 + 開放授權字義，無恢復本版權內容）。
-const lexById: Record<string, { transliteration: string; short_definition: string; lemma: string }> =
+const lexById: Record<string, { transliteration: string; short_definition: string; clean_gloss?: string; lemma: string }> =
   Object.fromEntries((lexiconData as any[]).map((e) => [e.strongs, e]));
 const keyWords = (keyStrongs as any[])
   .map((s) => ({ ...s, lex: lexById[s.st] }))
@@ -235,7 +235,7 @@ const jsonLd = {
           {keyWords.map((s, i) => (
             <Fragment>
               {i > 0 ? '、' : ''}
-              <a href={`${base}/lexicon/${s.st}`}><span lang={langTag} dir={langDir}>{s.lex.lemma}</span>{s.lex.transliteration ? `（${s.lex.transliteration}）` : ''}</a>（{s.count} 次）
+              <a href={`${base}/lexicon/${s.st}`}><span lang={langTag} dir={langDir}>{s.lex.lemma}</span>{s.lex.transliteration ? `（${s.lex.transliteration}）` : ''}</a>{s.lex.clean_gloss ? `，意為「${s.lex.clean_gloss}」` : ''}（{s.count} 次）
             </Fragment>
           ))}
           。點選任一字可查看其字義、詞形分析與在全本聖經的出現分布。

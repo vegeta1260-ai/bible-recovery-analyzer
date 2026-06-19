@@ -185,6 +185,16 @@ check_grep "G1 lang=grc" "lexicon/G1/index.html" 'lang="grc"'
 check_grep "字典頁出現章節互鏈(OT)" "lexicon/H7225/index.html" 'href="/bible-recovery-analyzer/study/Gen/1"'
 check_grep "字典頁出現章節互鏈(NT)" "lexicon/G26/index.html" 'href="/bible-recovery-analyzer/study/Matt/24"'
 check_grep "字典頁出現於標題" "lexicon/H7225/index.html" "出現於"
+# #1 各書卷出現分布（靜態圖取代壞掉的 D3 島）
+check_grep "字典頁出現分布靜態圖" "lexicon/G26/index.html" 'class="dist"'
+# #5 clean_gloss（去噪字義）：G26 應顯示 love，而非 KJV 雜燴
+check_grep "字典頁 clean gloss" "lexicon/G26/index.html" ">love</dd>"
+# #2 字典索引分頁：index 不再塞 14k 卡（檔案應 < 500KB），browse 分頁存在
+check_file "字典 browse 分頁" "lexicon/browse/1/index.html"
+check_grep "browse 頁有分頁器" "lexicon/browse/1/index.html" "下一頁"
+# 索引頁應為輕量目錄（< 500KB），而非 14k 卡塞一頁（曾 4.7MB）
+LEX_IDX_KB=$(du -k "$DIST/lexicon/index.html" 2>/dev/null | cut -f1)
+if [ "${LEX_IDX_KB:-9999}" -lt 500 ]; then echo "  PASS  字典索引輕量化 (${LEX_IDX_KB}KB < 500)"; PASS=$((PASS+1)); else echo "  FAIL  字典索引過大 (${LEX_IDX_KB}KB)"; FAIL=$((FAIL+1)); fi
 # NT token 應已含 Strong's（修正 ETL lemma 欄 + lexicon 反查）；驗逐章頁新約 Strong's 熱點連字典
 check_grep "新約逐章頁 Strong's 熱點" "study/John/3/index.html" 'href="/bible-recovery-analyzer/lexicon/G'
 echo ""

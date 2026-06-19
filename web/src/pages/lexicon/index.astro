@@ -1,27 +1,44 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import lexiconData from '../../data/lexicon.json';
-type LexiconEntry = { strongs: string; lemma: string; language: string; transliteration: string; short_definition: string; literal_gloss_en: string; pronunciation_bopomofo: string; };
-const entries = (lexiconData as LexiconEntry[]).sort((a, b) => a.strongs.localeCompare(b.strongs));
+type LexiconEntry = { strongs: string; lemma: string; language: string; transliteration: string; clean_gloss?: string; short_definition: string; };
+const entries = lexiconData as LexiconEntry[];
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// 字典共 14k+ 條，全塞一頁會是 4.7MB（CWV 災難）。改為：本頁＝輕量目錄（搜尋 + 分段跳轉），
+// 完整清單分頁於 /lexicon/browse/[page]。目錄按 H/G 各以「百位」分段，連到對應 browse 頁。
+const PAGE_SIZE = 240;
+const heb = entries.filter(e => e.strongs.startsWith('H'));
+const grk = entries.filter(e => e.strongs.startsWith('G'));
+const total = entries.length;
+// browse 頁的排序需與 /lexicon/browse/[page] 一致（H 在前、G 在後，各依編號）
+const numKey = (s: string) => (s[0] === 'H' ? 0 : 1) * 1e7 + parseInt(s.slice(1).replace(/\D/g, ''), 10);
+const sorted = [...entries].sort((a, b) => numKey(a.strongs) - numKey(b.strongs));
+// 為每 PAGE_SIZE 取首條 Strong's 當該頁起點標籤，產生跳轉目錄
+const pageAnchors: { page: number; from: string; to: string }[] = [];
+for (let i = 0; i < sorted.length; i += PAGE_SIZE) {
+  const slice = sorted.slice(i, i + PAGE_SIZE);
+  pageAnchors.push({ page: i / PAGE_SIZE + 1, from: slice[0].strongs, to: slice[slice.length - 1].strongs });
+}
 ---
-<BaseLayout title="原文字典" description="Strong's 編號字典索引">
-  <h1 style="margin: 2rem 0 1rem;">原文字典</h1>
-  <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem;">目前收錄 {entries.length} 筆條目（MVP 資料）。</p>
-  <div class="lexicon-grid">
-    {entries.map(entry => (
-      <a href={`${base}/lexicon/${entry.strongs}`} class="card lexicon-card">
-        <span class="strongs mono">{entry.strongs}</span>
-        <span class="lemma" lang={entry.language === 'Hebrew' ? 'he' : 'grc'} dir={entry.language === 'Hebrew' ? 'rtl' : 'ltr'}>{entry.lemma}</span>
-        <span class="gloss">{entry.literal_gloss_en} — {entry.short_definition}</span>
-      </a>
+<BaseLayout title="原文字典" description="聖經希伯來文、希臘文 Strong's 編號原文字典，收錄 14,197 條目，含字義、詞形與全經出現分布。">
+  <h1 style="margin: 2rem 0 0.5rem;">原文字典</h1>
+  <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem; max-width: 720px; line-height: 1.8;">
+    收錄 {total.toLocaleString()} 條 Strong's 原文字（希伯來文 {heb.length.toLocaleString()} ·
+    希臘文 {grk.length.toLocaleString()}）。每條含字義、常見變形、詞形分析與在全本聖經各書卷的出現分布。
+    可直接前往<a href={`${base}/study`}>研經頁</a>用字詞、lemma 模式搜尋，或從下方分段瀏覽。
+  </p>
+
+  <h2 class="sec">分段瀏覽</h2>
+  <nav class="anchors" aria-label="字典分段">
+    {pageAnchors.map(a => (
+      <a class="anchor" href={`${base}/lexicon/browse/${a.page}`}>{a.from}–{a.to}</a>
     ))}
-  </div>
+  </nav>
 </BaseLayout>
 <style>
-  .lexicon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-  .lexicon-card { display: flex; flex-direction: column; gap: 0.4rem; text-decoration: none; color: var(--color-text); }
-  .strongs { font-size: var(--font-sm); color: var(--color-text-muted); }
-  .lemma { font-size: var(--font-xl); }
-  .gloss { font-size: var(--font-sm); color: var(--color-text-secondary); }
+  .sec { font-size: var(--font-lg); margin: 1.5rem 0 0.8rem; }
+  .anchors { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .anchor { display: inline-block; padding: 0.35rem 0.7rem; border: 1px solid var(--color-border); border-radius: 8px; font-family: var(--font-mono); font-size: var(--font-sm); white-space: nowrap; }
+  .anchor:hover { background: var(--color-surface-hover); }
 </style>

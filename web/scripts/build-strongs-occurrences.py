@@ -23,6 +23,7 @@ book_order = {b["osis"]: i for i, b in enumerate(json.load(open(BOOKMAP, encodin
 
 counts = {}          # strongs -> 總出現次數
 chapters = {}        # strongs -> set of "Osis.ch"
+book_counts = {}     # strongs -> {Osis: 次數}（供字典頁靜態繪「各書卷出現分布」）
 
 for fp in sorted(glob.glob(os.path.join(TOKENS_DIR, "*.json"))):
     for t in json.load(open(fp, encoding="utf-8")):
@@ -33,9 +34,12 @@ for fp in sorted(glob.glob(os.path.join(TOKENS_DIR, "*.json"))):
         parts = ref.split(".")
         if len(parts) < 2:
             continue
+        osis = parts[0]
         ch_ref = f"{parts[0]}.{parts[1]}"      # "Gen.1.1" -> "Gen.1"
         counts[st] = counts.get(st, 0) + 1
         chapters.setdefault(st, set()).add(ch_ref)
+        bc = book_counts.setdefault(st, {})
+        bc[osis] = bc.get(osis, 0) + 1
 
 
 def sort_key(ch_ref):
@@ -46,7 +50,9 @@ def sort_key(ch_ref):
 out = {}
 for st in counts:
     ch_sorted = sorted(chapters[st], key=sort_key)
-    out[st] = {"n": counts[st], "ch": ch_sorted}
+    # 各書卷出現次數，依正典書序排序
+    bk_sorted = dict(sorted(book_counts[st].items(), key=lambda kv: book_order.get(kv[0], 999)))
+    out[st] = {"n": counts[st], "ch": ch_sorted, "bk": bk_sorted}
 
 json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 

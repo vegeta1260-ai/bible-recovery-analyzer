@@ -3,10 +3,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import lexiconData from '../../data/lexicon.json';
 import occurrences from '../../data/strongs-occurrences.json';
 import bookMap from '../../data/bookMap.json';
-import D3OccurrenceChart from '../../components/islands/D3OccurrenceChart';
-type LexiconEntry = { strongs: string; normalized_strongs: string; lemma: string; language: string; transliteration: string; pronunciation_bopomofo: string; short_definition: string; literal_gloss_en: string; common_inflections: string[]; analytical_notes: string[]; };
+type LexiconEntry = { strongs: string; normalized_strongs: string; lemma: string; language: string; transliteration: string; pronunciation_bopomofo: string; short_definition: string; literal_gloss_en: string; clean_gloss?: string; common_inflections: string[]; analytical_notes: string[]; };
 const entries = lexiconData as LexiconEntry[];
-const occ = occurrences as Record<string, { n: number; ch: string[] }>;
+const occ = occurrences as Record<string, { n: number; ch: string[]; bk: Record<string, number> }>;
 const osisZh: Record<string, string> = Object.fromEntries((bookMap as { osis: string; zh: string }[]).map(b => [b.osis, b.zh]));
 export function getStaticPaths() {
   return (lexiconData as LexiconEntry[]).map(e => ({ params: { id: e.strongs } }));
@@ -22,6 +21,10 @@ const MAX_CH = 60;
 const occRec = occ[entry.strongs];
 const occChapters = occRec?.ch ?? [];
 const shownChapters = occChapters.slice(0, MAX_CH);
+// 各書卷出現分布（靜態繪，取代原本讀空資料、永遠空白的 D3 client 島）
+const bookDist = Object.entries(occRec?.bk ?? {});
+const maxBook = bookDist.reduce((m, [, n]) => Math.max(m, n), 0);
+const cleanGloss = entry.clean_gloss || entry.short_definition;
 
 const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -41,7 +44,7 @@ const lexLd = {
       '@type': 'DefinedTerm',
       '@id': pageUrl,
       name: entry.transliteration,
-      description: entry.short_definition,
+      description: cleanGloss,
       inDefinedTermSet: { '@type': 'DefinedTermSet', name: "Strong's Concordance" },
       identifier: entry.strongs,
       inLanguage: langTag,
@@ -49,7 +52,7 @@ const lexLd = {
   ],
 };
 ---
-<BaseLayout title={`${entry.transliteration} ${entry.lemma}（${entry.strongs}）`} description={`${entry.transliteration} ${entry.lemma}（Strong's ${entry.strongs}）原文字義：${entry.short_definition}`}>
+<BaseLayout title={`${entry.transliteration} ${entry.lemma}（${entry.strongs}）`} description={`${entry.transliteration} ${entry.lemma}（Strong's ${entry.strongs}）原文字義：${cleanGloss}`}>
   <nav class="crumb" aria-label="breadcrumb" style="margin: 1.5rem 0 0; font-size: var(--font-sm); color: var(--color-text-muted);">
     <a href={`${base}/`}>首頁</a> › <a href={`${base}/lexicon`}>原文字典</a> › <span>{entry.transliteration}（{entry.strongs}）</span>
   </nav>
@@ -65,8 +68,8 @@ const lexLd = {
           <dt>語言</dt><dd>{entry.language}</dd>
           <dt>音譯</dt><dd>{entry.transliteration}</dd>
           <dt>注音</dt><dd>{entry.pronunciation_bopomofo}</dd>
-          <dt>簡義</dt><dd>{entry.short_definition}</dd>
-          <dt>英文 Gloss</dt><dd>{entry.literal_gloss_en}</dd>
+          <dt>簡義</dt><dd>{cleanGloss}</dd>
+          <dt>Strong's 原義</dt><dd class="raw-gloss">{entry.short_definition}</dd>
         </dl>
       </div>
       <div class="card">
@@ -98,7 +101,20 @@ const lexLd = {
     </section>
   )}
 
-  <D3OccurrenceChart client:visible strongs={entry.strongs} />
+  {bookDist.length > 0 && (
+    <section class="dist" aria-label="各書卷出現分布">
+      <h2>各書卷出現分布</h2>
+      <ul class="dist-list">
+        {bookDist.map(([osis, n]) => (
+          <li class="dist-row">
+            <a class="dist-book" href={`${base}/study/${osis}/1`}>{osisZh[osis] ?? osis}</a>
+            <span class="dist-bar-wrap"><span class="dist-bar" style={`width:${Math.max(2, (n / maxBook) * 100)}%`}></span></span>
+            <span class="dist-n mono">{n}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
   <script type="application/ld+json" set:html={JSON.stringify(lexLd)} />
 </BaseLayout>
 <style>
@@ -117,4 +133,13 @@ const lexLd = {
   .occ-list a { display: inline-block; padding: 0.2rem 0.6rem; border: 1px solid var(--color-border); border-radius: 999px; font-size: var(--font-sm); white-space: nowrap; }
   .occ-list a:hover { background: var(--color-surface-hover); }
   .occ-more { font-size: var(--font-sm); color: var(--color-text-muted); margin-top: 0.8rem; }
+  .raw-gloss { color: var(--color-text-muted); font-size: var(--font-xs); }
+  .dist { margin: 2.5rem 0; max-width: 640px; }
+  .dist h2 { font-size: var(--font-lg); margin-bottom: 1rem; }
+  .dist-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+  .dist-row { display: grid; grid-template-columns: 5.5rem 1fr 2.5rem; align-items: center; gap: 0.6rem; font-size: var(--font-sm); }
+  .dist-book { text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dist-bar-wrap { background: var(--color-surface); border-radius: 4px; overflow: hidden; height: 1.1rem; }
+  .dist-bar { display: block; height: 100%; background: var(--color-primary); border-radius: 4px; }
+  .dist-n { text-align: right; color: var(--color-text-secondary); }
 </style>
