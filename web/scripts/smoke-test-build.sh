@@ -182,8 +182,11 @@ check_grep "G1 JSON-LD" "lexicon/G1/index.html" "DefinedTerm"
 check_grep "G1 BreadcrumbList" "lexicon/G1/index.html" "BreadcrumbList"
 check_grep "G1 lang=grc" "lexicon/G1/index.html" 'lang="grc"'
 # 字典頁↔逐章頁互鏈（entity graph）：H7225 出現於 Gen.1，應有連回 /study 的「出現於」連結
-check_grep "字典頁出現章節互鏈" "lexicon/H7225/index.html" 'href="/bible-recovery-analyzer/study/Gen/1"'
+check_grep "字典頁出現章節互鏈(OT)" "lexicon/H7225/index.html" 'href="/bible-recovery-analyzer/study/Gen/1"'
+check_grep "字典頁出現章節互鏈(NT)" "lexicon/G26/index.html" 'href="/bible-recovery-analyzer/study/Matt/24"'
 check_grep "字典頁出現於標題" "lexicon/H7225/index.html" "出現於"
+# NT token 應已含 Strong's（修正 ETL lemma 欄 + lexicon 反查）；驗逐章頁新約 Strong's 熱點連字典
+check_grep "新約逐章頁 Strong's 熱點" "study/John/3/index.html" 'href="/bible-recovery-analyzer/lexicon/G'
 echo ""
 
 echo "[6b] AEO/GEO 補強（llms.txt / 404 / speakable / 地圖 CLS）"

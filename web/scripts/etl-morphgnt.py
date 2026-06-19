@@ -5,8 +5,12 @@ ETL: MorphGNT SBLGNT → per-book token JSON files.
 Input:  /tmp/sblgnt/*.txt (MorphGNT tab-separated format)
 Output: web/public/data/tokens/{Book}.json
 
-MorphGNT format per line (space-separated):
-  BBCCVV  POS  morphcode  surface  normalized  lemma
+MorphGNT format per line (space-separated, 7 欄):
+  BBCCVV  POS  morphcode  text  word  normalized  lemma
+  parts:  [0]    [1]   [2]      [3]   [4]    [5]       [6]
+  ⚠️ 早期版本誤把 [5]（normalized，仍是變化形）當 lemma，導致新約 lemma 多為屈折形、
+     無法對映 Strong's。正解：lemma = parts[6]（字典原形），normalized = parts[5]。
+  Strong's：MorphGNT 本身不含，改以字典原形對 web/src/data/lexicon.json 的 G-lemma 反查（命中 ~98.5%）。
 
 Morphcode positions (8 chars):
   0: person (1,2,3,-)
@@ -22,10 +26,32 @@ Morphcode positions (8 chars):
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 SBLGNT_DIR = Path("/tmp/sblgnt")
 OUTPUT_DIR = Path(__file__).resolve().parents[1] / "public" / "data" / "tokens"
+LEXICON = Path(__file__).resolve().parents[1] / "src" / "data" / "lexicon.json"
+
+
+def _norm_lemma(s: str) -> str:
+    """正規化希臘文 lemma 以利對映 Strong's：去括號內可動字尾（如 οὕτω(ς)）、去標點、去重音、轉小寫。"""
+    s = re.sub(r"\([^)]*\)", "", s)          # οὕτω(ς) → οὕτω
+    s = re.sub(r"[\[\].,··;:’'\"]", "", s)
+    nfd = unicodedata.normalize("NFD", s)
+    s = "".join(c for c in nfd if unicodedata.category(c) != "Mn")
+    return unicodedata.normalize("NFC", s).lower()
+
+
+def load_strongs_map() -> dict:
+    """從 web/src/data/lexicon.json 建 正規化 G-lemma → Strong's 對映（新約用）。"""
+    lex = json.loads(LEXICON.read_text(encoding="utf-8"))
+    m = {}
+    for e in lex:
+        st = e.get("strongs", "")
+        if st.startswith("G"):
+            m.setdefault(_norm_lemma(e.get("lemma", "")), st)
+    return m
 
 # MorphGNT file number → OSIS book abbreviation
 FILE_MAP = {
@@ -110,7 +136,7 @@ def parse_verse_ref(code: str, book_osis: str) -> str:
     return f"{book_osis}.{chapter}.{verse}"
 
 
-def process_file(filepath: Path, book_osis: str) -> list[dict]:
+def process_file(filepath: Path, book_osis: str, strongs_map: dict) -> list[dict]:
     tokens = []
     current_ref = ""
     token_order = 0
@@ -121,13 +147,14 @@ def process_file(filepath: Path, book_osis: str) -> list[dict]:
             continue
 
         parts = line.split()
-        if len(parts) < 6:
+        if len(parts) < 7:
             continue
 
         ref_code, pos_code, morphcode = parts[0], parts[1], parts[2]
         surface = parts[3].rstrip(",")
-        normalized = parts[4]
-        lemma = parts[5]
+        normalized = parts[5]          # 真正的 normalized 形（變化形，含可動字尾正規化）
+        lemma = parts[6]               # 字典原形（修正：原誤取 parts[5]）
+        strongs_primary = strongs_map.get(_norm_lemma(lemma), "")
 
         verse_ref = parse_verse_ref(ref_code, book_osis)
         if verse_ref != current_ref:
@@ -145,7 +172,7 @@ def process_file(filepath: Path, book_osis: str) -> list[dict]:
             "surface_form": surface,
             "normalized_form": normalized,
             "lemma": lemma,
-            "strongs_primary": "",
+            "strongs_primary": strongs_primary,
             "strongs_secondary": None,
             "analytical_code_raw": analytical_code,
             "part_of_speech": pos_name,
@@ -166,7 +193,10 @@ def process_file(filepath: Path, book_osis: str) -> list[dict]:
 
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    strongs_map = load_strongs_map()
+    print(f"  載入 Strong's 對映表：{len(strongs_map)} 個 G-lemma")
     total = 0
+    total_st = 0
 
     for txt_file in sorted(SBLGNT_DIR.glob("*-morphgnt.txt")):
         file_num = txt_file.name.split("-")[0]
@@ -175,15 +205,17 @@ def main():
             print(f"  skip {txt_file.name} (unknown book number {file_num})")
             continue
 
-        tokens = process_file(txt_file, book_osis)
+        tokens = process_file(txt_file, book_osis, strongs_map)
         out_path = OUTPUT_DIR / f"{book_osis}.json"
         out_path.write_text(json.dumps(tokens, ensure_ascii=False), encoding="utf-8")
 
+        st_hit = sum(1 for t in tokens if t["strongs_primary"])
         size_kb = out_path.stat().st_size / 1024
-        print(f"  {book_osis:8s} {len(tokens):6d} tokens  {size_kb:7.0f} KB")
+        print(f"  {book_osis:8s} {len(tokens):6d} tokens  st {st_hit:6d}  {size_kb:7.0f} KB")
         total += len(tokens)
+        total_st += st_hit
 
-    print(f"\nTotal: {total} tokens across {len(FILE_MAP)} books")
+    print(f"\nTotal: {total} tokens across {len(FILE_MAP)} books；Strong's 命中 {total_st} ({total_st/total*100:.1f}%)")
 
 
 if __name__ == "__main__":
