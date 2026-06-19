@@ -11,9 +11,8 @@ const NT_OSIS = new Set([
 const ot = books.filter(b => !NT_OSIS.has(b.osis));
 const nt = books.filter(b => NT_OSIS.has(b.osis));
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-// 點書卷 → 該卷第 1 章逐章頁（原文逐字對照 + 本章概要 + 恢復本）。
-// 逐章頁內有「全 N 章」導覽可跳任一章，這也是逐章頁的站內主入口。
-const bookHref = (book: BookEntry) => `${base}/study/${book.osis}/1`;
+// 點書卷 → 該卷 hub 頁（書卷概覽 + 各章概要 teaser + 章次入口）。
+const bookHref = (book: BookEntry) => `${base}/study/${book.osis}`;
 ---
 <section class="book-grid-section">
   <h2>舊約（{ot.length} 卷）</h2>

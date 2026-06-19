@@ -37,6 +37,8 @@ export default defineConfig({
     }),
   ],
   output: 'static',
+  // hover/viewport 預取站內連結，加快導覽（engagement 訊號）。
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   vite: {
     resolve: {
       alias: {

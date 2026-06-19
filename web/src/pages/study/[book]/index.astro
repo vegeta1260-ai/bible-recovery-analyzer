@@ -1,0 +1,121 @@
+---
+// 書卷層級 landing（hub）：接住「約翰福音」「羅馬書」等書名查詢，
+// 把該卷各章整理成一頁（含每章概要 teaser），並掛 Book / BreadcrumbList / ItemList schema。
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import bookMap from '../../../data/bookMap.json';
+
+type BookEntry = { osis: string; english: string; zh: string; aliases: string[] };
+
+// 各卷較深概要（用首句當每章 teaser，內容來自既有 chapter-summaries）
+const summaryFiles = import.meta.glob<{ default: Record<string, string> }>(
+  '../../../data/chapter-summaries/*.json',
+  { eager: true },
+);
+
+const NT_OSIS = new Set(['Matt','Mark','Luke','John','Acts','Rom','1Cor','2Cor','Gal','Eph','Phil','Col','1Thess','2Thess','1Tim','2Tim','Titus','Phlm','Heb','Jas','1Pet','2Pet','1John','2John','3John','Jude','Rev']);
+
+export function getStaticPaths() {
+  const mods = import.meta.glob<{ default: Record<string, string> }>(
+    '../../../data/chapter-summaries/*.json',
+    { eager: true },
+  );
+  const books = bookMap as BookEntry[];
+  return books
+    .filter((b) => mods[`../../../data/chapter-summaries/${b.osis}.json`])
+    .map((b) => ({ params: { book: b.osis }, props: { book: b } }));
+}
+
+const { book } = Astro.props as { book: BookEntry };
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
+
+const summaries = summaryFiles[`../../../data/chapter-summaries/${book.osis}.json`]?.default ?? {};
+const chapters = Object.keys(summaries).map(Number).sort((a, b) => a - b);
+const chapterCount = chapters.length;
+const testament = NT_OSIS.has(book.osis) ? '新約' : '舊約';
+const lang = NT_OSIS.has(book.osis) ? '希臘文' : '希伯來文';
+
+const teaser = (ch: number) => {
+  const s = summaries[String(ch)] ?? '';
+  return s.length > 48 ? s.slice(0, 48) + '…' : s;
+};
+
+const pageTitle = `${book.zh}（${book.english}）逐章查經與原文解析`;
+const pageDesc = `${book.zh}（${book.english}）全 ${chapterCount} 章逐章${lang}原文逐字對照、Strong's 編號、詞形分析與恢復本經文。各章概要與研經入口。`;
+const pageUrl = `${siteUrl}${Astro.url.pathname}`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '首頁', item: `${siteUrl}${base}/` },
+        { '@type': 'ListItem', position: 2, name: '書卷', item: `${siteUrl}${base}/books` },
+        { '@type': 'ListItem', position: 3, name: book.zh },
+      ],
+    },
+    {
+      '@type': 'Book',
+      name: `${book.zh}（${book.english}）`,
+      alternateName: book.english,
+      inLanguage: 'zh-Hant',
+      numberOfPages: chapterCount,
+      url: pageUrl,
+      about: '聖經原文逐字解析',
+      isPartOf: { '@type': 'Book', name: '聖經' },
+    },
+    {
+      '@type': 'ItemList',
+      name: `${book.zh}各章`,
+      numberOfItems: chapterCount,
+      itemListElement: chapters.map((ch) => ({
+        '@type': 'ListItem',
+        position: ch,
+        name: `${book.zh} 第${ch}章`,
+        url: `${siteUrl}${base}/study/${book.osis}/${ch}`,
+      })),
+    },
+  ],
+};
+---
+<BaseLayout title={pageTitle} description={pageDesc} ogImage={`/og/${book.osis}.png`}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <nav class="crumb" aria-label="breadcrumb">
+    <a href={`${base}/`}>首頁</a> › <a href={`${base}/books`}>書卷</a> › <span>{book.zh}</span>
+  </nav>
+
+  <h1>{book.zh} <span class="en">{book.english}</span></h1>
+  <p class="lede">
+    {testament} · 共 {chapterCount} 章。逐章提供{lang}原文逐字對照、Strong's 編號、詞形分析與恢復本經文，
+    以及每章較深概要與關鍵原文字。點選下方任一章開始研讀。
+  </p>
+
+  <section class="ch-list" aria-label="章次">
+    <h2>各章概要</h2>
+    <ul class="ch-grid">
+      {chapters.map((ch) => (
+        <li class="ch-item">
+          <a href={`${base}/study/${book.osis}/${ch}`}>
+            <span class="ch-no">第 {ch} 章</span>
+            <span class="ch-teaser">{teaser(ch)}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .crumb { margin: 1.5rem 0 0.5rem; font-size: var(--font-sm); color: var(--color-text-muted); }
+  h1 { font-size: var(--font-2xl); }
+  h1 .en { font-size: var(--font-lg); color: var(--color-text-muted); font-weight: 400; margin-left: 0.5rem; }
+  .lede { color: var(--color-text-secondary); font-size: var(--font-lg); line-height: 1.8; margin: 0.5rem 0 2rem; max-width: 760px; }
+  .ch-list h2 { font-size: var(--font-xl); margin-bottom: 1rem; }
+  .ch-grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8rem; }
+  .ch-item a { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.9rem 1rem; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); height: 100%; }
+  .ch-item a:hover { background: var(--color-surface-hover); }
+  .ch-no { font-family: var(--font-sans); font-weight: 700; color: var(--color-primary); }
+  .ch-teaser { font-size: var(--font-sm); color: var(--color-text-secondary); line-height: 1.7; }
+</style>

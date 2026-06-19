@@ -1,8 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import LegendTable from '../components/static/LegendTable.astro';
+import BreadcrumbLd from '../components/static/BreadcrumbLd.astro';
 ---
 <BaseLayout title="分析碼圖例" description="原文分析碼、縮寫、文法注記完整對照表">
+  <BreadcrumbLd items={[{ name: '首頁', path: '/' }, { name: '分析碼圖例' }]} />
   <h1 style="margin: 2rem 0 0;">分析碼圖例</h1>
   <LegendTable />
 </BaseLayout>

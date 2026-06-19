@@ -153,7 +153,7 @@ const isHebrew = osis !== '' && strongsHotspots.some((s: any) => s.st?.startsWit
 const langTag = isHebrew ? 'he' : 'grc';
 const langDir = isHebrew ? 'rtl' : 'ltr';
 
-const pageTitle = `${bookZh} 第${chapter}章 — 原文逐字解析`;
+const pageTitle = `${bookZh}第${chapter}章 查經｜原文逐字解析、Strong's 與恢復本`;
 // meta keywords 用內容詞（名詞/動詞/形容詞），避免落入 the/and/of 等虛詞；無內容詞才退回 topLemmas。
 const keywords = (keyWords.length ? keyWords.map((s: any) => s.lex.lemma) : topLemmas.map((l: any) => l.lemma))
   .slice(0, 4).join('、');
@@ -168,6 +168,16 @@ const orgId = `${siteUrl}${base}/#organization`;
 const datePublished = '2026-04-22';
 const dateModified = new Date().toISOString().slice(0, 10);
 
+// 逐章 FAQ（FAQPage）：從既有概要與關鍵字衍生，給 answer engine 直接可答的問答（GEO）。
+const faqQ1 = `${bookZh}第${chapter}章在講什麼？`;
+const faqQ2 = `${bookZh}第${chapter}章有哪些關鍵原文字？`;
+const keyWordsAnswer = keyWords.length
+  ? `本章較常出現的關鍵${isHebrew ? '希伯來' : '希臘'}文字包括：${keyWords.map((s: any) => `${s.lex.lemma}（${s.lex.clean_gloss || s.lex.short_definition}，${s.count} 次）`).join('、')}。`
+  : '';
+const faqItems: { q: string; a: string }[] = [];
+if (outline) faqItems.push({ q: faqQ1, a: outline });
+if (keyWordsAnswer) faqItems.push({ q: faqQ2, a: keyWordsAnswer });
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -176,10 +186,18 @@ const jsonLd = {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: '首頁', item: `${siteUrl}${base}/` },
         { '@type': 'ListItem', position: 2, name: '書卷', item: `${siteUrl}${base}/books` },
-        { '@type': 'ListItem', position: 3, name: bookZh, item: `${siteUrl}${base}/study/${osis}/${chapter}` },
+        { '@type': 'ListItem', position: 3, name: bookZh, item: `${siteUrl}${base}/study/${osis}` },
         { '@type': 'ListItem', position: 4, name: `第${chapter}章` },
       ],
     },
+    ...(faqItems.length ? [{
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    }] : []),
     {
       '@type': 'Article',
       headline: pageTitle,
@@ -229,14 +247,14 @@ const jsonLd = {
 
     {outline && (
       <section class="outline">
-        <h2>本章概要</h2>
+        <h2>{faqQ1}</h2>
         <p>{outline}</p>
       </section>
     )}
 
     {keyWords.length > 0 && (
       <section class="keywords">
-        <h2>本章關鍵原文字</h2>
+        <h2>{faqQ2}</h2>
         <p>
           本章共 {verseCount} 節、{tokenCount} 個原文字。出現頻率較高的關鍵{isHebrew ? '希伯來' : '希臘'}文字（名詞、動詞、形容詞）包括：
           {keyWords.map((s, i) => (

@@ -1,9 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SearchBox from '../components/islands/SearchBox.tsx';
+import BreadcrumbLd from '../components/static/BreadcrumbLd.astro';
 ---
 
 <BaseLayout title="研經" description="聖經恢復本原文字義研經工具 — 搜尋經文、逐字對照、原文分析">
+  <BreadcrumbLd items={[{ name: '首頁', path: '/' }, { name: '研經工具' }]} />
   <div class="study-page">
     <h1 style="margin: 2rem 0 0;">研經工具</h1>
     <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; line-height: 1.8;">

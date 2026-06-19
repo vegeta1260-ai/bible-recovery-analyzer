@@ -219,14 +219,21 @@ check_grep "逐章頁 speakable" "study/John/3/index.html" "SpeakableSpecificati
 check_grep "逐章頁關鍵原文字 prose" "study/John/3/index.html" "本章關鍵原文字"
 # 較深逐章概要（LLM 生成，~250 字，1189 章全覆蓋）
 check_grep "逐章深概要(Gen1)" "study/Gen/1/index.html" "空虛混沌"
+# 逐章 FAQPage（從概要/關鍵字衍生的問答，GEO）
+check_grep "逐章 FAQPage schema" "study/John/3/index.html" '"FAQPage"'
+check_grep "逐章 FAQ 問句標題" "study/John/3/index.html" "在講什麼"
+# 書卷 hub 頁（/study/[book]）：Book schema + 章列表 teaser
+check_file "書卷 hub 頁(John)" "study/John/index.html"
+check_grep "書卷 hub Book schema" "study/John/index.html" '"Book"'
+check_grep "書卷 hub ItemList" "study/John/index.html" '"ItemList"'
 SUMMARY_FILES=$(ls "$SCRIPT_DIR/../src/data/chapter-summaries"/*.json 2>/dev/null | wc -l | tr -d ' ')
 check_min "逐章深概要書卷數" "${SUMMARY_FILES:-0}" 66
 check_grep "地圖 img 含 width/height（防 CLS）" "maps/index.html" 'width="1766"'
 echo ""
 
 echo "[7] 導覽連結含正確 base path"
-check_grep "書卷卡連逐章頁(首頁)" "index.html" 'href="/bible-recovery-analyzer/study/John/1"'
-check_grep "書卷卡連逐章頁(書卷頁)" "books/index.html" 'href="/bible-recovery-analyzer/study/Gen/1"'
+check_grep "書卷卡連書卷 hub(首頁)" "index.html" 'href="/bible-recovery-analyzer/study/John"'
+check_grep "書卷卡連書卷 hub(書卷頁)" "books/index.html" 'href="/bible-recovery-analyzer/study/Gen"'
 check_grep "study 連結" "index.html" 'href="/bible-recovery-analyzer/study"'
 check_grep "books 連結" "index.html" 'href="/bible-recovery-analyzer/books"'
 check_grep "lexicon 連結" "index.html" 'href="/bible-recovery-analyzer/lexicon"'

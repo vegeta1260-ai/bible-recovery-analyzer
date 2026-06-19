@@ -1,0 +1,20 @@
+---
+// 可重用的 BreadcrumbList JSON-LD。items 由淺到深；最後一項為當前頁（不給 item url）。
+interface Props {
+  items: { name: string; path?: string }[];
+}
+const { items } = Astro.props as Props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((it, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: it.name,
+    ...(it.path !== undefined ? { item: `${siteUrl}${base}${it.path}` } : {}),
+  })),
+};
+---
+<script type="application/ld+json" set:html={JSON.stringify(ld)} />

@@ -3,6 +3,7 @@
 // 疊上自繪的中文地名。另保留兩張 1873 古地圖作補充（靜態）。
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import MapView, { type Place } from '../../components/islands/MapView.tsx';
+import BreadcrumbLd from '../../components/static/BreadcrumbLd.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -35,6 +36,7 @@ const oldMaps = [
 
 <BaseLayout title="聖經地圖" description="聖地與周邊的互動古地圖（1853 Mitchell 公共領域），疊上中文地名標註。">
   <article class="maps">
+    <BreadcrumbLd items={[{ name: '首頁', path: '/' }, { name: '聖經地圖' }]} />
     <nav class="crumb" aria-label="breadcrumb">
       <a href={`${base}/`}>首頁</a> › <span>聖經地圖</span>
     </nav>

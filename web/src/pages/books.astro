@@ -1,8 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BookGrid from '../components/static/BookGrid.astro';
+import BreadcrumbLd from '../components/static/BreadcrumbLd.astro';
 ---
 <BaseLayout title="書卷總覽" description="聖經 66 卷書 OSIS / 英文 / 中文 / 別名對照表">
+  <BreadcrumbLd items={[{ name: '首頁', path: '/' }, { name: '書卷總覽' }]} />
   <h1 style="margin: 2rem 0 0;">書卷總覽</h1>
   <p style="color: var(--color-text-secondary); margin-bottom: 1rem; max-width: 760px; line-height: 1.8;">
     完整收錄聖經 66 卷書（舊約 39 卷 + 新約 27 卷），點選任一卷即進入該卷的逐章研經頁。
