@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import bookMap from '../../../data/bookMap.json';
+import lexiconData from '../../../data/lexicon.json';
 import ChapterRecovery from '../../../components/islands/ChapterRecovery.tsx';
 import ChapterReadAloud from '../../../components/islands/ChapterReadAloud.tsx';
 import ChapterMusic from '../../../components/islands/ChapterMusic.tsx';
@@ -76,12 +77,17 @@ export async function getStaticPaths() {
       // A 導覽：高頻 lemma、Strong's 熱點、token 數
       const lemmaCount = new Map<string, number>();
       const strongsCount = new Map<string, number>();
+      // 內容詞（名詞/動詞/形容詞）的 Strong's 統計，排除虛詞（冠詞/連詞/介系詞/代名詞/質詞/副詞），
+      // 供「本章關鍵原文字」prose 顯示有主題意義的字，而非 the/and/of 之類。
+      const contentStrongsCount = new Map<string, number>();
+      const CONTENT_POS = new Set(['noun', 'verb', 'adjective']);
       let tokenCount = 0;
       for (const v of verses) {
         for (const t of v.tokens) {
           tokenCount++;
           if (t.l) lemmaCount.set(t.l, (lemmaCount.get(t.l) ?? 0) + 1);
           if (t.st) strongsCount.set(t.st, (strongsCount.get(t.st) ?? 0) + 1);
+          if (t.st && CONTENT_POS.has(t.pos ?? '')) contentStrongsCount.set(t.st, (contentStrongsCount.get(t.st) ?? 0) + 1);
         }
       }
       const topLemmas = [...lemmaCount.entries()]
@@ -89,6 +95,9 @@ export async function getStaticPaths() {
         .map(([lemma, count]) => ({ lemma, count }));
       const strongsHotspots = [...strongsCount.entries()]
         .sort((a, c) => c[1] - a[1]).slice(0, 6)
+        .map(([st, count]) => ({ st, count }));
+      const keyStrongs = [...contentStrongsCount.entries()]
+        .sort((a, c) => c[1] - a[1]).slice(0, 5)
         .map(([st, count]) => ({ st, count }));
 
       paths.push({
@@ -98,7 +107,7 @@ export async function getStaticPaths() {
           chapter: Number(ch),
           verses, tokenCount,
           verseCount: verses.length,
-          topLemmas, strongsHotspots,
+          topLemmas, strongsHotspots, keyStrongs,
           chapterNums: allChapters,
         },
       });
@@ -107,7 +116,15 @@ export async function getStaticPaths() {
   return paths;
 }
 
-const { osis, bookZh, bookEn, chapter, verses, tokenCount, verseCount, topLemmas, strongsHotspots, chapterNums } = Astro.props;
+const { osis, bookZh, bookEn, chapter, verses, tokenCount, verseCount, topLemmas, strongsHotspots, keyStrongs, chapterNums } = Astro.props;
+
+// 本章關鍵原文字 prose（GEO）：內容詞 Strong's × lexicon 字義接成自然語言敘述，
+// 給 answer engine 可索引、可引用的內容（純本站分析 + 開放授權字義，無恢復本版權內容）。
+const lexById: Record<string, { transliteration: string; short_definition: string; lemma: string }> =
+  Object.fromEntries((lexiconData as any[]).map((e) => [e.strongs, e]));
+const keyWords = (keyStrongs as any[])
+  .map((s) => ({ ...s, lex: lexById[s.st] }))
+  .filter((s) => s.lex && s.lex.short_definition);
 
 // 章次內鏈：prev/next + 同書全章清單（使逐章頁互連、爬蟲可爬完整本書）
 const chIdx = chapterNums.indexOf(chapter);
@@ -130,7 +147,9 @@ const langTag = isHebrew ? 'he' : 'grc';
 const langDir = isHebrew ? 'rtl' : 'ltr';
 
 const pageTitle = `${bookZh} 第${chapter}章 — 原文逐字解析`;
-const keywords = topLemmas.slice(0, 4).map((l: any) => l.lemma).join('、');
+// meta keywords 用內容詞（名詞/動詞/形容詞），避免落入 the/and/of 等虛詞；無內容詞才退回 topLemmas。
+const keywords = (keyWords.length ? keyWords.map((s: any) => s.lex.lemma) : topLemmas.map((l: any) => l.lemma))
+  .slice(0, 4).join('、');
 const pageDesc = `${bookZh}（${bookEn}）第${chapter}章希伯來/希臘文逐字對照，含 Strong's、詞形分析與恢復本經文。本章關鍵原文字：${keywords}。`;
 
 const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
@@ -164,7 +183,7 @@ const jsonLd = {
       url: pageUrl,
       mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
       // Speakable：標記本章自然語言內容（導言 + 概要）供語音／answer engine 朗讀摘要。
-      speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.lede', '.outline'] },
+      speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.lede', '.outline', '.keywords'] },
       image: `${siteUrl}${base}/og/${osis}.png`,
       datePublished,
       dateModified,
@@ -205,6 +224,22 @@ const jsonLd = {
       <section class="outline">
         <h2>本章概要</h2>
         <p>{outline}</p>
+      </section>
+    )}
+
+    {keyWords.length > 0 && (
+      <section class="keywords">
+        <h2>本章關鍵原文字</h2>
+        <p>
+          本章共 {verseCount} 節、{tokenCount} 個原文字。出現頻率較高的關鍵{isHebrew ? '希伯來' : '希臘'}文字（名詞、動詞、形容詞）包括：
+          {keyWords.map((s, i) => (
+            <Fragment>
+              {i > 0 ? '、' : ''}
+              <a href={`${base}/lexicon/${s.st}`}><span lang={langTag} dir={langDir}>{s.lex.lemma}</span>{s.lex.transliteration ? `（${s.lex.transliteration}）` : ''}</a>（{s.count} 次）
+            </Fragment>
+          ))}
+          。點選任一字可查看其字義、詞形分析與在全本聖經的出現分布。
+        </p>
       </section>
     )}
 
@@ -313,6 +348,9 @@ const jsonLd = {
   .cn.cur { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
   .outline { background: var(--color-surface, #f6f1e7); border-left: 4px solid var(--color-primary); padding: 0.8rem 1rem; border-radius: 4px; margin-bottom: 1.2rem; }
   .outline h2 { font-size: var(--font-base); color: var(--color-primary); margin-bottom: 0.4rem; }
+  .keywords { margin-bottom: 1.2rem; padding: 0.4rem 0; }
+  .keywords h2 { font-size: var(--font-base); color: var(--color-primary); margin-bottom: 0.4rem; }
+  .keywords p { line-height: 2; }
   .meditation { background: var(--color-surface-hover, #efe8da); border-left: 4px solid var(--color-recovery, #8a6d3b); padding: 0.8rem 1rem; border-radius: 4px; margin-bottom: 1.2rem; }
   .meditation h2 { font-size: var(--font-base); color: var(--color-recovery, #8a6d3b); margin-bottom: 0.4rem; }
   .meditation p { line-height: 1.9; }
