@@ -6,6 +6,16 @@ import { normalizeStrongs } from '@/lib/strongs';
 // 不可只掃 bookTokenCache（剛進站時為空，會導致搜尋「沒反應」）。
 const ALL_BOOKS: string[] = (bookMap as { osis: string }[]).map((b) => b.osis);
 
+// 原文寬鬆比對：去除希伯來母音點/重音（U+0591–U+05C7）與希臘重音/氣號（NFD 後的組合符
+// U+0300–U+036F），以及詞綴分隔「/」與空白，轉小寫。讓使用者帶不帶這些符號都能命中。
+export function foldOriginal(s: string): string {
+  return (s || '')
+    .normalize('NFD')
+    .replace(/[֑-ׇ̀-ͯ]/g, '')
+    .replace(/[/\s]/g, '')
+    .toLowerCase();
+}
+
 export interface Token {
   verse_ref: string;
   token_order: number;
@@ -185,13 +195,17 @@ export function lookupStrongs(rawId: string): LexiconEntry | null {
 
 export async function lookupWord(query: string, book?: string): Promise<Token[]> {
   const q = query.trim();
+  const fq = foldOriginal(q);          // 寬鬆比對鍵（忽略母音點/重音）
+  const tq = q.toLowerCase();          // 音譯（拉丁字母）比對
   const books = book ? [book] : ALL_BOOKS;
   const results: Token[] = [];
   for (const b of books) {
     const tokens = await loadBookTokens(b);
     results.push(...tokens.filter((t) =>
-      t.surface_form === q || t.normalized_form === q ||
-      t.lemma === q || t.pronunciation_transliteration === q
+      foldOriginal(t.surface_form) === fq ||
+      foldOriginal(t.normalized_form) === fq ||
+      foldOriginal(t.lemma) === fq ||
+      (t.pronunciation_transliteration || '').toLowerCase() === tq
     ));
     if (results.length >= 80) break;
   }
@@ -201,11 +215,12 @@ export async function lookupWord(query: string, book?: string): Promise<Token[]>
 }
 
 export async function lookupLemma(lemma: string, book?: string): Promise<Token[]> {
+  const fq = foldOriginal(lemma.trim());   // 寬鬆比對（忽略母音點/重音）
   const books = book ? [book] : ALL_BOOKS;
   const results: Token[] = [];
   for (const b of books) {
     const tokens = await loadBookTokens(b);
-    results.push(...tokens.filter((t) => t.lemma === lemma));
+    results.push(...tokens.filter((t) => foldOriginal(t.lemma) === fq));
     if (results.length >= 80) break;
   }
   return results

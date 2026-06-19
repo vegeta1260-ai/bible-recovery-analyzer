@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { getVerseTokens, lookupStrongs, lookupWord, lookupLemma, loadBookTokens } from '@/lib/analyzer';
+import { getVerseTokens, lookupStrongs, lookupWord, lookupLemma, loadBookTokens, foldOriginal } from '@/lib/analyzer';
 
 // Pre-load test books so async tests work against real data
 beforeAll(async () => {
@@ -33,6 +33,20 @@ describe('lookupStrongs', () => {
     const entry = lookupStrongs('G0001');
     expect(entry).not.toBeNull();
     expect(entry!.strongs).toBe('G1');
+  });
+});
+
+describe('foldOriginal（原文寬鬆比對：忽略母音點/重音）', () => {
+  it('希伯來文帶母音點與無點折疊相同', () => {
+    expect(foldOriginal('בָּרָא')).toBe(foldOriginal('ברא'));
+    expect(foldOriginal('אֱלֹהִים')).toBe(foldOriginal('אלהים'));
+  });
+  it('去除詞綴分隔「/」與重音', () => {
+    expect(foldOriginal('בְּ/רֵאשִׁ֖ית')).toBe(foldOriginal('בראשית'));
+  });
+  it('希臘文帶重音與無重音折疊相同', () => {
+    expect(foldOriginal('θεός')).toBe(foldOriginal('θεος'));
+    expect(foldOriginal('λόγος')).toBe(foldOriginal('ΛΟΓΟΣ'.toLowerCase()));
   });
 });
 
