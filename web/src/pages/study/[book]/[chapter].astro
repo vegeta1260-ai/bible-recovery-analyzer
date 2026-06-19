@@ -163,6 +163,8 @@ const jsonLd = {
       isPartOf: { '@type': 'Book', name: `${bookZh}（${bookEn}）` },
       url: pageUrl,
       mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+      // Speakable：標記本章自然語言內容（導言 + 概要）供語音／answer engine 朗讀摘要。
+      speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.lede', '.outline'] },
       image: `${siteUrl}${base}/og/${osis}.png`,
       datePublished,
       dateModified,

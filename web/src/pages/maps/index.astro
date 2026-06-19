@@ -28,8 +28,8 @@ const holylandPlaces: Place[] = [
 ];
 
 const oldMaps = [
-  { src: `${base}/maps/exodus-sinai-1873.jpg`, title: '西奈半島（1873）', alt: '1873 年西奈半島古地圖' },
-  { src: `${base}/maps/paul-journeys-1873.jpg`, title: '希伯來人所知的世界（1873）', alt: '1873 年古地圖：希伯來人所知的世界' },
+  { src: `${base}/maps/exodus-sinai-1873.jpg`, title: '西奈半島（1873）', alt: '1873 年西奈半島古地圖', width: 1766, height: 2118 },
+  { src: `${base}/maps/paul-journeys-1873.jpg`, title: '希伯來人所知的世界（1873）', alt: '1873 年古地圖：希伯來人所知的世界', width: 2371, height: 1741 },
 ];
 ---
 
@@ -54,7 +54,7 @@ const oldMaps = [
       {oldMaps.map((m) => (
         <figure class="map-fig">
           <h3>{m.title}</h3>
-          <a href={m.src} target="_blank" rel="noopener"><img src={m.src} alt={m.alt} loading="lazy" /></a>
+          <a href={m.src} target="_blank" rel="noopener"><img src={m.src} alt={m.alt} width={m.width} height={m.height} loading="lazy" /></a>
         </figure>
       ))}
     </div>

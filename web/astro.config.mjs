@@ -16,6 +16,8 @@ export default defineConfig({
     sitemap({
       serialize(item) {
         const url = item.url;
+        // lastmod = 本次部署日：靜態頁每次 deploy 皆重新產生，屬實；給爬蟲新鮮度訊號。
+        item.lastmod = new Date().toISOString();
         if (/\/bible-recovery-analyzer\/?$/.test(url)) {
           item.priority = 1.0;
           item.changefreq = 'weekly';

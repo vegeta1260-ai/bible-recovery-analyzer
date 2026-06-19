@@ -172,7 +172,16 @@ echo ""
 
 echo "[6] Lexicon 頁面 SEO"
 check_grep "G1 JSON-LD" "lexicon/G1/index.html" "DefinedTerm"
+check_grep "G1 BreadcrumbList" "lexicon/G1/index.html" "BreadcrumbList"
 check_grep "G1 lang=grc" "lexicon/G1/index.html" 'lang="grc"'
+echo ""
+
+echo "[6b] AEO/GEO 補強（llms.txt / 404 / speakable / 地圖 CLS）"
+check_file "llms.txt" "llms.txt"
+check_file "自訂 404 頁" "404.html"
+check_grep "404 noindex" "404.html" 'name="robots" content="noindex'
+check_grep "逐章頁 speakable" "study/John/3/index.html" "SpeakableSpecification"
+check_grep "地圖 img 含 width/height（防 CLS）" "maps/index.html" 'width="1766"'
 echo ""
 
 echo "[7] 導覽連結含正確 base path"
@@ -200,6 +209,7 @@ check_file "robots.txt" "robots.txt"
 check_grep "robots 指向 sitemap" "robots.txt" "Sitemap:"
 check_file "sitemap-index.xml" "sitemap-index.xml"
 check_file "sitemap-0.xml" "sitemap-0.xml"
+check_grep "sitemap 含 lastmod" "sitemap-0.xml" "<lastmod>"
 check_grep "sitemap 含 lexicon 頁" "sitemap-0.xml" "lexicon/G1"
 SITEMAP_URLS=$(grep -o "<loc>" "$DIST/sitemap-0.xml" 2>/dev/null | wc -l | tr -d ' ')
 check_min "sitemap URL 總數" "${SITEMAP_URLS:-0}" 15000
