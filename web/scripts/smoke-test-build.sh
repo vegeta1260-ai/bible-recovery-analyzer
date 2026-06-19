@@ -170,6 +170,13 @@ check_grep "FAQPage schema" "faq/index.html" '"FAQPage"'
 check_grep "FAQ Question 條目" "faq/index.html" '"Question"'
 echo ""
 
+echo "[5c] About 頁（E-E-A-T）"
+check_file "About 頁" "about/index.html"
+check_grep "AboutPage schema" "about/index.html" '"AboutPage"'
+check_grep "About 非官方聲明" "about/index.html" "非"
+check_grep "頁尾連 about" "index.html" 'href="/bible-recovery-analyzer/about"'
+echo ""
+
 echo "[6] Lexicon 頁面 SEO"
 check_grep "G1 JSON-LD" "lexicon/G1/index.html" "DefinedTerm"
 check_grep "G1 BreadcrumbList" "lexicon/G1/index.html" "BreadcrumbList"

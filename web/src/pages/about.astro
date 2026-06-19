@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
+const orgId = `${siteUrl}${base}/#organization`;
+
+// AboutPage schema：提供 E-E-A-T 信任訊號與來源歸因，並 $ref 全站 Organization 實體。
+const aboutLd = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: '關於本站',
+  url: `${siteUrl}${base}/about`,
+  inLanguage: 'zh-Hant',
+  about: { '@id': orgId },
+  publisher: { '@id': orgId },
+};
+---
+<BaseLayout
+  title="關於本站"
+  description="聖經原文解析的資料來源、編輯方法、與恢復本（LSM）的授權關係，以及內容使用須知。"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(aboutLd)} />
+
+  <nav class="crumb" aria-label="breadcrumb">
+    <a href={`${base}/`}>首頁</a> › <span>關於本站</span>
+  </nav>
+
+  <article class="about">
+    <h1>關於本站</h1>
+    <p class="lede">聖經原文解析是一個免費的研經工具，把聖經希伯來文、希臘文原文逐字解析，與恢復本（Recovery Version）中文經文對照在一起，協助讀者親自查考原文。</p>
+
+    <h2>我們提供什麼</h2>
+    <p>
+      涵蓋新舊約全 66 卷、共 1,189 章。每一章有獨立的研經頁，呈現原文逐字對照、本章概要與恢復本經文對照；
+      每個原文字都附 <strong>Strong's 編號</strong>、字典原形（lemma）與<strong>詞形分析碼</strong>，
+      並可在收錄 14,197 條目的<a href={`${base}/lexicon`}>原文字典</a>中追蹤同一個字在全本聖經的出現分布。
+    </p>
+
+    <h2>資料來源</h2>
+    <ul>
+      <li><strong>舊約原文</strong>：OSHB（Open Scriptures Hebrew Bible）／WLC（Westminster Leningrad Codex），開放授權。</li>
+      <li><strong>新約原文</strong>：SBLGNT 與 MorphGNT 的詞形標註，開放授權。</li>
+      <li><strong>恢復本經文</strong>：水流職事站（Living Stream Ministry, LSM）出版，屬 LSM 版權，透過官方 API 即時取得，本站不離線散布。</li>
+      <li><strong>地圖</strong>：Wikimedia Commons 公共領域古地圖（1853 Mitchell、1873 等），中文地名為對照標註、位置為近似標示。</li>
+    </ul>
+
+    <h2>編輯方法</h2>
+    <p>
+      原文逐字資料由上述開放授權底本經程式化處理（ETL）產生，包含 token 切分、Strong's 對應與詞形分析碼展開。
+      由於原文（OSHB／MorphGNT）與恢復本的分章分節慣例不同，本站對章節邊界做了系統化的重對映，
+      使逐章頁的原文與恢復本經文能正確對齊。字典的「出現於」章節索引由原文 token 反查生成。
+    </p>
+
+    <h2>與恢復本／LSM 的關係</h2>
+    <p>
+      本站是<strong>獨立的研經輔助工具，並非水流職事站（LSM）的官方網站，也不代表 LSM 的立場</strong>。
+      「恢復本」與「LSM」為其各自權利人之名稱與商標；恢復本經文依其官方授權規範使用。
+      若你需要購買或引用恢復本，請以 LSM 官方出版品為準。
+    </p>
+    <p class="note">
+      補充：LSM 指 Living Stream Ministry（水流職事站），是聖經出版機構，與人工智慧或語言模型（LLM）無關。
+    </p>
+
+    <h2>使用須知</h2>
+    <ul>
+      <li>恢復本經文有版權，請勿從本站擷取後再散布；引用時請註明出處並依官方授權規範。</li>
+      <li>原文字義、詞形與地名位置為研讀輔助，可能存在誤差，重要結論請對照權威工具書核實。</li>
+      <li>更多操作與名詞說明見<a href={`${base}/faq`}>常見問題</a>。</li>
+    </ul>
+  </article>
+</BaseLayout>
+
+<style>
+  .crumb { margin: 1.5rem 0 0.5rem; font-size: var(--font-sm); color: var(--color-text-muted); }
+  .about { max-width: 760px; }
+  .about h1 { font-size: var(--font-2xl); margin-top: 0.5rem; }
+  .about .lede { color: var(--color-text-secondary); font-size: var(--font-lg); margin: 0.5rem 0 2rem; line-height: 1.8; }
+  .about h2 { font-size: var(--font-xl); margin: 2rem 0 0.8rem; }
+  .about p { line-height: 1.9; margin-bottom: 1rem; }
+  .about ul { padding-left: 1.4rem; line-height: 1.9; margin-bottom: 1rem; }
+  .about li { margin-bottom: 0.5rem; }
+  .about .note { font-size: var(--font-sm); color: var(--color-text-muted); }
+</style>
