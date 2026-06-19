@@ -13,6 +13,7 @@ import PassageResult from './PassageResult';
 
 const LemmaFrequencyChart = lazy(() => import('./LemmaFrequencyChart'));
 const AnalyticalCodePie = lazy(() => import('./AnalyticalCodePie'));
+const RelatedVersesNetwork = lazy(() => import('./RelatedVersesNetwork'));
 
 type SearchMode = 'verse' | 'word' | 'lemma' | 'search' | 'morphology';
 
@@ -137,6 +138,11 @@ export default function SearchBox() {
     () => [...tokenResults, ...verseResults.flatMap((v) => v.tokens)],
     [tokenResults, verseResults],
   );
+  // 相關經節網絡需跨多節經文才有邊；統計結果涵蓋的相異經節數。
+  const chartVerseCount = useMemo(
+    () => new Set(chartTokens.map((t) => t.verse_ref).filter(Boolean)).size,
+    [chartTokens],
+  );
 
   return (
     <div className="search-box-container">
@@ -255,6 +261,15 @@ export default function SearchBox() {
               <AnalyticalCodePie tokens={chartTokens} />
             </Suspense>
           </div>
+        </div>
+      )}
+
+      {/* 相關經節網絡：結果跨 ≥2 節經文時才有共享 Lemma 的連線可畫。 */}
+      {chartVerseCount >= 2 && (
+        <div className="card" style={{ padding: '1rem', marginTop: '1.5rem' }}>
+          <Suspense fallback={<div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B6914' }}>載入圖表中...</div>}>
+            <RelatedVersesNetwork tokens={chartTokens} />
+          </Suspense>
         </div>
       )}
     </div>

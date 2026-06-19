@@ -28,10 +28,22 @@ export default function RelatedVersesNetwork({ tokens }: { tokens: Token[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { nodes, links } = useMemo(() => {
-    // Build map: lemma -> Set of verse_refs
+    // 安全上限：避免結果跨大量經文時，O(節點²) 連線把瀏覽器卡死。
+    const MAX_VERSES = 40;       // 只取前 N 節經文進網絡
+    const MAX_LEMMA_VERSES = 12; // 出現在過多節的 lemma（多為虛詞）跳過，省去稠密噪音邊
+    const MAX_LINKS = 1500;      // 連線總數硬上限
+
+    // 取結果中出現順序的前 MAX_VERSES 節相異經文
+    const allowedVerses = new Set<string>();
+    for (const t of tokens) {
+      if (t.verse_ref) allowedVerses.add(t.verse_ref);
+      if (allowedVerses.size >= MAX_VERSES) break;
+    }
+
+    // Build map: lemma -> Set of verse_refs（僅限 allowedVerses）
     const lemmaToVerses = new Map<string, Set<string>>();
     for (const t of tokens) {
-      if (!t.lemma || !t.verse_ref) continue;
+      if (!t.lemma || !t.verse_ref || !allowedVerses.has(t.verse_ref)) continue;
       if (!lemmaToVerses.has(t.lemma)) lemmaToVerses.set(t.lemma, new Set());
       lemmaToVerses.get(t.lemma)!.add(t.verse_ref);
     }
@@ -41,20 +53,19 @@ export default function RelatedVersesNetwork({ tokens }: { tokens: Token[] }) {
 
     for (const [lemma, verses] of lemmaToVerses.entries()) {
       const verseArr = Array.from(verses);
-      if (verseArr.length < 2) continue; // need at least 2 to form an edge
-      for (let i = 0; i < verseArr.length; i++) {
+      if (verseArr.length < 2 || verseArr.length > MAX_LEMMA_VERSES) continue; // 需 ≥2 才成邊；過多則跳過
+      for (let i = 0; i < verseArr.length && linkList.length < MAX_LINKS; i++) {
         nodeSet.add(verseArr[i]);
-        for (let j = i + 1; j < verseArr.length; j++) {
+        for (let j = i + 1; j < verseArr.length && linkList.length < MAX_LINKS; j++) {
           nodeSet.add(verseArr[j]);
           linkList.push({ source: verseArr[i], target: verseArr[j], lemma });
         }
       }
     }
 
-    // If no links, add all unique verse_refs as nodes (no edges)
+    // 無連線時，至少把（受限的）經節列為節點
     if (nodeSet.size === 0) {
-      const uniqueVerses = Array.from(new Set(tokens.map(t => t.verse_ref).filter(Boolean)));
-      uniqueVerses.forEach(v => nodeSet.add(v));
+      allowedVerses.forEach(v => nodeSet.add(v));
     }
 
     const nodeList: Node[] = Array.from(nodeSet).map(id => ({ id }));
