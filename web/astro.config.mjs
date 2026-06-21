@@ -7,8 +7,8 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  site: 'https://vegeta1260-ai.github.io',
-  base: '/bible-recovery-analyzer',
+  site: 'https://bible.weiqi.kids',
+  base: '/',
   integrations: [
     react(),
     // sitemap 權重分級：全站 ~15k URL 中，逐章研經頁與首頁是高價值內容，
@@ -18,7 +18,7 @@ export default defineConfig({
         const url = item.url;
         // lastmod = 本次部署日：靜態頁每次 deploy 皆重新產生，屬實；給爬蟲新鮮度訊號。
         item.lastmod = new Date().toISOString();
-        if (/\/bible-recovery-analyzer\/?$/.test(url)) {
+        if (/^https?:\/\/[^/]+\/?$/.test(url)) {
           item.priority = 1.0;
           item.changefreq = 'weekly';
         } else if (url.includes('/study/')) {

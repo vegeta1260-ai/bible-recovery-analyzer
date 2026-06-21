@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 部署後煙霧測試 — 驗證 gh-pages 上線後所有關鍵功能正常
+# 部署後煙霧測試 — 驗證上線後所有關鍵功能正常
 # 用法: bash web/scripts/smoke-test-deployed.sh [base_url]
 
 set -euo pipefail
 
-BASE="${1:-https://vegeta1260-ai.github.io/bible-recovery-analyzer}"
+BASE="${1:-https://bible.weiqi.kids}"
 PASS=0
 FAIL=0
 
@@ -98,9 +98,9 @@ check "AudioController JS 存在" "$BASE/" "AudioController"
 echo ""
 
 echo "[8] 導覽連結"
-check "study 連結正確" "$BASE/" 'href=\"/bible-recovery-analyzer/study\"'
-check "books 連結正確" "$BASE/" 'href=\"/bible-recovery-analyzer/books\"'
-check "lexicon 連結正確" "$BASE/" 'href=\"/bible-recovery-analyzer/lexicon\"'
+check "study 連結正確" "$BASE/" 'href=\"/study\"'
+check "books 連結正確" "$BASE/" 'href=\"/books\"'
+check "lexicon 連結正確" "$BASE/" 'href=\"/lexicon\"'
 echo ""
 
 echo "[9] LSM API (直接測試)"

@@ -1,4 +1,4 @@
-name: Build and Deploy to gh-pages
+name: Build and Deploy to bible.weiqi.kids
 
 on:
   push:
@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: pages
+  group: deploy
   cancel-in-progress: true
 
 jobs:
@@ -44,9 +44,13 @@ jobs:
         run: bash scripts/smoke-test-build.sh
         working-directory: web
 
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: web/dist
-          cname: ''
+      - name: Deploy to host via rsync over SSH
+        # 把 build 產物同步進主機 /opt/static-sites/bible/，由 NPM(nginx) 容器掛載服務。
+        # SSH_PRIVATE_KEY 為 repo secret（對應主機 github 帳號 authorized_keys 的公鑰）。
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key && chmod 600 deploy_key
+          rsync -avz --delete dist/ \
+            -e "ssh -i deploy_key -o StrictHostKeyChecking=no" \
+            github@172.235.205.148:/opt/static-sites/bible/
+          rm -f deploy_key
+        working-directory: web

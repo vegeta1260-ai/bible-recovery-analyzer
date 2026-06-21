@@ -157,7 +157,7 @@ check_grep "twitter:card" "index.html" "twitter:card"
 check_grep "canonical" "index.html" "canonical"
 check_grep "lang=zh-Hant" "index.html" 'lang="zh-Hant"'
 # og:image 必須含 base path（曾漏 base → 分享卡圖 404）
-check_grep "og:image 含 base path" "index.html" 'og:image" content="https://vegeta1260-ai.github.io/bible-recovery-analyzer/'
+check_grep "og:image 絕對網址" "index.html" 'og:image" content="https://bible.weiqi.kids/'
 # robots meta（可被索引）+ 全站 Organization/WebSite schema（AEO/GEO 來源歸因 + sitelinks）
 check_grep "robots meta index" "index.html" 'name="robots" content="index'
 check_grep "Organization schema" "index.html" '"Organization"'
@@ -174,7 +174,7 @@ echo "[5c] About 頁（E-E-A-T）"
 check_file "About 頁" "about/index.html"
 check_grep "AboutPage schema" "about/index.html" '"AboutPage"'
 check_grep "About 非官方聲明" "about/index.html" "非"
-check_grep "頁尾連 about" "index.html" 'href="/bible-recovery-analyzer/about"'
+check_grep "頁尾連 about" "index.html" 'href="/about"'
 echo ""
 
 echo "[6] Lexicon 頁面 SEO"
@@ -182,8 +182,8 @@ check_grep "G1 JSON-LD" "lexicon/G1/index.html" "DefinedTerm"
 check_grep "G1 BreadcrumbList" "lexicon/G1/index.html" "BreadcrumbList"
 check_grep "G1 lang=grc" "lexicon/G1/index.html" 'lang="grc"'
 # 字典頁↔逐章頁互鏈（entity graph）：H7225 出現於 Gen.1，應有連回 /study 的「出現於」連結
-check_grep "字典頁出現章節互鏈(OT)" "lexicon/H7225/index.html" 'href="/bible-recovery-analyzer/study/Gen/1"'
-check_grep "字典頁出現章節互鏈(NT)" "lexicon/G26/index.html" 'href="/bible-recovery-analyzer/study/Matt/24"'
+check_grep "字典頁出現章節互鏈(OT)" "lexicon/H7225/index.html" 'href="/study/Gen/1"'
+check_grep "字典頁出現章節互鏈(NT)" "lexicon/G26/index.html" 'href="/study/Matt/24"'
 check_grep "字典頁出現於標題" "lexicon/H7225/index.html" "出現於"
 # #1 各書卷出現分布（靜態圖取代壞掉的 D3 島）
 check_grep "字典頁出現分布靜態圖" "lexicon/G26/index.html" 'class="dist"'
@@ -196,7 +196,7 @@ check_grep "browse 頁有分頁器" "lexicon/browse/1/index.html" "下一頁"
 LEX_IDX_KB=$(du -k "$DIST/lexicon/index.html" 2>/dev/null | cut -f1)
 if [ "${LEX_IDX_KB:-9999}" -lt 500 ]; then echo "  PASS  字典索引輕量化 (${LEX_IDX_KB}KB < 500)"; PASS=$((PASS+1)); else echo "  FAIL  字典索引過大 (${LEX_IDX_KB}KB)"; FAIL=$((FAIL+1)); fi
 # NT token 應已含 Strong's（修正 ETL lemma 欄 + lexicon 反查）；驗逐章頁新約 Strong's 熱點連字典
-check_grep "新約逐章頁 Strong's 熱點" "study/John/3/index.html" 'href="/bible-recovery-analyzer/lexicon/G'
+check_grep "新約逐章頁 Strong's 熱點" "study/John/3/index.html" 'href="/lexicon/G'
 echo ""
 
 echo "[6c] 字型 self-host（去 Google 依賴）"
@@ -232,11 +232,11 @@ check_grep "地圖 img 含 width/height（防 CLS）" "maps/index.html" 'width="
 echo ""
 
 echo "[7] 導覽連結含正確 base path"
-check_grep "書卷卡連書卷 hub(首頁)" "index.html" 'href="/bible-recovery-analyzer/study/John"'
-check_grep "書卷卡連書卷 hub(書卷頁)" "books/index.html" 'href="/bible-recovery-analyzer/study/Gen"'
-check_grep "study 連結" "index.html" 'href="/bible-recovery-analyzer/study"'
-check_grep "books 連結" "index.html" 'href="/bible-recovery-analyzer/books"'
-check_grep "lexicon 連結" "index.html" 'href="/bible-recovery-analyzer/lexicon"'
+check_grep "書卷卡連書卷 hub(首頁)" "index.html" 'href="/study/John"'
+check_grep "書卷卡連書卷 hub(書卷頁)" "books/index.html" 'href="/study/Gen"'
+check_grep "study 連結" "index.html" 'href="/study"'
+check_grep "books 連結" "index.html" 'href="/books"'
+check_grep "lexicon 連結" "index.html" 'href="/lexicon"'
 echo ""
 
 echo "[8] Islands 元件參照"

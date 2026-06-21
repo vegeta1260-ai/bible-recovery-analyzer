@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://vegeta1260-ai.github.io/bible-recovery-analyzer/sitemap-index.xml
+Sitemap: https://bible.weiqi.kids/sitemap-index.xml

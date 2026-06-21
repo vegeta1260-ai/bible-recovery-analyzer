@@ -21,10 +21,10 @@ const {
   noindex = false,
 } = Astro.props;
 const fullTitle = `${title} | 聖經原文解析`;
-const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
+const siteUrl = Astro.site?.origin ?? 'https://bible.weiqi.kids';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const canonical = canonicalUrl ?? `${siteUrl}${Astro.url.pathname}`;
-// og/twitter 圖需含 base path（站在 /bible-recovery-analyzer 子路徑下）。
+// og/twitter 圖需含 base path（base='/' 時為空字串；換回子路徑部署時才有前綴）。
 // ogImage 為 root-relative（如 /og-default.png），缺 base 會 404 → 分享卡無圖。
 const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${base}${ogImage}`;
 

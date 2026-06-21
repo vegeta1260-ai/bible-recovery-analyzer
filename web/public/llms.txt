@@ -11,14 +11,14 @@
 
 ## 主要內容
 
-- [常見問題](/bible-recovery-analyzer/faq): 恢復本、原文資料來源、Strong's、詞形分析碼、使用方式的問答。
-- [關於本站](/bible-recovery-analyzer/about): 資料來源、編輯方法、授權關係（E-E-A-T）。
-- [書卷總覽](/bible-recovery-analyzer/books): 66 卷書入口。
-- [逐章研經](/bible-recovery-analyzer/study/John/3): 每章原文逐字對照、本章概要、恢復本經文對照（共 1,189 章，路徑格式 /study/{書卷OSIS}/{章}）。
-- [原文字典](/bible-recovery-analyzer/lexicon): 14,197 個 Strong's 原文字條目（路徑格式 /lexicon/{Strong's編號，如 G26、H430}）。
-- [分析碼圖例](/bible-recovery-analyzer/legend): 詞形分析碼對照表。
-- [聖經地圖](/bible-recovery-analyzer/maps): 公共領域古地圖疊中文地名。
+- [常見問題](/faq): 恢復本、原文資料來源、Strong's、詞形分析碼、使用方式的問答。
+- [關於本站](/about): 資料來源、編輯方法、授權關係（E-E-A-T）。
+- [書卷總覽](/books): 66 卷書入口。
+- [逐章研經](/study/John/3): 每章原文逐字對照、本章概要、恢復本經文對照（共 1,189 章，路徑格式 /study/{書卷OSIS}/{章}）。
+- [原文字典](/lexicon): 14,197 個 Strong's 原文字條目（路徑格式 /lexicon/{Strong's編號，如 G26、H430}）。
+- [分析碼圖例](/legend): 詞形分析碼對照表。
+- [聖經地圖](/maps): 公共領域古地圖疊中文地名。
 
 ## Sitemap
 
-- https://vegeta1260-ai.github.io/bible-recovery-analyzer/sitemap-index.xml
+- https://bible.weiqi.kids/sitemap-index.xml

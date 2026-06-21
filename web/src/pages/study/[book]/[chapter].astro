@@ -159,7 +159,7 @@ const keywords = (keyWords.length ? keyWords.map((s: any) => s.lex.lemma) : topL
   .slice(0, 4).join('、');
 const pageDesc = `${bookZh}（${bookEn}）第${chapter}章希伯來/希臘文逐字對照，含 Strong's、詞形分析與恢復本經文。本章關鍵原文字：${keywords}。`;
 
-const siteUrl = Astro.site?.origin ?? 'https://vegeta1260-ai.github.io';
+const siteUrl = Astro.site?.origin ?? 'https://bible.weiqi.kids';
 const pageUrl = `${siteUrl}${Astro.url.pathname}`;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const orgId = `${siteUrl}${base}/#organization`;
