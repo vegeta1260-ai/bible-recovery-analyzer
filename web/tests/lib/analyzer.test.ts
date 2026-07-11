@@ -1,40 +1,9 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { getVerseTokens, lookupStrongs, lookupWord, lookupLemma, loadBookTokens, foldOriginal } from '@/lib/analyzer';
+import { describe, it, expect, vi } from 'vitest';
+import { getVerseTokens, lookupWord, lookupLemma, foldOriginal } from '@/lib/analyzer';
 
-// Pre-load test books so async tests work against real data
-beforeAll(async () => {
-  // loadBookTokens will fetch from public/data/tokens/ — in test env it falls back to empty
-  // So we mock the fetch to return data from the JSON files
-});
-
-// Note: getVerseTokens, lookupWord, lookupLemma are now async (they load per-book JSON dynamically)
+// Note: getVerseTokens, lookupWord, lookupLemma are async (they load per-book JSON dynamically)
 // In test environment without a server, they return empty arrays since fetch fails.
-// We test lookupStrongs (sync, uses bundled lexicon.json) and verify async APIs don't throw.
-
-describe('lookupStrongs', () => {
-  it('finds G3056 lexicon entry', () => {
-    const entry = lookupStrongs('G3056');
-    expect(entry).not.toBeNull();
-    expect(entry!.lemma).toBe('λόγος');
-    expect(entry!.language).toBe('Greek');
-  });
-
-  it('finds H430 lexicon entry', () => {
-    const entry = lookupStrongs('H430');
-    expect(entry).not.toBeNull();
-    expect(entry!.language).toBe('Hebrew');
-  });
-
-  it('returns null for unknown ID', () => {
-    expect(lookupStrongs('G99999')).toBeNull();
-  });
-
-  it('normalizes strongs with leading zeros', () => {
-    const entry = lookupStrongs('G0001');
-    expect(entry).not.toBeNull();
-    expect(entry!.strongs).toBe('G1');
-  });
-});
+// We verify async APIs don't throw and test the pure helpers.
 
 describe('foldOriginal（原文寬鬆比對：忽略母音點/重音）', () => {
   it('希伯來文帶母音點與無點折疊相同', () => {

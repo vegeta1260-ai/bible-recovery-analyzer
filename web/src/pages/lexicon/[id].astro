@@ -4,14 +4,13 @@ import lexiconData from '../../data/lexicon.json';
 import occurrences from '../../data/strongs-occurrences.json';
 import bookMap from '../../data/bookMap.json';
 type LexiconEntry = { strongs: string; normalized_strongs: string; lemma: string; language: string; transliteration: string; pronunciation_bopomofo: string; short_definition: string; literal_gloss_en: string; clean_gloss?: string; common_inflections: string[]; analytical_notes: string[]; };
-const entries = lexiconData as LexiconEntry[];
 const occ = occurrences as Record<string, { n: number; ch: string[]; bk: Record<string, number> }>;
 const osisZh: Record<string, string> = Object.fromEntries((bookMap as { osis: string; zh: string }[]).map(b => [b.osis, b.zh]));
 export function getStaticPaths() {
-  return (lexiconData as LexiconEntry[]).map(e => ({ params: { id: e.strongs } }));
+  // props 直接帶 entry：14k 頁若在頁面端 entries.find() 反查會是 O(n²)，明顯拖慢 build
+  return (lexiconData as LexiconEntry[]).map(e => ({ params: { id: e.strongs }, props: { entry: e } }));
 }
-const { id } = Astro.params;
-const entry = entries.find(e => e.strongs === id)!;
+const { entry } = Astro.props as { entry: LexiconEntry };
 const langTag = entry.language === 'Hebrew' ? 'he' : 'grc';
 const langDir = entry.language === 'Hebrew' ? 'rtl' : 'ltr';
 
@@ -67,19 +66,28 @@ const lexLd = {
         <dl>
           <dt>語言</dt><dd>{entry.language}</dd>
           <dt>音譯</dt><dd>{entry.transliteration}</dd>
-          <dt>注音</dt><dd>{entry.pronunciation_bopomofo}</dd>
+          {/* 注音／變形／注記：資料目前全庫皆空，條件渲染避免 14k 頁空殼；未來補上資料即自動顯示 */}
+          {entry.pronunciation_bopomofo && (
+            <Fragment>
+              <dt>注音</dt><dd>{entry.pronunciation_bopomofo}</dd>
+            </Fragment>
+          )}
           <dt>簡義</dt><dd>{cleanGloss}</dd>
           <dt>Strong's 原義</dt><dd class="raw-gloss">{entry.short_definition}</dd>
         </dl>
       </div>
-      <div class="card">
-        <h3>常見變形</h3>
-        <ul>{entry.common_inflections.map(inf => <li class="mono">{inf}</li>)}</ul>
-      </div>
-      <div class="card">
-        <h3>分析注記</h3>
-        <ul>{entry.analytical_notes.map(note => <li>{note}</li>)}</ul>
-      </div>
+      {(entry.common_inflections?.length ?? 0) > 0 && (
+        <div class="card">
+          <h3>常見變形</h3>
+          <ul>{entry.common_inflections.map(inf => <li class="mono">{inf}</li>)}</ul>
+        </div>
+      )}
+      {(entry.analytical_notes?.length ?? 0) > 0 && (
+        <div class="card">
+          <h3>分析注記</h3>
+          <ul>{entry.analytical_notes.map(note => <li>{note}</li>)}</ul>
+        </div>
+      )}
     </div>
   </article>
 

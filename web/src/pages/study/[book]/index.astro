@@ -6,7 +6,7 @@ import bookMap from '../../../data/bookMap.json';
 
 type BookEntry = { osis: string; english: string; zh: string; aliases: string[] };
 
-// 各卷較深概要（用首句當每章 teaser，內容來自既有 chapter-summaries）
+// 各卷較深概要（每章 teaser 取概要前 48 字，內容來自既有 chapter-summaries）
 const summaryFiles = import.meta.glob<{ default: Record<string, string> }>(
   '../../../data/chapter-summaries/*.json',
   { eager: true },

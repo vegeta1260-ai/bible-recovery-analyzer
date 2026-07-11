@@ -1,6 +1,6 @@
 /**
  * Web Audio API procedural sound effects.
- * Three generators: paper turn (noise+bandpass), bell (sine decay), ambient pad (lfo fade).
+ * Two generators: paper turn (noise+bandpass), bell (sine decay).
  * All effects are no-ops when AudioContext is unavailable (SSR/test environments).
  */
 
@@ -86,52 +86,4 @@ export function playBell(frequency = 528): void {
   osc2.start(now);
   osc.stop(now + 2.6);
   osc2.stop(now + 1.3);
-}
-
-let _padGain: GainNode | null = null;
-let _padOsc: OscillatorNode | null = null;
-
-/** Low frequency oscillator with slow gain fade — ambient drone/pad. */
-export function playAmbientPad(on: boolean): void {
-  const ctx = getCtx();
-  if (!ctx) return;
-
-  if (on) {
-    if (_padOsc) return; // already running
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = 110;
-
-    const lfo = ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.value = 0.1;
-
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 4;
-
-    const gain = ctx.createGain();
-    const now = ctx.currentTime;
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.06, now + 3);
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    lfo.start(now);
-    osc.start(now);
-
-    _padOsc = osc;
-    _padGain = gain;
-  } else {
-    if (!_padOsc || !_padGain) return;
-    const ctx2 = getCtx();
-    if (!ctx2) return;
-    const now = ctx2.currentTime;
-    _padGain.gain.linearRampToValueAtTime(0, now + 2);
-    _padOsc.stop(now + 2.1);
-    _padOsc = null;
-    _padGain = null;
-  }
 }

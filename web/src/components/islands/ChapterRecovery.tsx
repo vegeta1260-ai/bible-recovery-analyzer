@@ -13,6 +13,16 @@ interface Props {
   chapter: number;
 }
 
+/** API 回傳經文屬外部輸入，插入 innerHTML 前必須轉義（XSS 防護） */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * 取整章恢復本經文，runtime 填入各節靜態 slot（漸進增強）。
  * 恢復本為 LSM 版權、不離線打包；靜態頁只放公版原文，恢復本由此 island 疊上。
@@ -32,16 +42,16 @@ export default function ChapterRecovery({ chapterRef, slotPrefix, osis, chapter 
         const m = v.ref.match(/:(\d+)/) ?? v.ref.match(/(\d+)\s*$/);
         if (!m) continue;
         // 英文上、中文下（中文以 secondary 色區隔兩行）
-        const en = v.textEn ? `<span class="rec-en">${v.textEn}</span>` : '';
-        const html = `<strong>恢復本：</strong>${en}<span class="rec-zh">${v.text}</span>`;
+        const en = v.textEn ? `<span class="rec-en">${escapeHtml(v.textEn)}</span>` : '';
+        const html = `<strong>恢復本：</strong>${en}<span class="rec-zh">${escapeHtml(v.text)}</span>`;
         // 把恢復本節號轉成正確的原文 slot（詩篇題注 offset、3John 末節合併、新約章末多節等）
         for (const slot of recoveryVerseToOrigSlots(osis, chapter, Number(m[1]))) {
           const el = document.getElementById(`${slotPrefix}${slot}`);
           if (!el) continue;
           if (el.dataset.recFilled) {
             // 多個恢復本節對同一原文 slot（如希臘長句拆兩節、頌讚併入）→ 附加，不覆蓋
-            const en2 = v.textEn ? ` <span class="rec-en">${v.textEn}</span>` : '';
-            el.innerHTML += `${en2}<span class="rec-zh"> ${v.text}</span>`;
+            const en2 = v.textEn ? ` <span class="rec-en">${escapeHtml(v.textEn)}</span>` : '';
+            el.innerHTML += `${en2}<span class="rec-zh"> ${escapeHtml(v.text)}</span>`;
           } else {
             el.innerHTML = html;
             el.dataset.recFilled = '1';

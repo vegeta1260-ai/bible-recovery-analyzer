@@ -12,6 +12,7 @@
 import json
 import glob
 import os
+import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOKENS_DIR = os.path.join(ROOT, "public", "data", "tokens")
@@ -25,7 +26,15 @@ counts = {}          # strongs -> 總出現次數
 chapters = {}        # strongs -> set of "Osis.ch"
 book_counts = {}     # strongs -> {Osis: 次數}（供字典頁靜態繪「各書卷出現分布」）
 
-for fp in sorted(glob.glob(os.path.join(TOKENS_DIR, "*.json"))):
+token_files = sorted(glob.glob(os.path.join(TOKENS_DIR, "*.json")))
+
+# key-style 防呆：長 key token（未經 compress-tokens.py）沒有 'st'/'r'，會把索引覆寫成 {}
+if token_files:
+    _first = json.load(open(token_files[0], encoding="utf-8"))
+    if _first and "verse_ref" in _first[0]:
+        sys.exit(f"錯誤：{os.path.basename(token_files[0])} 為長 key token（含 verse_ref），請先跑 compress-tokens.py 再執行本腳本")
+
+for fp in token_files:
     for t in json.load(open(fp, encoding="utf-8")):
         st = t.get("st")
         ref = t.get("r")
@@ -53,6 +62,11 @@ for st in counts:
     # 各書卷出現次數，依正典書序排序
     bk_sorted = dict(sorted(book_counts[st].items(), key=lambda kv: book_order.get(kv[0], 999)))
     out[st] = {"n": counts[st], "ch": ch_sorted, "bk": bk_sorted}
+
+# 最低筆數 sanity：正常約 1.4 萬個 Strong's；異常低代表 token 內容有問題（如「筆數對但全 null」事故），
+# 拒寫以免把現有索引覆寫壞
+if len(out) < 10000:
+    sys.exit(f"錯誤：僅產出 {len(out)} 個 Strong's（<10000），輸入 token 可疑，拒絕覆寫 {os.path.relpath(OUT, ROOT)}")
 
 json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 

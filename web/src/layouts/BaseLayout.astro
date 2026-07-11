@@ -102,11 +102,9 @@ const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
          以正常 stylesheet 載入（同源、僅 @font-face、gzip 後小）：讓 font-display:optional 有套用窗口，
          字型未及時則用系統 fallback 且「不再 swap」→ 消除字型重排造成的 CLS。 -->
     <link rel="stylesheet" href={`${base}/fonts/fonts.css`} />
-  </head>
-  <body>
-    <Header />
-    <main class="container"><slot /></main>
-    <Footer />
+
+    <!-- 主題/字級初始化必須在 <head> 同步執行（首屏繪製前設好 data-theme），
+         放 </body> 前的話大章頁深色模式會先閃白。 -->
     <script is:inline>
       (function() {
         var theme = localStorage.getItem('theme');
@@ -117,6 +115,13 @@ const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
         if (scale) document.documentElement.setAttribute('data-font-scale', scale);
       })();
     </script>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">跳至主要內容</a>
+    <Header />
+    {/* tabindex=-1 讓 skip link 觸發後鍵盤焦點真正落在主內容（純錨點只捲動不移焦） */}
+    <main id="main" class="container" tabindex="-1"><slot /></main>
+    <Footer />
     {cfBeaconToken && (
       <script
         is:inline

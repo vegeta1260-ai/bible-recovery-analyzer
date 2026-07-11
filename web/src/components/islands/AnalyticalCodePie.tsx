@@ -106,7 +106,8 @@ export default function AnalyticalCodePie({ tokens }: { tokens: Token[] }) {
       .attr('class', 'slice')
       .attr('d', arc)
       .attr('fill', d => colorScale(d.data.pos))
-      .attr('stroke', '#fff')
+      // 分隔線模擬「縫隙露出頁面底色」，須跟主題底色走
+      .style('stroke', 'var(--color-bg)')
       .attr('stroke-width', 2)
       .style('cursor', 'pointer');
 
@@ -134,7 +135,8 @@ export default function AnalyticalCodePie({ tokens }: { tokens: Token[] }) {
       .attr('transform', d => `translate(${labelArc.centroid(d)})`)
       .attr('text-anchor', 'middle')
       .attr('font-size', '11px')
-      .attr('fill', '#3a2810')
+      // 主題色一律走 style 而非 attr：SVG presentation attribute 不支援 var()
+      .style('fill', 'var(--color-text)')
       .text(d => LABEL_MAP[d.data.pos] ?? d.data.pos);
 
     // Center text
@@ -143,14 +145,14 @@ export default function AnalyticalCodePie({ tokens }: { tokens: Token[] }) {
       .attr('dy', '-0.2em')
       .attr('font-size', '18px')
       .attr('font-weight', 'bold')
-      .attr('fill', '#8B4513')
+      .style('fill', 'var(--color-primary)')
       .text(total);
 
     g.append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '1.1em')
       .attr('font-size', '11px')
-      .attr('fill', '#8B6914')
+      .style('fill', 'var(--color-text-muted)')
       .text('總 tokens');
 
     return () => {
@@ -160,7 +162,7 @@ export default function AnalyticalCodePie({ tokens }: { tokens: Token[] }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h3 style={{ color: '#8B4513', marginBottom: '0.5rem', fontSize: '1rem', alignSelf: 'flex-start' }}>
+      <h3 style={{ color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1rem', alignSelf: 'flex-start' }}>
         詞性分佈
       </h3>
       <svg ref={svgRef} style={{ display: 'block' }} />

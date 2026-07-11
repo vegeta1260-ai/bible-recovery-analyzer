@@ -2,9 +2,16 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import path from 'path';
+import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// 內容真實最後變更日（git commit 日，由 scripts/build-lastmod.mjs 產生並 commit）。
+// 資料檔變更後須重跑該腳本，否則 sitemap lastmod 會停在舊日期。
+const lastmod = JSON.parse(
+  readFileSync(path.resolve(__dirname, 'src/data/lastmod.json'), 'utf-8'),
+);
 
 export default defineConfig({
   site: 'https://bible.weiqi.kids',
@@ -16,8 +23,16 @@ export default defineConfig({
     sitemap({
       serialize(item) {
         const url = item.url;
-        // lastmod = 本次部署日：靜態頁每次 deploy 皆重新產生，屬實；給爬蟲新鮮度訊號。
-        item.lastmod = new Date().toISOString();
+        // lastmod = 內容來源檔的 git 最後 commit 日（非 build 日）：
+        // 全站假更新會讓 Google 折價 lastmod，改用真實日期才保得住重爬訊號。
+        const studyMatch = url.match(/\/study\/([^/]+)\//);
+        if (studyMatch && lastmod.books[studyMatch[1]]) {
+          item.lastmod = lastmod.books[studyMatch[1]];
+        } else if (url.includes('/lexicon')) {
+          item.lastmod = lastmod.lexicon;
+        } else {
+          item.lastmod = lastmod.site;
+        }
         if (/^https?:\/\/[^/]+\/?$/.test(url)) {
           item.priority = 1.0;
           item.changefreq = 'weekly';

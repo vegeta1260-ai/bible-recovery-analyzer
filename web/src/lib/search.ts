@@ -1,4 +1,4 @@
-import { loadBookTokens, type Token } from '@/lib/analyzer';
+import { scanBooks, type Token } from '@/lib/analyzer';
 import bookMapData from '@/data/bookMap.json';
 
 type BookEntry = { osis: string };
@@ -11,21 +11,18 @@ export interface SearchResult {
   matchedStrongs: string[];
 }
 
-export async function search(query: string, book?: string): Promise<SearchResult> {
+export async function search(
+  query: string,
+  book?: string,
+  onProgress?: (scanned: number, total: number) => void,
+): Promise<SearchResult> {
   const q = query.trim();
   const qUpper = q.toUpperCase();
   const booksToSearch = book ? [book] : allBooks;
   const matched: Token[] = [];
 
-  for (const b of booksToSearch) {
-    let tokens: Token[];
-    try {
-      tokens = await loadBookTokens(b);
-    } catch {
-      continue;
-    }
-    if (tokens.length === 0) continue;
-
+  // 有限並行掃卷（上限 4），滿 500 筆即不再排新卷
+  await scanBooks(booksToSearch, (tokens) => {
     for (const t of tokens) {
       if (
         t.verse_ref.includes(q) || t.surface_form.includes(q) ||
@@ -35,8 +32,8 @@ export async function search(query: string, book?: string): Promise<SearchResult
         matched.push(t);
       }
     }
-    if (matched.length >= 500) break;
-  }
+    return matched.length >= 500;
+  }, onProgress);
 
   const refs = [...new Set(matched.map((t) => t.verse_ref))].sort().slice(0, 100);
   const matchedLemmas = [...new Set(matched.map((t) => t.lemma))].sort().slice(0, 100);

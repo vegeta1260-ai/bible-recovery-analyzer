@@ -7,6 +7,7 @@ import path from 'node:path';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import bookMap from '../../../data/bookMap.json';
 import lexiconData from '../../../data/lexicon.json';
+import lastmod from '../../../data/lastmod.json';
 import ChapterRecovery from '../../../components/islands/ChapterRecovery.tsx';
 import ChapterReadAloud from '../../../components/islands/ChapterReadAloud.tsx';
 import ChapterMusic from '../../../components/islands/ChapterMusic.tsx';
@@ -16,14 +17,13 @@ type BookEntry = { osis: string; english: string; zh: string; aliases: string[] 
 // 壓縮 token 的短 key（見 scripts/compress-tokens.py / lib/analyzer.ts）
 type CToken = { r: string; o: number; s: string; l: string; ac?: string; pos?: string; st?: string; ge?: string; tr?: string };
 
-// 較深的逐章概要（~250 字，LLM 逐章生成；有就優先用於「本章概要」）
+// 新約 27 卷 OSIS（與 hub 頁 / BookGrid 同一份清單）：據此判定原文語言，
+// 不再從 token 的 Strong's 前綴推斷（token 缺 st 時會誤判）。
+const NT_OSIS = new Set(['Matt','Mark','Luke','John','Acts','Rom','1Cor','2Cor','Gal','Eph','Phil','Col','1Thess','2Thess','1Tim','2Tim','Titus','Phlm','Heb','Jas','1Pet','2Pet','1John','2John','3John','Jude','Rev']);
+
+// 逐章概要（~250–400 字，LLM 逐卷生成，66 卷 / 1189 章全覆蓋，用於「本章概要」）
 const summaryFiles = import.meta.glob<{ default: Record<string, string> }>(
   '../../../data/chapter-summaries/*.json',
-  { eager: true },
-);
-// 簡短概要（~100 字，舊版；無較深概要時的退路）
-const outlineFiles = import.meta.glob<{ default: Record<string, string> }>(
-  '../../../data/chapter-outlines/*.json',
   { eager: true },
 );
 // 選填的本章默想/禱讀引導（逐步補齊；沒有就不顯示）
@@ -136,11 +136,9 @@ const chIdx = chapterNums.indexOf(chapter);
 const prevCh = chIdx > 0 ? chapterNums[chIdx - 1] : null;
 const nextCh = chIdx >= 0 && chIdx < chapterNums.length - 1 ? chapterNums[chIdx + 1] : null;
 
-// 選填概要：優先用較深概要，無則退回簡短 outline
+// 本章概要（chapter-summaries 全覆蓋；仍留空字串防呆，缺檔時區塊不渲染）
 const summaryMod = summaryFiles[`../../../data/chapter-summaries/${osis}.json`];
-const deepSummary = summaryMod?.default?.[String(chapter)] ?? '';
-const outlineMod = outlineFiles[`../../../data/chapter-outlines/${osis}.json`];
-const outline = deepSummary || (outlineMod?.default?.[String(chapter)] ?? '');
+const outline = summaryMod?.default?.[String(chapter)] ?? '';
 
 // 選填默想/禱讀引導
 const meditationMod = meditationFiles[`../../../data/chapter-meditations/${osis}.json`];
@@ -149,7 +147,7 @@ const meditation = meditationMod?.default?.[String(chapter)] ?? '';
 // LSM API 可解析的整章引用（書名解析的雷與規則見 lib/lsmApi.ts buildLsmChapterRef）。
 const lsmChapterRef = buildLsmChapterRef(osis, bookEn, chapter, chapterNums.length);
 
-const isHebrew = osis !== '' && strongsHotspots.some((s: any) => s.st?.startsWith('H')) || verses[0]?.tokens?.[0]?.st?.startsWith('H');
+const isHebrew = !NT_OSIS.has(osis);
 const langTag = isHebrew ? 'he' : 'grc';
 const langDir = isHebrew ? 'rtl' : 'ltr';
 
@@ -164,9 +162,10 @@ const pageUrl = `${siteUrl}${Astro.url.pathname}`;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const orgId = `${siteUrl}${base}/#organization`;
 // datePublished：repo 首個 commit 日（內容上線日，誠實固定值）。
-// dateModified：build 日（此頁每次部署皆重新產生，屬實）。
+// dateModified：該卷資料實際最後變更日（git commit 日，data/lastmod.json 供表），
+// 不用 build 日——每次部署都標「今天」等於對搜尋引擎謊報更新。
 const datePublished = '2026-04-22';
-const dateModified = new Date().toISOString().slice(0, 10);
+const dateModified = (lastmod as { books: Record<string, string> }).books[osis] ?? datePublished;
 
 // 逐章 FAQ（FAQPage）：從既有概要與關鍵字衍生，給 answer engine 直接可答的問答（GEO）。
 const faqQ1 = `${bookZh}第${chapter}章在講什麼？`;

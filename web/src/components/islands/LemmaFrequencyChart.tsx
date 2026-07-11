@@ -124,7 +124,8 @@ export default function LemmaFrequencyChart({ tokens }: { tokens: Token[] }) {
       .attr('x', d => xScale(d.count) + 4)
       .attr('y', d => (yScale(d.lemma) ?? 0) + yScale.bandwidth() / 2 + 4)
       .text(d => d.count)
-      .attr('fill', '#5a3e1b')
+      // 主題色一律走 style 而非 attr：SVG presentation attribute 不支援 var()
+      .style('fill', 'var(--color-text-secondary)')
       .attr('font-size', '12px');
 
     // Y axis — lemma labels
@@ -133,16 +134,16 @@ export default function LemmaFrequencyChart({ tokens }: { tokens: Token[] }) {
       .call(axis => axis.select('.domain').remove())
       .selectAll('text')
       .attr('font-size', '13px')
-      .attr('fill', '#3a2810')
+      .style('fill', 'var(--color-text)')
       .attr('dx', '-4');
 
     // X axis
     g.append('g')
       .attr('transform', `translate(0,${lemmaData.length * barHeight})`)
       .call(d3.axisBottom(xScale).ticks(5).tickFormat(d => String(d)))
-      .call(axis => axis.select('.domain').attr('stroke', '#c4a060'))
+      .call(axis => axis.select('.domain').style('stroke', 'var(--color-border)'))
       .selectAll('text')
-      .attr('fill', '#5a3e1b')
+      .style('fill', 'var(--color-text-secondary)')
       .attr('font-size', '11px');
 
     return () => {
@@ -152,7 +153,7 @@ export default function LemmaFrequencyChart({ tokens }: { tokens: Token[] }) {
 
   return (
     <div style={{ width: '100%', overflowX: 'auto' }}>
-      <h3 style={{ color: '#8B4513', marginBottom: '0.5rem', fontSize: '1rem' }}>
+      <h3 style={{ color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1rem' }}>
         Lemma 出現頻率
       </h3>
       <svg ref={svgRef} style={{ display: 'block' }} />

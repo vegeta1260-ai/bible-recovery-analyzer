@@ -4,14 +4,15 @@ import path from 'node:path';
 import bookMap from '@/data/bookMap.json';
 
 // 內容完整性 gate：逐章頁（study/[book]/[chapter]）由 token 動態產 1,189 頁，
-// 每頁疊上「本章概要」與「默想·禱讀」。這兩份資料是逐章補齊的，容易漏章或留空，
+// 每頁疊上「本章概要」（chapter-summaries，LLM 生成較深概要；舊 chapter-outlines 已刪除）
+// 與「默想·禱讀」（chapter-meditations）。這兩份資料是逐章補齊的，容易漏章或留空，
 // 故在此把「66 卷每一章都有非空概要與默想」固化成 CI gate，防止未來退化。
 // 章數權威來源 = token（與 getStaticPaths 同源），不硬編，避免兩處數字漂移。
 
 type CToken = { r?: string };
 
 const tokensDir = path.join(process.cwd(), 'public', 'data', 'tokens');
-const outlineDir = path.join(process.cwd(), 'src', 'data', 'chapter-outlines');
+const summaryDir = path.join(process.cwd(), 'src', 'data', 'chapter-summaries');
 const meditationDir = path.join(process.cwd(), 'src', 'data', 'chapter-meditations');
 
 /** 由 token 的 verse_ref（"Book.Chapter.Verse"）算出該卷最大章號。0 = 無 token 檔。 */
@@ -47,7 +48,7 @@ it('能由 token 解析出 66 卷的章數', () => {
 });
 
 for (const [label, dir] of [
-  ['本章概要', outlineDir],
+  ['本章概要', summaryDir],
   ['默想·禱讀', meditationDir],
 ] as const) {
   describe(`${label} 每章都有非空內容`, () => {

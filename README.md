@@ -6,7 +6,7 @@
 
 | 產品 | 目錄 | 形態 | 服務對象 | 部署 |
 |------|------|------|----------|------|
-| **網頁研經工具** | [`web/`](web/) | Astro 靜態前端（React Islands） | 人（瀏覽器） | GitHub Pages（自動 CI） |
+| **網頁研經工具** | [`web/`](web/) | Astro 靜態前端（React Islands） | 人（瀏覽器） | 自架主機 `bible.weiqi.kids`（CI rsync over SSH） |
 | **GPT Actions API** | [`bible_recovery_analyzer/`](bible_recovery_analyzer/) | FastAPI 服務 | ChatGPT Custom GPT / GPT Actions | 本機 / 自架（目前無 CI） |
 
 > ⚠️ 兩者**不是**前後端關係。網頁前端直接呼叫 LSM API 取恢復本經文，**完全不經過** FastAPI；FastAPI 是另一條給 ChatGPT 呼叫的聚合 API。
@@ -15,7 +15,7 @@
 
 ## 1. 網頁研經工具（`web/`）
 
-純靜態前端，部署於 GitHub Pages。
+純靜態前端，部署於自架主機 `bible.weiqi.kids`。
 
 - **444,339 筆原文 token**（137,554 NT 希臘文 + 306,785 OT 希伯來文），按書卷動態載入 + IndexedDB 快取
 - **14,197 筆 Strong's 字典**，每筆獨立頁面含 JSON-LD
@@ -24,14 +24,14 @@
 - 恢復本經文由前端直接呼叫 LSM API（Basic auth，CORS OK）
 - 視覺特效 + 環境音樂 + OKLCH 暖色系 + 響應式 + 深色模式 + SEO/AEO 預渲染（15,392 頁 + sitemap）
 
-線上網址：<https://vegeta1260-ai.github.io/bible-recovery-analyzer/>
+線上網址：<https://bible.weiqi.kids/>（舊 GitHub Pages 站待轉址退場）
 
 技術棧：Astro 6 + React 19 + D3 7 + Vitest 4。
 
 → 詳見 [`web/README.md`](web/README.md)
 
 ```bash
-cd web && npm install && npm run dev   # http://localhost:4321/bible-recovery-analyzer/
+cd web && npm install && npm run dev   # http://localhost:4321/
 ```
 
 ---

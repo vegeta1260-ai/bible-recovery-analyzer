@@ -1,6 +1,5 @@
-import lexiconData from '@/data/lexicon.json';
 import bookMap from '@/data/bookMap.json';
-import { normalizeStrongs } from '@/lib/strongs';
+import lastmod from '@/data/lastmod.json';
 
 // 全部書卷 OSIS（正典順序）。字詞/Lemma 搜尋預設掃全 66 卷——
 // 不可只掃 bookTokenCache（剛進站時為空，會導致搜尋「沒反應」）。
@@ -37,21 +36,6 @@ export interface Token {
   grammar_explanation: string;
   is_ot_quote: boolean;
 }
-
-export interface LexiconEntry {
-  strongs: string;
-  normalized_strongs: string;
-  lemma: string;
-  language: string;
-  transliteration: string;
-  pronunciation_bopomofo: string;
-  short_definition: string;
-  literal_gloss_en: string;
-  common_inflections: string[];
-  analytical_notes: string[];
-}
-
-const lexicon = lexiconData as LexiconEntry[];
 
 // --- Compressed token key mapping ---
 interface CompressedToken {
@@ -105,6 +89,16 @@ const DB_NAME = 'bible-tokens';
 const DB_VERSION = 1;
 const STORE_NAME = 'books';
 
+// 快取資料版本 = token 資料在 git 的最後變更日（build 時由 lastmod.json 嵌入）。
+// token 經 versification remap 等更新後，回訪使用者的舊 IndexedDB 快取必須失效，
+// 否則會永遠讀到 remap 前的舊資料。
+const DATA_VERSION: string = (lastmod as { tokens: string }).tokens;
+
+interface CacheRecord {
+  v: string;       // 寫入當下的 DATA_VERSION
+  tokens: Token[];
+}
+
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -122,7 +116,15 @@ async function getCached(book: string): Promise<Token[] | null> {
     return new Promise((resolve) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const req = tx.objectStore(STORE_NAME).get(book);
-      req.onsuccess = () => resolve(req.result ?? null);
+      req.onsuccess = () => {
+        const rec = req.result as CacheRecord | Token[] | undefined;
+        // 版本不符（含改版前存的裸陣列格式）一律視為過期，丟棄讓呼叫端重抓
+        if (rec && !Array.isArray(rec) && rec.v === DATA_VERSION) {
+          resolve(rec.tokens);
+        } else {
+          resolve(null);
+        }
+      };
       req.onerror = () => resolve(null);
     });
   } catch {
@@ -134,7 +136,7 @@ async function setCache(book: string, tokens: Token[]): Promise<void> {
   try {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(tokens, book);
+    tx.objectStore(STORE_NAME).put({ v: DATA_VERSION, tokens } as CacheRecord, book);
   } catch {
     // silently ignore cache errors
   }
@@ -184,45 +186,72 @@ export async function getVerseTokens(osisRef: string): Promise<Token[]> {
     .sort((a, b) => a.token_order - b.token_order);
 }
 
-export function lookupStrongs(rawId: string): LexiconEntry | null {
-  try {
-    const sid = normalizeStrongs(rawId);
-    return lexicon.find((e) => e.normalized_strongs === sid) ?? null;
-  } catch {
-    return null;
+// --- 多卷掃描（字詞/Lemma/全文搜尋未指定書卷時掃全 66 卷） ---
+// 有限並行：同時最多 4 卷。串行掃 66 卷太慢；一次全開又會對伺服器灌 66 條連線。
+const SCAN_CONCURRENCY = 4;
+
+/**
+ * 以有限並行載入並逐卷處理 token。onBook 回傳 true 表示結果已足夠——
+ * 之後不再排入新卷（已在下載中的卷仍會跑完）。onProgress 於每卷完成時回報進度。
+ */
+export async function scanBooks(
+  books: string[],
+  onBook: (tokens: Token[]) => boolean | void,
+  onProgress?: (scanned: number, total: number) => void,
+): Promise<void> {
+  let next = 0;
+  let scanned = 0;
+  let stopped = false;
+  async function worker(): Promise<void> {
+    while (!stopped && next < books.length) {
+      const book = books[next++];
+      const tokens = await loadBookTokens(book);
+      scanned += 1;
+      onProgress?.(scanned, books.length);
+      if (onBook(tokens) === true) stopped = true;
+    }
   }
+  await Promise.all(
+    Array.from({ length: Math.min(SCAN_CONCURRENCY, books.length) }, () => worker()),
+  );
 }
 
-export async function lookupWord(query: string, book?: string): Promise<Token[]> {
+export async function lookupWord(
+  query: string,
+  book?: string,
+  onProgress?: (scanned: number, total: number) => void,
+): Promise<Token[]> {
   const q = query.trim();
   const fq = foldOriginal(q);          // 寬鬆比對鍵（忽略母音點/重音）
   const tq = q.toLowerCase();          // 音譯（拉丁字母）比對
   const books = book ? [book] : ALL_BOOKS;
   const results: Token[] = [];
-  for (const b of books) {
-    const tokens = await loadBookTokens(b);
+  await scanBooks(books, (tokens) => {
     results.push(...tokens.filter((t) =>
       foldOriginal(t.surface_form) === fq ||
       foldOriginal(t.normalized_form) === fq ||
       foldOriginal(t.lemma) === fq ||
       (t.pronunciation_transliteration || '').toLowerCase() === tq
     ));
-    if (results.length >= 80) break;
-  }
+    return results.length >= 80;
+  }, onProgress);
   return results
     .sort((a, b) => a.verse_ref.localeCompare(b.verse_ref) || a.token_order - b.token_order)
     .slice(0, 80);
 }
 
-export async function lookupLemma(lemma: string, book?: string): Promise<Token[]> {
+export async function lookupLemma(
+  lemma: string,
+  book?: string,
+  onProgress?: (scanned: number, total: number) => void,
+): Promise<Token[]> {
   const fq = foldOriginal(lemma.trim());   // 寬鬆比對（忽略母音點/重音）
   const books = book ? [book] : ALL_BOOKS;
   const results: Token[] = [];
-  for (const b of books) {
-    const tokens = await loadBookTokens(b);
+  await scanBooks(books, (tokens) => {
     results.push(...tokens.filter((t) => foldOriginal(t.lemma) === fq));
-    if (results.length >= 80) break;
-  }
+    return results.length >= 80;
+  }, onProgress);
   return results
     .sort((a, b) => a.verse_ref.localeCompare(b.verse_ref) || a.token_order - b.token_order)
     .slice(0, 80);

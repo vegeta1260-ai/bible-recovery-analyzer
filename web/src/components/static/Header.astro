@@ -9,13 +9,15 @@ const navItems = [
   { href: `${base}/books`, label: '書卷' },
   { href: `${base}/legend`, label: '圖例' },
   { href: `${base}/lexicon`, label: '字典' },
+  { href: `${base}/maps`, label: '地圖' },
   { href: `${base}/faq`, label: '常見問題' },
   { href: `${base}/resources`, label: '資源' },
 ];
 ---
 <header class="site-header">
   <div class="header-inner container">
-    <a href={base} class="logo">聖經原文解析</a>
+    {/* base='/' 時 replace 後為空字串，href="" 會原地重載 → 與 navItems 首頁同用 `${base}/` */}
+    <a href={`${base}/`} class="logo">聖經原文解析</a>
     <nav class="main-nav" aria-label="主導覽">
       {navItems.map(item => (
         <a href={item.href} class="nav-link">{item.label}</a>
@@ -26,6 +28,22 @@ const navItems = [
       <ThemeToggle client:load />
       <AudioController client:load />
     </div>
+    {/* 行動版漢堡選單：純 <details>/<summary>（免 JS island、鍵盤原生可操作），<768px 才顯示。
+        點連結即整頁導航（MPA），選單自然關閉，不需 close 邏輯。 */}
+    <details class="mobile-nav">
+      <summary class="mobile-nav-toggle" aria-label="開啟選單">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
+      </summary>
+      <nav class="mobile-nav-panel" aria-label="行動版主導覽">
+        {navItems.map(item => (
+          <a href={item.href} class="mobile-nav-link">{item.label}</a>
+        ))}
+      </nav>
+    </details>
   </div>
 </header>
 <style>
@@ -42,7 +60,52 @@ const navItems = [
     padding: 0 1.1rem;
     transition: background 0.15s, color 0.15s;
   }
-  .nav-link:hover, .nav-link:focus-visible { color: var(--color-primary); background: var(--color-surface-hover); outline: none; }
+  .nav-link:hover, .nav-link:focus-visible { color: var(--color-primary); background: var(--color-surface-hover); }
+  /* 焦點不能只靠背景色（低視力難辨識）；outline 內縮避免被 sticky header 邊緣裁掉 */
+  .nav-link:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
   .header-controls { display: flex; align-items: center; gap: 0.5rem; }
-  @media (max-width: 767px) { .main-nav { display: none; } }
+
+  /* -- 行動版漢堡選單（預設隱藏，<768px 顯示） -- */
+  .mobile-nav { display: none; }
+  .mobile-nav-toggle {
+    list-style: none; /* 移除 details 預設三角標記（Safari 另需 ::-webkit-details-marker） */
+    display: flex; align-items: center; justify-content: center;
+    min-width: 44px; min-height: 44px; /* 觸控目標 ≥44px */
+    cursor: pointer; color: var(--color-text-secondary); border-radius: 8px;
+  }
+  .mobile-nav-toggle::-webkit-details-marker { display: none; }
+  .mobile-nav-toggle:hover { color: var(--color-primary); background: var(--color-surface-hover); }
+  .mobile-nav-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+  .mobile-nav[open] .mobile-nav-toggle { color: var(--color-primary); background: var(--color-surface-hover); }
+  /* 面板以 .site-header（sticky 即 positioned）為定位基準，貼齊 header 下緣滿版下拉；
+     absolute 脫離文流，展開不推擠 header 高度 */
+  .mobile-nav-panel {
+    position: absolute; top: 100%; left: 0; right: 0;
+    display: flex; flex-direction: column;
+    background: var(--color-bg); border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 4px 12px oklch(0.2 0.02 50 / 0.15);
+  }
+  .mobile-nav-link {
+    display: flex; align-items: center; min-height: 44px; /* 觸控目標 ≥44px */
+    padding: 0.5rem 1.25rem;
+    font-family: var(--font-sans); font-size: var(--font-base);
+    color: var(--color-text-secondary); border-top: 1px solid var(--color-border);
+  }
+  .mobile-nav-link:hover, .mobile-nav-link:focus-visible { color: var(--color-primary); background: var(--color-surface-hover); }
+  .mobile-nav-link:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+
+  /* 平板：8 個導覽項橫列會超過 768px 寬（本站 1rem=20px），縮 gap／內距／字級連同 logo
+     一起降一級，768px 視窗實測估算 ~750px 內不溢出 */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .header-inner { gap: 0.5rem; }
+    .main-nav { gap: 0; }
+    .nav-link { padding: 0 0.3rem; font-size: var(--font-sm); }
+    .logo { font-size: var(--font-base); }
+  }
+  @media (max-width: 767px) {
+    .main-nav { display: none; }
+    .mobile-nav { display: flex; align-items: center; }
+    /* main-nav（flex:1）隱藏後無元素撐開，補 margin-left:auto 讓控制鈕＋漢堡靠右 */
+    .header-controls { margin-left: auto; }
+  }
 </style>

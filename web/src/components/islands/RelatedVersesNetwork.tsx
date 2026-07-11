@@ -17,11 +17,10 @@ interface Link extends d3.SimulationLinkDatum<Node> {
   lemma: string;
 }
 
-// Warm color palette
+// Warm color palette（節點/連線為固定中間調暖色，深淺主題皆可讀）
 const NODE_COLOR = '#C4956A';
 const NODE_STROKE = '#8B4513';
 const LINK_COLOR = '#D4A017';
-const LABEL_COLOR = '#3a2810';
 
 export default function RelatedVersesNetwork({ tokens }: { tokens: Token[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -218,13 +217,13 @@ export default function RelatedVersesNetwork({ tokens }: { tokens: Token[] }) {
 
   return (
     <div ref={containerRef} style={{ width: '100%', overflowX: 'auto' }}>
-      <h3 style={{ color: '#8B4513', marginBottom: '0.5rem', fontSize: '1rem' }}>
+      <h3 style={{ color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1rem' }}>
         相關經節網絡（共享 Lemma）
       </h3>
-      <p style={{ fontSize: '12px', color: '#8B6914', marginBottom: '0.5rem' }}>
+      <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
         可拖曳節點、滾輪縮放
       </p>
-      <svg ref={svgRef} style={{ display: 'block', background: '#fdf6ec', borderRadius: '8px' }} />
+      <svg ref={svgRef} style={{ display: 'block', background: 'var(--color-surface)', borderRadius: '8px' }} />
     </div>
   );
 }

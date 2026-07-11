@@ -4,8 +4,17 @@
  * Audio files are placeholders — replace with real 1-minute loops in public/audio/.
  */
 
-import { Howl } from 'howler';
+import type { Howl } from 'howler';
 import { isAudioEnabled } from './audioStore';
+
+// howler（~30KB gzip）不進全站共用 chunk：首次真的要播放時才動態載入
+let _howlLoading: Promise<typeof import('howler').Howl> | null = null;
+function loadHowl(): Promise<typeof import('howler').Howl> {
+  if (!_howlLoading) {
+    _howlLoading = import('howler').then(m => m.Howl);
+  }
+  return _howlLoading;
+}
 
 export type BookType = 'pentateuch' | 'history' | 'wisdom' | 'prophecy' | 'gospel' | 'epistle' | 'apocalypse' | 'default';
 
@@ -66,39 +75,47 @@ export function getBookType(osisBook: string): BookType {
   return BOOK_TYPE_MAP[osisBook] ?? 'default';
 }
 
-/** Switch ambient music to match the given OSIS book abbreviation. */
+/** Switch ambient music to match the given OSIS book abbreviation.（fire-and-forget，howler 首播才載入） */
 export function switchMusic(osisBook: string): void {
   if (!isAudioEnabled()) return;
 
   const bookType = getBookType(osisBook);
   if (bookType === _currentType) return;
 
+  // 先佔位再等動態載入：載入期間再切書卷時只播最後一次要求，避免競態疊音軌
+  _currentType = bookType;
   const trackSrc = TRACK_MAP[bookType];
 
-  const next = new Howl({
-    src: [trackSrc],
-    loop: true,
-    volume: 0,
-    // 用 Web Audio（非 html5）：背景循環樂在使用者手勢解鎖 AudioContext 後播放可靠，
-    // 且無 html5 模式的「HTML5 Audio pool exhausted / locked audio object」問題（會導致無聲）。
-    html5: false,
-    onloaderror: () => {
-      // Audio file missing (placeholder) — silently ignore
-    },
+  loadHowl().then((HowlCtor) => {
+    if (_currentType !== bookType) return; // 載入期間已改切別的音軌
+
+    const next = new HowlCtor({
+      src: [trackSrc],
+      loop: true,
+      volume: 0,
+      // 用 Web Audio（非 html5）：背景循環樂在使用者手勢解鎖 AudioContext 後播放可靠，
+      // 且無 html5 模式的「HTML5 Audio pool exhausted / locked audio object」問題（會導致無聲）。
+      html5: false,
+      onloaderror: () => {
+        // Audio file missing (placeholder) — silently ignore
+      },
+    });
+
+    // Fade out current track（fade 完 stop 並 unload 釋放資源，避免重複切換累積）
+    if (_current) {
+      const prev = _current;
+      prev.fade(prev.volume() as number, 0, FADE_DURATION);
+      setTimeout(() => { prev.stop(); prev.unload(); }, FADE_DURATION + 50);
+    }
+
+    next.play();
+    next.fade(0, 0.35, FADE_DURATION);
+
+    _current = next;
+  }).catch(() => {
+    // 載入失敗則還原佔位，之後同卷再呼叫仍可重試
+    if (_currentType === bookType) _currentType = null;
   });
-
-  // Fade out current track（fade 完 stop 並 unload 釋放資源，避免重複切換累積）
-  if (_current) {
-    const prev = _current;
-    prev.fade(prev.volume() as number, 0, FADE_DURATION);
-    setTimeout(() => { prev.stop(); prev.unload(); }, FADE_DURATION + 50);
-  }
-
-  next.play();
-  next.fade(0, 0.35, FADE_DURATION);
-
-  _current = next;
-  _currentType = bookType;
 }
 
 /** Mute/unmute without stopping. */

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import type { Token } from '@/lib/analyzer';
 import { parseAnalyticalCode } from '@/lib/analyticalCodes';
 
+// 站方基底路徑（base='/' 時 replace 後為空字串，避免組出 // 開頭的網址）
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 interface Props {
   token: Token;
   defaultExpanded?: boolean;
@@ -21,7 +24,14 @@ export default function TokenCard({ token, defaultExpanded = false }: Props) {
           {token.surface_form}
         </span>
         <span className="token-gloss">{token.literal_gloss_en}</span>
-        <span className="token-strongs mono">{token.strongs_primary}</span>
+        {token.strongs_primary ? (
+          // stopPropagation：整張卡片的 onClick 是展開/收合，點連結不應同時觸發
+          <a className="token-strongs mono"
+             href={`${base}/lexicon/${token.strongs_primary}`}
+             onClick={(e) => e.stopPropagation()}>{token.strongs_primary}</a>
+        ) : (
+          <span className="token-strongs mono" />
+        )}
       </div>
 
       {expanded && (

@@ -57,6 +57,14 @@ echo ""
 
 echo "[1] 頁面可存取"
 check_status "首頁" "$BASE/"
+# 佔位頁回歸 gate：主機初始佔位頁含 "awaiting first deploy"，首頁絕不可出現（曾發生部署落空、線上仍是佔位頁）
+if curl -s "$BASE/" | head -c 50000 | grep -qi "awaiting first deploy"; then
+  echo "  FAIL  首頁仍是主機佔位頁（含 'awaiting first deploy'）"
+  FAIL=$((FAIL + 1))
+else
+  echo "  PASS  首頁非佔位頁"
+  PASS=$((PASS + 1))
+fi
 check_status "研經" "$BASE/study/"
 check_status "書卷" "$BASE/books/"
 check_status "圖例" "$BASE/legend/"
@@ -114,9 +122,9 @@ else
 fi
 echo ""
 
-echo "[10] 音檔"
-check_status "ambient-default.mp3" "$BASE/audio/ambient-default.mp3"
-check_status "ambient-gospel.mp3" "$BASE/audio/ambient-gospel.mp3"
+echo "[10] 音檔（public/audio 現存兩支）"
+check_status "ambient-chant.mp3" "$BASE/audio/ambient-chant.mp3"
+check_status "ambient-rorate.mp3" "$BASE/audio/ambient-rorate.mp3"
 echo ""
 
 echo "=== 結果: $PASS passed, $FAIL failed ==="

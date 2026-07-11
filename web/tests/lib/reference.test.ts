@@ -39,4 +39,17 @@ describe('splitOsisRange', () => {
       'John.1.3',
     ]);
   });
+
+  // 反向範圍過去回空陣列，導致下游 TypeError 裸露給使用者 → 現在擲出友善錯誤
+  it('throws on reversed range (e.g. 創1:5-2)', () => {
+    expect(() => splitOsisRange('Gen.1.5-2')).toThrow('結束節不可小於起始節');
+  });
+
+  it('throws on range exceeding 30 verses', () => {
+    expect(() => splitOsisRange('Ps.119.1-40')).toThrow('範圍過大');
+  });
+
+  it('allows range of exactly 30 verses', () => {
+    expect(splitOsisRange('Ps.119.1-30')).toHaveLength(30);
+  });
 });

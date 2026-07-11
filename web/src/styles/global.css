@@ -1,6 +1,7 @@
 @import './tokens.css';
-/* Google Fonts 改由 BaseLayout 以 <link rel="preload"> 非阻塞載入（見該檔 head）。
-   原 @import 須先下載此 CSS 才觸發字型請求且 render-blocking，拖累 LCP，故移除。 */
+/* 字型已 self-host（public/fonts/，@font-face 皆 font-display:optional），由 BaseLayout
+   以同源「阻塞式」stylesheet 載入：字型未及時就用系統 fallback 且不再 swap → 零 CLS。
+   勿改回 Google Fonts / preload 非阻塞 / swap（CLAUDE.md 明令）。 */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: var(--font-base); line-height: var(--line-height); -webkit-text-size-adjust: 100%; }
 body { font-family: var(--font-serif); color: var(--color-text); background-color: var(--color-bg); transition: color 0.3s ease, background-color 0.3s ease; }
@@ -14,6 +15,11 @@ code, .mono { font-family: var(--font-mono); }
 .card:hover { background: var(--color-surface-hover); box-shadow: 0 2px 8px oklch(0.5 0.02 50 / 0.1); }
 .skeleton { background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-hover) 50%, var(--color-surface) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.5s ease-in-out infinite; border-radius: 8px; }
 @keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+/* skip link：平時 translateY 移出視窗（仍可聚焦），Tab 聚焦時浮現於 sticky header（z-index:100）之上。
+   文字用 --color-bg 而非固定白：深色主題 primary 較亮，白字對比不足。 */
+.skip-link { position: absolute; top: 0; left: 0; z-index: 101; transform: translateY(-200%); padding: 0.6rem 1.2rem; background: var(--color-primary); color: var(--color-bg); font-family: var(--font-sans); border-radius: 0 0 8px 0; }
+.skip-link:focus { transform: none; }
+#main:focus { outline: none; } /* skip link 落點（tabindex=-1），不需視覺焦點框 */
 .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
 @media (min-width: 768px) { .container { padding: 0 2rem; } }
 @media (min-width: 1024px) { .layout-two-col { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; } }

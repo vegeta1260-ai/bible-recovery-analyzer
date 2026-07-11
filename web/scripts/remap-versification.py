@@ -12,12 +12,15 @@
 - 排除新約（eng.json 未涵蓋；Acts/Rom/2Cor/John 等希臘文差異另議）。
 - Num 25:19 為 WLC 特有（eng.json 未列），以 EXTRA_MAP 手動補。
 
-冪等：以「受影響章重對映後節數是否已等於原狀」偵測；實務上用 --check 先驗證、
---apply 才寫檔，且寫 .bak 備份。重跑 OT ETL 後需再執行本腳本（見 web/README SOP）。
+冪等：以跨卷「指紋章」最大節號偵測是否已是恢復本分節（Gen.31=55 且 Gen.32=32、
+Jonah.1=17 且 Jonah.2=10、Nah.1=15 且 Nah.2=13），已套用則整體 SKIP——對映多數成鏈
+（如原文 Gen 32:2-33→英 32:1-32），二次套用會把節號再位移一次、損毀資料，故必須守門。
+--apply 不另存 .bak：token 已在 git，可還原（與其他 remap 腳本一致）。
+重跑 OT ETL 後需再執行本腳本（見 web/README SOP）。
 
 用法：
-  python3 scripts/remap-versification.py --check   # 只報告，不改檔
-  python3 scripts/remap-versification.py --apply   # 備份 .bak 後實際重對映
+  python3 scripts/remap-versification.py --check   # 只報告（含「疑似已套用」偵測），不改檔
+  python3 scripts/remap-versification.py --apply   # 實際重對映；偵測已套用則 SKIP
 """
 import json
 import sys
@@ -39,6 +42,13 @@ USFM2OSIS = {
 EXCLUDE = {'Ps', 'Joel', 'Mal'}
 # WLC 特有、eng.json 未列的手動補充（原文 → 英文）
 EXTRA_MAP = {('Num', '25', '19'): ('Num', '26', '1')}
+# 冪等指紋：恢復本分節下指紋章的最大節號（由 eng.json 對映推得）。
+# 原文分節時為 Gen.31=54/32=33、Jonah.1=16/2=11、Nah.1=14/2=14，兩態不重疊 → 可安全判別。
+FINGERPRINTS = [
+    ('Gen', {31: 55, 32: 32}),
+    ('Jonah', {1: 17, 2: 10}),
+    ('Nah', {1: 15, 2: 13}),
+]
 
 
 def expand(ref):
@@ -62,7 +72,7 @@ def expand(ref):
 
 
 def build_map():
-    mv = json.loads(ENG.read_text())['mappedVerses']
+    mv = json.loads(ENG.read_text(encoding="utf-8"))['mappedVerses']
     org2eng = {}
     for eng_ref, org_ref in mv.items():          # key = 英文, value = 原文
         el, ol = expand(eng_ref), expand(org_ref)
@@ -77,7 +87,7 @@ def remap_book(osis, org2eng, apply):
     f = TOK / f"{osis}.json"
     if not f.exists():
         return None
-    toks = json.loads(f.read_text())
+    toks = json.loads(f.read_text(encoding="utf-8"))
     changed = 0
     for t in toks:
         r = t.get("r")
@@ -89,7 +99,8 @@ def remap_book(osis, org2eng, apply):
             t["r"] = f"{ne[0]}.{ne[1]}.{ne[2]}"
             changed += 1
     if apply and changed:
-        f.write_text(json.dumps(toks, ensure_ascii=False))  # token 已在 git，可還原，不另存 .bak
+        # token 已在 git，可還原，不另存 .bak；separators 與 compress-tokens.py 一致，避免膨脹
+        f.write_text(json.dumps(toks, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     # 回報重對映後各章最大節
     ch = defaultdict(int)
     for t in toks:
@@ -101,11 +112,53 @@ def remap_book(osis, org2eng, apply):
     return changed, ch
 
 
+def max_verse_by_chapter(osis):
+    f = TOK / f"{osis}.json"
+    if not f.exists():
+        return None
+    ch = defaultdict(int)
+    for t in json.loads(f.read_text(encoding="utf-8")):
+        r = t.get("r")
+        if not r:
+            continue
+        _, c, v = r.split(".")
+        ch[int(c)] = max(ch[int(c)], int(v))
+    return ch
+
+
+def already_applied():
+    """冪等守門：指紋卷全數符合恢復本分節才判定已套用；任一卷不符即視為原文分節。"""
+    checked = 0
+    for osis, expect in FINGERPRINTS:
+        ch = max_verse_by_chapter(osis)
+        if ch is None:
+            continue
+        checked += 1
+        if any(ch.get(c) != v for c, v in expect.items()):
+            return False
+    return checked > 0
+
+
+def guard_key_style():
+    """key-style 防呆：長 key token（ETL 直出、未經 compress-tokens.py）沒有 'r' 欄，
+    本腳本會靜默 no-op 並誤報成功 → 抽第一卷第一筆偵測，長 key 即 abort。"""
+    for f in sorted(TOK.glob("*.json")):
+        toks = json.loads(f.read_text(encoding="utf-8"))
+        if toks and isinstance(toks[0], dict) and "verse_ref" in toks[0]:
+            sys.exit(f"錯誤：{f.name} 為長 key token（含 verse_ref），請先跑 compress-tokens.py 再執行本腳本")
+        return
+
+
 def main():
     apply = "--apply" in sys.argv
+    guard_key_style()
     org2eng = build_map()
     affected = sorted({o for (o, _, _) in org2eng} - EXCLUDE)
     print(f"{'APPLY' if apply else 'CHECK'}：受影響卷 {affected}")
+    if already_applied():
+        # 對映成鏈，二次套用會把節號再位移 → 無論 --check/--apply 一律整體 SKIP
+        print("SKIP：指紋章（Gen.31/32、Jonah.1/2、Nah.1/2）已符合恢復本分節，疑似已套用，不做任何變更")
+        return
     total = 0
     for osis in affected:
         res = remap_book(osis, org2eng, apply)

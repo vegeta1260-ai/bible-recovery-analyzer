@@ -11,9 +11,11 @@ interface Props {
   tokens: Token[];
   recovery: RecoveryResult | null;
   loading?: boolean;
+  /** 範圍查詢多節共用畫面時，只讓第一節掛全螢幕特效（避免 N 個 fixed overlay 疊加） */
+  showEffect?: boolean;
 }
 
-export default function VerseResult({ osisRef, tokens, recovery, loading }: Props) {
+export default function VerseResult({ osisRef, tokens, recovery, loading, showEffect = true }: Props) {
   const parts = osisRef.split('.');
   const displayRef = parts.length >= 3 ? `${parts[0]} ${parts[1]}:${parts[2]}` : osisRef;
 
@@ -27,7 +29,7 @@ export default function VerseResult({ osisRef, tokens, recovery, loading }: Prop
   return (
     <div className="verse-result">
       {/* Miracle effect overlay — renders and removes itself on completion */}
-      {!effectDone && tokens.length > 0 && (
+      {showEffect && !effectDone && tokens.length > 0 && (
         <MiracleEffectRouter
           context={miracleCtx}
           onComplete={() => setEffectDone(true)}
@@ -80,7 +82,7 @@ export default function VerseResult({ osisRef, tokens, recovery, loading }: Prop
       )}
 
       {tokens.length === 0 && !loading && (
-        <p className="no-data">此經節尚無原文 token 資料（MVP 資料範圍有限）。</p>
+        <p className="no-data">此經節尚無原文 token 資料（多為原文與恢復本分節差異所致的少數經節）。</p>
       )}
     </div>
   );

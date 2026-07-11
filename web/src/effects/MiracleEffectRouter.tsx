@@ -43,10 +43,10 @@ interface EffectRule {
 }
 
 /** Ordered rules — first match wins (except particle-text fallback). */
+// first-match 下同條件重複規則永不可達，已刪 Gen→cosmic-firmament、pneuma→pentecost-flames（兩效果仍分別由 Ps／Acts 規則觸達）
 export const EFFECT_RULES: EffectRule[] = [
   // Book-level
   { match: ctx => ctx.book === 'Gen',  effect: 'genesis-light' },
-  { match: ctx => ctx.book === 'Gen',  effect: 'cosmic-firmament' },
   { match: ctx => ctx.book === 'Exod', effect: 'parting-waters' },
   { match: ctx => ctx.book === 'Ps',   effect: 'cosmic-firmament' },
   { match: ctx => ctx.book === 'Acts', effect: 'pentecost-flames' },
@@ -61,7 +61,6 @@ export const EFFECT_RULES: EffectRule[] = [
 
   // Semantic-level — normalized pneuma form
   { match: ctx => ctx.normalizedForms.includes(PNEUMA), effect: 'dove-descending' },
-  { match: ctx => ctx.normalizedForms.includes(PNEUMA), effect: 'pentecost-flames' },
 
   // Default fallback
   { match: () => true, effect: 'particle-text' },

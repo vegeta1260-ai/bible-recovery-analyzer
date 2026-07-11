@@ -5,6 +5,9 @@ import BreadcrumbLd from '../components/static/BreadcrumbLd.astro';
 ---
 <BaseLayout title="事工資源" description="聖經原文研究與恢復本相關資源索引">
   <BreadcrumbLd items={[{ name: '首頁', path: '/' }, { name: '事工資源' }]} />
-  <h1 style="margin: 2rem 0 1rem;">事工資源索引</h1>
+  <h1 style="margin: 2rem 0 0;">事工資源索引</h1>
+  <p style="color: var(--color-text-secondary); margin-bottom: 1rem; max-width: 760px; line-height: 1.8;">
+    這裡整理了與原文研經、職事書報相關的外部資源，點選各卡片標題即可前往該網站。
+  </p>
   <ResourceList />
 </BaseLayout>

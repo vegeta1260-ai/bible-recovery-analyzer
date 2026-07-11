@@ -13,6 +13,7 @@ runtime 恢復本層也對不上。本腳本依標準對映修正這 2 卷（其
 用法：cd web && python3 scripts/remap-joel-mal-versification.py
 """
 import json
+import sys
 from pathlib import Path
 
 TOK = Path(__file__).resolve().parents[1] / "public" / "data" / "tokens"
@@ -60,6 +61,10 @@ def sort_key(t):
 def run(name, fn):
     f = TOK / f"{name}.json"
     tokens = json.loads(f.read_text("utf-8"))
+    # key-style 防呆：長 key token（未經 compress-tokens.py）沒有 'r'，chapters() 會是空集合
+    # → Joel 誤判「已套用」、Mal 照樣寫檔且 sort_key 全退化成 (0,0,o) 把整卷順序打亂
+    if tokens and "verse_ref" in tokens[0]:
+        sys.exit(f"錯誤：{name}.json 為長 key token（含 verse_ref），請先跑 compress-tokens.py 再執行本腳本")
     if not fn(tokens):
         print(f"  {name}: 已是恢復本章節，跳過")
         return

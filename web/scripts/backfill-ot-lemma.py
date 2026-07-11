@@ -11,6 +11,7 @@
 import json
 import glob
 import os
+import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOKENS_DIR = os.path.join(ROOT, "public", "data", "tokens")
@@ -18,9 +19,17 @@ LEXICON = os.path.join(ROOT, "src", "data", "lexicon.json")
 
 lex = {e["strongs"]: e["lemma"] for e in json.load(open(LEXICON, encoding="utf-8"))}
 
+token_files = sorted(glob.glob(os.path.join(TOKENS_DIR, "*.json")))
+
+# key-style 防呆：長 key token（未經 compress-tokens.py）沒有 'st'，會 0 變更卻誤報成功
+if token_files:
+    _first = json.load(open(token_files[0], encoding="utf-8"))
+    if _first and "verse_ref" in _first[0]:
+        sys.exit(f"錯誤：{os.path.basename(token_files[0])} 為長 key token（含 verse_ref），請先跑 compress-tokens.py 再執行本腳本")
+
 total_changed = 0
 files_touched = 0
-for fp in sorted(glob.glob(os.path.join(TOKENS_DIR, "*.json"))):
+for fp in token_files:
     toks = json.load(open(fp, encoding="utf-8"))
     changed = 0
     for t in toks:

@@ -18,6 +18,21 @@ if [ ! -d "$DIST" ]; then
   exit 1
 fi
 
+# python 執行檔偵測（全腳本共用）：CI(ubuntu) 有 python3；本機 Windows Git Bash 可能只有 python，
+# 且 PATH 上的 python3 可能是 WindowsApps 商店 stub（找得到但跑不動）→ 必須實跑驗證。
+# 各 gate 的檔案路徑一律走 argv 傳入（內嵌 -c 字串時 MSYS 不轉換路徑，Windows python 開不了 /e/...）。
+PYBIN=""
+for _py in python3 python; do
+  if "$_py" -c "import json" >/dev/null 2>&1; then
+    PYBIN="$_py"
+    break
+  fi
+done
+if [ -z "$PYBIN" ]; then
+  echo "✗ 找不到可用的 python3/python（token/versification gate 需要）"
+  exit 1
+fi
+
 # 檔案存在
 check_file() {
   local name="$1" rel="$2"
@@ -45,7 +60,7 @@ check_grep() {
 # JSON 陣列／物件筆數 >= 下限
 check_json_count() {
   local name="$1" rel="$2" min_count="$3" count
-  count=$(python3 -c "import sys,json; print(len(json.load(open('$DIST/$rel'))))" 2>/dev/null || echo "0")
+  count=$("$PYBIN" -c "import sys,json; print(len(json.load(open(sys.argv[1],encoding='utf-8'))))" "$DIST/$rel" 2>/dev/null || echo "0")
   if [ "$count" -ge "$min_count" ]; then
     echo "  PASS  $name ($count >= $min_count)"
     PASS=$((PASS + 1))
@@ -72,7 +87,7 @@ check_min() {
 # 舊的 check_json_count 只看長度會放行。此檢查只計 r 非空者。
 check_valid_tokens() {
   local name="$1" rel="$2" min_count="$3" count
-  count=$(python3 -c "import json; t=json.load(open('$DIST/$rel')); print(sum(1 for x in t if x.get('r')))" 2>/dev/null || echo "0")
+  count=$("$PYBIN" -c "import sys,json; t=json.load(open(sys.argv[1],encoding='utf-8')); print(sum(1 for x in t if x.get('r')))" "$DIST/$rel" 2>/dev/null || echo "0")
   if [ "$count" -ge "$min_count" ]; then
     echo "  PASS  $name (有效 $count >= $min_count)"
     PASS=$((PASS + 1))
@@ -85,13 +100,13 @@ check_valid_tokens() {
 # 全部 token 檔有效筆數總量不變式（一次抓全經料庫歸零）。
 check_total_valid_tokens() {
   local name="$1" min_count="$2" total
-  total=$(python3 -c "
-import json, glob, os
+  total=$("$PYBIN" -c "
+import json, glob, os, sys
 tot = 0
-for f in glob.glob(os.path.join('$DIST', 'data', 'tokens', '*.json')):
-    tot += sum(1 for x in json.load(open(f)) if x.get('r'))
+for f in glob.glob(os.path.join(sys.argv[1], 'data', 'tokens', '*.json')):
+    tot += sum(1 for x in json.load(open(f, encoding='utf-8')) if x.get('r'))
 print(tot)
-" 2>/dev/null || echo "0")
+" "$DIST" 2>/dev/null || echo "0")
   if [ "$total" -ge "$min_count" ]; then
     echo "  PASS  $name (全經有效 $total >= $min_count)"
     PASS=$((PASS + 1))
@@ -247,8 +262,8 @@ echo ""
 echo "[9] 靜態資源與音檔"
 check_file "OG image" "og-default.png"
 check_file "favicon" "favicon.ico"
-check_file "ambient-default.mp3" "audio/ambient-default.mp3"
-check_file "ambient-gospel.mp3" "audio/ambient-gospel.mp3"
+check_file "ambient-chant.mp3" "audio/ambient-chant.mp3"
+check_file "ambient-rorate.mp3" "audio/ambient-rorate.mp3"
 echo ""
 
 echo "[10] SEO / sitemap / AEO 可發現性（不可缺漏）"
@@ -271,6 +286,42 @@ RECOVERY_PAGES=$(find "$DIST/study" -mindepth 2 -name index.html -exec grep -l '
 echo "  (逐章頁總數 ${STUDY_TOTAL})"
 check_min "逐章頁配樂島覆蓋" "${MUSIC_PAGES:-0}" 1189
 check_min "逐章頁恢復本 slot 覆蓋" "${RECOVERY_PAGES:-0}" 1189
+echo ""
+
+echo "[12] Versification 指紋（防 remap 漏跑/雙跑；純本地讀 token，零 API）"
+# 原文（OSHB/MorphGNT）與恢復本分章/分節不同，token 需經兩支 remap 腳本重對映：
+#   漏跑 → Joel 退回希伯來 4 章制、Gen.31 最大節退回 WLC 的 54
+#   雙跑 → 章/節再度偏移（Mal 章集合、Gen.31 節號都會走樣）
+# 見 web/scripts/remap-joel-mal-versification.py、remap-versification.py。
+# PYBIN 於腳本開頭統一偵測（找不到會提前 exit，此處必有值）
+if [ -z "$PYBIN" ]; then
+  echo "  FAIL  找不到 python3/python，無法驗 versification 指紋"
+  FAIL=$((FAIL + 1))
+else
+  # 書卷章號集合須「完全等於」期望值（同時攔多章與缺章）
+  check_chapter_set() {
+    local name="$1" book="$2" expect="$3" actual
+    actual=$("$PYBIN" -c "import json,sys; t=json.load(open(sys.argv[1],encoding='utf-8')); print(','.join(str(c) for c in sorted({int(x['r'].split('.')[1]) for x in t if x.get('r')})))" "$DIST/data/tokens/$book.json" 2>/dev/null || echo "ERR")
+    if [ "$actual" = "$expect" ]; then
+      echo "  PASS  $name (章集合 {$actual})"
+      PASS=$((PASS + 1))
+    else
+      echo "  FAIL  $name (章集合 {$actual} != {$expect}) — versification remap 漏跑或雙跑"
+      FAIL=$((FAIL + 1))
+    fi
+  }
+  check_chapter_set "Joel 章指紋（希伯來4章→恢復本3章）" "Joel" "1,2,3"
+  check_chapter_set "Mal 章指紋（希伯來3章→恢復本4章）" "Mal" "1,2,3,4"
+  # Gen.31 最大節 = 55（英文/恢復本制；WLC 為 54）——節層級 remap 指紋
+  GEN31_MAX=$("$PYBIN" -c "import json,sys; t=json.load(open(sys.argv[1],encoding='utf-8')); print(max((int(x['r'].split('.')[2]) for x in t if x.get('r') and x['r'].split('.')[1]=='31'), default=0))" "$DIST/data/tokens/Gen.json" 2>/dev/null || echo "ERR")
+  if [ "$GEN31_MAX" = "55" ]; then
+    echo "  PASS  Gen.31 節指紋 (最大節 55)"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL  Gen.31 節指紋 (最大節 ${GEN31_MAX} != 55) — 節層級 remap 漏跑或雙跑"
+    FAIL=$((FAIL + 1))
+  fi
+fi
 echo ""
 
 echo "=== 結果: $PASS passed, $FAIL failed ==="

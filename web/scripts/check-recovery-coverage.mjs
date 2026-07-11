@@ -3,8 +3,9 @@
 // 中英文恢復本經文。這是 web/src/pages/study 逐章頁主要內容的回歸防護——
 // 曾因英文書名含空格（18 卷）/ 單章書章節格式而整段缺漏（commit 642831bd）。
 //
-// 依賴外部 LSM API + 公開 web token + 配額，故不放進 CI 的 `npm test`，
-// 改作手動／定期執行：`npm run check:recovery`（或 node scripts/check-recovery-coverage.mjs）。
+// 依賴外部 LSM API + 公開 web token + 配額，故不放進 `npm test`（單元測試需離線可跑）；
+// 現為 CI 部署 gate：deploy-pages.yml 的「Recovery coverage」步驟跑 `npm run check:recovery`，
+// 失敗則不部署。也可手動執行：node scripts/check-recovery-coverage.mjs。
 // 書名解析規則與 src/lib/lsmApi.ts 的 buildLsmChapterRef 同源（此處內聯一份，故意保持一致）。
 
 import fs from 'node:fs';

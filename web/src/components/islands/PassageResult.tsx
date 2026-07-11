@@ -31,6 +31,7 @@ export default function PassageResult({ verses, loading }: Props) {
           tokens={v.tokens}
           recovery={v.recovery}
           loading={loading}
+          showEffect={i === 0}
         />
       ))}
     </div>

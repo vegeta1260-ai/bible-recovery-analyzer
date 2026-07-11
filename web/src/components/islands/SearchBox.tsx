@@ -15,7 +15,16 @@ const LemmaFrequencyChart = lazy(() => import('./LemmaFrequencyChart'));
 const AnalyticalCodePie = lazy(() => import('./AnalyticalCodePie'));
 const RelatedVersesNetwork = lazy(() => import('./RelatedVersesNetwork'));
 
-type SearchMode = 'verse' | 'word' | 'lemma' | 'search' | 'morphology';
+type SearchMode = 'verse' | 'word' | 'lemma' | 'search';
+
+// 站方基底路徑（base='/' 時 replace 後為空字串，避免組出 // 開頭的網址）
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// verse_ref（如 Gen.1.1）→ 逐章研經頁對應節錨點
+function verseHref(ref: string): string {
+  const [book, chapter, verse] = ref.split('.');
+  return `${base}/study/${book}/${chapter}#v${verse}`;
+}
 
 interface VerseData {
   osisRef: string;
@@ -32,18 +41,14 @@ export default function SearchBox() {
   const [tokenResults, setTokenResults] = useState<Token[]>([]);
   const [searchResults, setSearchResults] = useState<{ refs: string[]; matchedLemmas: string[]; matchedStrongs: string[] } | null>(null);
   const [error, setError] = useState('');
-  const audioStarted = useRef(false);
-
-  // Start audio on first user interaction with this component
-  const ensureAudioStarted = useCallback(() => {
-    if (audioStarted.current) return;
-    audioStarted.current = true;
-  }, []);
+  // 全卷掃描進度（字詞/Lemma/全文搜尋掃 66 卷時顯示「已掃描 X/66 卷」）
+  const [scanProgress, setScanProgress] = useState<{ done: number; total: number } | null>(null);
 
   const clearResults = () => {
     setVerseResults([]);
     setTokenResults([]);
     setSearchResults(null);
+    setScanProgress(null);
     setError('');
     setSearched(false);
   };
@@ -52,7 +57,6 @@ export default function SearchBox() {
     const q = query.trim();
     if (!q) return;
 
-    ensureAudioStarted();
     clearResults();
     setLoading(true);
     setSearched(true);
@@ -90,11 +94,11 @@ export default function SearchBox() {
         // Page-turn sound on results appearing
         if (isAudioEnabled()) playPageTurn();
       } else if (mode === 'word') {
-        setTokenResults(await lookupWord(q));
+        setTokenResults(await lookupWord(q, undefined, (done, total) => setScanProgress({ done, total })));
       } else if (mode === 'lemma') {
-        setTokenResults(await lookupLemma(q));
-      } else if (mode === 'search' || mode === 'morphology') {
-        const result = await fullTextSearch(q);
+        setTokenResults(await lookupLemma(q, undefined, (done, total) => setScanProgress({ done, total })));
+      } else if (mode === 'search') {
+        const result = await fullTextSearch(q, undefined, (done, total) => setScanProgress({ done, total }));
         setSearchResults(result);
       }
     } catch (err) {
@@ -133,7 +137,6 @@ export default function SearchBox() {
     { value: 'word', label: '字詞' },
     { value: 'lemma', label: 'Lemma' },
     { value: 'search', label: '全文搜尋' },
-    { value: 'morphology', label: '詞形' },
   ];
 
   // 圖表用 token：彙整目前查詢結果（經文逐字 + 字詞/Lemma 命中），供 D3 圖即時統計。
@@ -168,11 +171,9 @@ export default function SearchBox() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={ensureAudioStarted}
           placeholder={mode === 'verse' ? '輸入經文，如：約1:1 或 Gen1:1-3'
             : mode === 'word' ? '輸入原文或音譯，如：λόγος 或 logos'
             : mode === 'lemma' ? '輸入 lemma，如：λόγος'
-            : mode === 'morphology' ? '輸入分析碼或詞性，如：NOM 或 noun'
             : '輸入任意關鍵字搜尋'}
           className="search-input"
           aria-label="搜尋經文或原文"
@@ -186,6 +187,11 @@ export default function SearchBox() {
         <div className="error-card card" role="alert">
           <p>{error}</p>
         </div>
+      )}
+
+      {/* 全卷掃描進度（僅載入中顯示） */}
+      {loading && scanProgress && (
+        <div className="card"><p className="no-data">搜尋中——已掃描 {scanProgress.done}/{scanProgress.total} 卷…</p></div>
       )}
 
       {/* Verse mode results */}
@@ -208,14 +214,16 @@ export default function SearchBox() {
           <div className="token-card-grid">
             {tokenResults.map((t, i) => (
               <div key={i} className="token-result-item">
-                <span className="token-result-ref mono">{t.verse_ref}</span>
+                <a className="token-result-ref mono" href={verseHref(t.verse_ref)}>{t.verse_ref}</a>
                 <div className="token-card card">
                   <div className="token-header">
                     <span lang={t.strongs_primary.startsWith('H') ? 'he' : 'grc'}
                           dir={t.strongs_primary.startsWith('H') ? 'rtl' : 'ltr'}
                           className="token-surface">{t.surface_form}</span>
                     <span className="token-gloss">{t.literal_gloss_en}</span>
-                    <span className="token-strongs mono">{t.strongs_primary}</span>
+                    {t.strongs_primary
+                      ? <a className="token-strongs mono" href={`${base}/lexicon/${t.strongs_primary}`}>{t.strongs_primary}</a>
+                      : <span className="token-strongs mono" />}
                   </div>
                 </div>
               </div>
@@ -230,13 +238,13 @@ export default function SearchBox() {
       )}
 
       {/* Search results */}
-      {(mode === 'search' || mode === 'morphology') && searchResults && (
+      {mode === 'search' && searchResults && (
         <div className="search-results card">
           <h3>搜尋結果</h3>
           {searchResults.refs.length > 0 && (
             <div className="result-section">
               <h4>匹配經節 ({searchResults.refs.length})</h4>
-              <div className="ref-list">{searchResults.refs.map(r => <span key={r} className="ref-tag mono">{r}</span>)}</div>
+              <div className="ref-list">{searchResults.refs.map(r => <a key={r} className="ref-tag mono" href={verseHref(r)}>{r}</a>)}</div>
             </div>
           )}
           {searchResults.matchedLemmas.length > 0 && (
@@ -248,7 +256,7 @@ export default function SearchBox() {
           {searchResults.matchedStrongs.length > 0 && (
             <div className="result-section">
               <h4>匹配 Strong's ({searchResults.matchedStrongs.length})</h4>
-              <div className="ref-list">{searchResults.matchedStrongs.map(s => <span key={s} className="ref-tag mono">{s}</span>)}</div>
+              <div className="ref-list">{searchResults.matchedStrongs.map(s => <a key={s} className="ref-tag mono" href={`${base}/lexicon/${s}`}>{s}</a>)}</div>
             </div>
           )}
           {searchResults.refs.length === 0 && <p className="no-data">查無結果。</p>}

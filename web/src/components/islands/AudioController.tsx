@@ -25,9 +25,10 @@ export default function AudioController() {
       if (
         e.key === 'm' || e.key === 'M'
       ) {
-        // Ignore if focus is in an input/textarea
-        const tag = (e.target as HTMLElement).tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        // Ignore if focus is in an editable/interactive element
+        const el = e.target as HTMLElement;
+        const tag = el.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable) return;
         handleToggle();
       }
     };

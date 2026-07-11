@@ -15,14 +15,17 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
 
-      - run: rm -f package-lock.json && npm install
+      - run: npm ci
         working-directory: web
 
       - name: Unit tests
@@ -46,11 +49,19 @@ jobs:
 
       - name: Deploy to host via rsync over SSH
         # 把 build 產物同步進主機 /opt/static-sites/bible/，由 NPM(nginx) 容器掛載服務。
-        # SSH_PRIVATE_KEY 為 repo secret（對應主機 github 帳號 authorized_keys 的公鑰）。
+        # SSH_PRIVATE_KEY 為 repo secret（對應主機 github 帳號 authorized_keys 的公鑰）；
+        # 走 env 傳入（不內插進 shell script，避免落進命令列/日誌）。
+        # accept-new：首連自動記錄主機鑰，之後換鑰即失敗（取代不驗鑰的 =no）。
+        env:
+          DEPLOY_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key && chmod 600 deploy_key
-          rsync -avz --delete dist/ \
-            -e "ssh -i deploy_key -o StrictHostKeyChecking=no" \
+          printf '%s\n' "$DEPLOY_KEY" > deploy_key && chmod 600 deploy_key
+          trap 'rm -f deploy_key' EXIT
+          rsync -avz --delete --delay-updates dist/ \
+            -e "ssh -i deploy_key -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new" \
             github@172.235.205.148:/opt/static-sites/bible/
-          rm -f deploy_key
+        working-directory: web
+
+      - name: Post-deploy smoke test (實站驗證，含佔位頁回歸 gate)
+        run: bash scripts/smoke-test-deployed.sh https://bible.weiqi.kids
         working-directory: web

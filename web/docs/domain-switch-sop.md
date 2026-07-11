@@ -1,8 +1,12 @@
 # 換正式網域 SOP（從 github.io 子路徑 → 自訂網域）
 
-> 目前站台跑在 GitHub Pages 專案站：`https://vegeta1260-ai.github.io/bible-recovery-analyzer/`（子路徑）。
-> 等正式網域定案後，**一次照這份清單改完再 push**，才不會 canonical / OG / sitemap 散落新舊網址。
-> 本清單盤點時間：2026-06-19。改 code 前先 `grep -rn "vegeta1260-ai.github.io\|/bible-recovery-analyzer" web/src web/scripts web/public web/astro.config.mjs` 復查，避免日後新增遺漏。
+> **📜 歷史紀錄**：2026-06-21 已依本 SOP 將程式層遷移至自架主機 `https://bible.weiqi.kids`（`site`/`base`/robots/smoke 皆已改，rsync over SSH 部署）。
+> 本檔保留作參考。**尚未完成的收尾**（部署成功後執行）：
+> 1. GSC / Bing 對新網域建資源、提交 sitemap；
+> 2. 舊 GitHub Pages 站改發 canonical + meta-refresh 轉址殼站（GitHub Pages 專案站無法真 301 到外部網域，本檔第 7 節的「自動 301」假設不適用自架路線）；
+> 3. Rich Results 驗證、社群分享卡重抓。
+>
+> 原始清單盤點時間：2026-06-19。改 code 前先 `grep -rn "vegeta1260-ai.github.io\|/bible-recovery-analyzer" web/src web/scripts web/public web/astro.config.mjs` 復查，避免日後新增遺漏。
 
 ---
 
